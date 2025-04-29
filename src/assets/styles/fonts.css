@@ -1,0 +1,11 @@
+/* Roboto 字體 (英文) */
+@import "@fontsource/roboto/400.css";
+@import "@fontsource/roboto/700.css";
+
+/* Noto Sans TC 字體 (繁中) */
+@import "@fontsource/noto-sans-tc/chinese-traditional-400.css";
+@import "@fontsource/noto-sans-tc/chinese-traditional-700.css";
+
+:root {
+  --font-sans: "Roboto", "Noto Sans TC", system-ui, sans-serif;
+}
