@@ -1,44 +1,47 @@
 <template>
-    <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <!-- 課程頂部信息 -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            <!-- 左側 - 課程圖片 -->
-            <div class="relative">
-                <img :src="currentCourse.images[currentImageIndex]" alt="課程圖片"
-                    class="w-full h-96 object-cover rounded-lg">
-                <!-- 圖片導航 -->
-                <div class="mt-4 flex space-x-2">
-                    <button v-for="(_, index) in currentCourse.images" :key="index" :class="[
-                        'w-3 h-3 rounded-full',
-                        index === currentImageIndex ? 'bg-blue-500' : 'bg-gray-300'
-                    ]" @click="currentImageIndex = index" />
-                </div>
-            </div>
+    <Dialog v-model:visible="visible" :modal="true" :draggable="false" :resizable="false" :closable="true"
+        :dt="courseDlg">
+        <template #header>
+            <p> </p>
+        </template>
+        <div class="max-w-6xl mx-auto p-6 sm:px-2">
+            <Toast />
+            <!-- 課程頂部信息 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 overflow-hidden">
+                <!-- 左側 - 課程圖片 -->
+                <Galleria :value="currentCourse.images" :responsiveOptions="responsiveOptions" :numVisible="5"
+                    :circular="true" containerStyle="width: 100%" :showItemNavigators="true"
+                    :showItemNavigatorsOnHover="true">
+                    <template #item="slotProps">
+                        <img :src="slotProps.item.itemImageSrc" :alt="slotProps.item.alt" class="w-full" />
+                    </template>
+                    <template #thumbnail="slotProps">
+                        <img :src="slotProps.item.thumbnailImageSrc" :alt="slotProps.item.alt" class="block" />
+                    </template>
+                </Galleria>
 
-            <!-- 右側 - 課程信息 -->
-            <div class="space-y-6">
-                <h1 class="text-3xl font-bold">{{ currentCourse.title }}</h1>
-
-                <div class="flex items-center space-x-2">
-                    <Rating v-model="currentCourse.rating" readonly />
-
-                    <span class="text-gray-600">
-                        {{ currentCourse.rating }} ({{ currentCourse.reviewCount }} 評價)
-                    </span>
-                </div>
-
-                <div class="bg-blue-50 p-4 rounded-lg">
-                    <p class="text-lg font-semibold text-blue-700">
-                        點數: {{ currentCourse.pointsRequired }} 點
-                    </p>
-                    <p class="text-sm text-blue-600">
-                        您目前有 {{ courseStore.userPoints }} 點
-                    </p>
-                </div>
-
-                <div>
-                    <h2 class="text-xl font-semibold mb-2">課程介紹</h2>
-                    <p class="text-gray-700">{{ currentCourse.description }}</p>
+                <!-- 右側 - 課程信息 -->
+                <div class="flex flex-col space-y-6 overflow-hidden">
+                    <h1 class="text-3xl font-bold">{{ currentCourse.title }}</h1>
+                    <div class="flex items-center gap-2">
+                        <Rating v-model="currentCourse.merchant.rating" readonly />
+                        <span class="text-gray-600">
+                            {{ currentCourse.merchant.rating }} ({{ currentCourse.merchant.reviewCount }} 評價)
+                        </span>
+                    </div>
+                    <ScrollPanel style="width: 100%; height: 100%">
+                        <p>
+                            {{ currentCourse.description }}
+                        </p>
+                    </ScrollPanel>
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <p class="text-lg text-blue-700">
+                            點數: {{ currentCourse.pointsRequired }} 點
+                        </p>
+                        <p class="text-sm text-blue-600">
+                            您目前有 {{ courseStore.userPoints }} 點
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -48,124 +51,158 @@
             <template #title>{{ currentCourse.merchant.name }}</template>
             <template #content>
                 <p class="m-0">
-                    <p class="text-gray-700 mb-4">{{ currentCourse.merchant.description }}</p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
-                        <div>
-                            <a :href="currentCourse.merchant.googleMapUrl" target="_blank" class="flex items-center text-blue-600 hover:text-blue-800">
-                                <i class="pi pi-map-marker mr-2"></i>
-                                <span>{{ currentCourse.merchant.address }}</span>
-                            </a>
-                        </div>
-                        <div class="flex items-center">
-                            <i class="pi pi-phone mr-2"></i>
-                            <span>{{ currentCourse.merchant.phone }}</span>
-                        </div>
-                        <div class="flex items-center">
-                            <i class="pi pi-clock mr-2"></i>
-                            <span>{{ currentCourse.merchant.businessHours }}</span>
-                        </div>
-                        <div class="flex items-center">
-                            <i class="pi pi-tag mr-2"></i>
-                            <span>{{ currentCourse.merchant.type }}</span>
-                        </div>
+                <p class="text-gray-700 mb-4">{{ currentCourse.merchant.description }}</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                    <div>
+                        <a :href="currentCourse.merchant.googleMapUrl" target="_blank"
+                            class="flex items-center text-blue-600 hover:text-blue-800">
+                            <i class="pi pi-map-marker mr-2"></i>
+                            <span>{{ currentCourse.merchant.address }}</span>
+                        </a>
                     </div>
+                    <div class="flex items-center">
+                        <i class="pi pi-phone mr-2"></i>
+                        <span>{{ currentCourse.merchant.phone }}</span>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="pi pi-clock mr-2"></i>
+                        <span>{{ currentCourse.merchant.businessHours }}</span>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="pi pi-tag mr-2"></i>
+                        <span>{{ currentCourse.merchant.type }}</span>
+                    </div>
+                </div>
                 </p>
             </template>
         </Card>
 
         <!-- 預約區塊 -->
-        <div class="bg-gray-50 rounded-lg p-6 mb-8">
-            <h2 class="text-xl font-semibold mb-4">選擇預約時間</h2>
-
-            <!-- 日期選擇 -->
-            <div class="mb-6">
-                <div class="flex flex-wrap gap-2">
-                    <button v-for="date in availableDates" :key="date" :class="[
-                        'px-4 py-2 rounded-lg border',
-                        selectedDate === date ? 'bg-blue-500 text-white' : 'hover:bg-gray-100'
-                    ]" @click="selectedDate = date">
-                        {{ formatDate(date) }}
-                    </button>
-                </div>
+        <div class=" bg-gray-50 rounded-lg p-4">
+            <div class="form-field-frame flex-col">
+                <h2 class="form-field-label">選擇預約時間</h2>
+                <!-- 日期選擇 -->
+                <IftaLabel class="w-1/3">
+                    <DatePicker class="w-full" v-model="selectedDate" inputId="date" showIcon iconDisplay="input"
+                        variant="filled" />
+                    <label for="date">Date</label>
+                </IftaLabel>
             </div>
-
+            <Divider />
             <!-- 時間選擇 -->
-            <div class="mb-6">
-                <h3 class="font-medium mb-2">可用時段</h3>
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                    <button v-for="slot in filteredTimeSlots" :key="slot.id" :class="[
-                        'px-4 py-3 rounded-lg border relative',
-                        selectedSlot?.id === slot.id ? 'bg-blue-500 text-white' : '',
-                        slot.availableSeats === 0 ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'hover:bg-gray-100'
-                    ]" :disabled="slot.availableSeats === 0" @click="selectTimeSlot(slot)">
+            <div class="">
+                <div class="form-field-frame text-center gap-2.5">
+                    <h3 class="form-field-label">可預約時段</h3>
+                </div>
+                <template v-if="filteredTimeSlots.length === 0">
+                    <p class="text-center p-5">
+                        目前沒有可預約時段
+                    </p>
+                </template>
+                <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                    <button v-for="slot in filteredTimeSlots" :key="slot.id"
+                        :class="['avaliable-btn', { 'avaliable-btn-selected': selectedSlot?.id === slot.id }]"
+                        :disabled="slot.availableSeats === 0" @click="selectTimeSlot(slot)">
                         <span>{{ slot.time }}</span>
-                        <span class="block text-xs"
-                            :class="selectedSlot?.id === slot.id ? 'text-blue-100' : 'text-gray-500'">
+                        <span class="block text-xs">
                             剩餘: {{ slot.availableSeats }}/{{ slot.totalSeats }}
                         </span>
-                        <span v-if="slot.availableSeats === 0"
-                            class="absolute inset-0 flex items-center justify-center bg-gray-200 bg-opacity-70 rounded-lg">
+                        <span v-if="slot.availableSeats === 0" class="">
                             已滿
                         </span>
                     </button>
                 </div>
             </div>
-
-            <!-- 預約按鈕 -->
-            <div class="flex justify-between items-center">
-                <div>
-                    <p v-if="selectedSlot" class="text-sm text-gray-600">
-                        已選擇: {{ formatDate(selectedSlot.date) }} {{ selectedSlot.time }}
-                    </p>
-                    <p v-else class="text-sm text-gray-600">
-                        請選擇預約時段
-                    </p>
-                </div>
-
-                <Button :disabled="!courseStore.canBook" @click="handleBooking"
-                    :variant="courseStore.canBook ? 'default' : 'outline'">
-                    {{
-                        !selectedSlot
-                            ? '請選擇時段'
-                            : userPoints < (currentCourse.pointsRequired) ? '點數不足' : '立即預約' }} </Button>
-            </div>
         </div>
-    </div>
+        <template #footer class="bg-sky-300">
+            <Toolbar class="w-full bg-amber-100">
+                <template #start>
+                    <Button icon="pi pi-heart-fill" severity="secondary" text />
+                    <Button icon="pi pi-share-alt" severity="secondary" text />
+                </template>
+                <template #center>
+                    <div class="!text-lg font-bold !text-gray-800">
+                        <p v-if="selectedSlot">
+                            已選擇: {{ selectedSlot.date.toLocaleDateString() }} {{ selectedSlot.time }}
+                        </p>
+                        <p v-else class="">
+                            請選擇預約時段
+                        </p>
+                    </div>
+                </template>
+                <template #end>
+                    <ConfirmDialog id="confirm" style="width: 450px;" />
+                    <Button size="large" @click="handleBooking" :disabled="!courseStore.canBook"
+                        :variant="courseStore.canBook ? 'default' : 'outline'">
+                        <span class="text-lg font-medium">
+                            {{
+                                !selectedSlot
+                                    ? '請選擇時段'
+                                    : userPoints < (currentCourse.pointsRequired) ? '點數不足' : '立即預約' }} </span>
+                    </Button>
+                </template>
+            </Toolbar>
+        </template>
+    </Dialog>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, toRef } from 'vue'
+import { ref, toRef, onMounted, watch } from 'vue'
 import { useCourseStore } from '@/stores/courseStore'
 import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm';
 import Rating from 'primevue/rating';
 import Card from 'primevue/card';
+import Galleria from 'primevue/galleria';
+import DatePicker from 'primevue/datepicker';
+import IftaLabel from 'primevue/iftalabel';
+import Divider from 'primevue/divider';
+import Dialog from 'primevue/dialog';
+import Button from 'primevue/button';
+import { isSameDate } from '@/utils/common';
+import Toolbar from 'primevue/toolbar';
+import ScrollPanel from 'primevue/scrollpanel';
+import Toast from 'primevue/toast';
+import ConfirmDialog from 'primevue/confirmdialog';
+
+
 const courseStore = useCourseStore();
 const toast = useToast();
+const confirm = useConfirm()
 // 圖片展示
-const currentImageIndex = ref(0)
 const currentCourse = toRef(courseStore, 'currentCourse');
 const selectedSlot = toRef(courseStore, 'selectedSlot');
-const courseSlots = toRef(courseStore, 'courseSlots');
+const courseTime = toRef(courseStore, 'courseTime');
 const userPoints = toRef(courseStore, 'userPoints');
+const visible = ref(false)
+const courseDlg = ref({
+    header: {
+        padding: '0.5rem 0.5rem 0 0.5rem',
+    }
+})
 
 // 商家信息展示控制
-const showMerchantInfo = ref(false)
-const toggleMerchantInfo = () => {
-    showMerchantInfo.value = !showMerchantInfo.value
-}
+
+const responsiveOptions = ref([
+    {
+        breakpoint: '1300px',
+        numVisible: 4
+    },
+    {
+        breakpoint: '575px',
+        numVisible: 1
+    }
+])
 
 // 日期時間選擇
-const selectedDate = ref(courseSlots.value[0]?.date || '')
+const selectedDate = ref(courseTime.value[0]?.date || '')
+const filteredTimeSlots = ref<any[]>([])
 
-// 獲取可用日期
-const availableDates = computed(() => {
-    return [...new Set(courseSlots.value.map(slot => slot.date))]
-})
 
-// 根據選擇的日期過濾時段
-const filteredTimeSlots = computed(() => {
-    return courseSlots.value.filter(slot => slot.date === selectedDate.value)
-})
+watch(selectedDate, (newVal) => {
+    selectedSlot.value = null
+    filteredTimeSlots.value = courseTime.value.filter(slot => isSameDate(slot.date, newVal))
+}, { immediate: true })
 
 // 選擇時段
 const selectTimeSlot = (slot: any) => {
@@ -176,18 +213,45 @@ const selectTimeSlot = (slot: any) => {
 // 處理預約
 const handleBooking = async () => {
     if (!courseStore.canBook) return
-
-    const success = courseStore.bookCourse()
-
-    if (success) {
-        // 顯示成功消息，實際應用中可使用toast組件
-        toast.add({ severity: 'success', summary: 'Success Message', detail: 'Message Content', life: 3000 });
-    }
+    confirm.require({
+        message: '確認預約嗎?',
+        header: '確認',
+        acceptLabel: '確認',
+        rejectLabel: '取消',
+        accept: () => {
+            const success = courseStore.bookCourse()
+            if (success) {
+                toast.add({ severity: 'success', summary: '預約成功！', detail: '已成功預約一門課程', life: 3000 });
+            }
+        },
+        reject: () => {
+            console.log('reject');
+        }
+    });
+    // 顯示成功消息，實際應用中可使用toast組件
 }
 
-// 格式化日期
-const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return `${date.getMonth() + 1}/${date.getDate()}`
-}
 </script>
+<style>
+@reference "tailwindcss";
+
+.avaliable-btn {
+    @apply px-4 py-3 rounded-lg border cursor-pointer border-gray-300 transition-colors;
+}
+
+.avaliable-btn:disabled {
+    @apply bg-gray-100 text-gray-500 cursor-not-allowed;
+}
+
+.avaliable-btn-selected {
+    @apply bg-blue-400 text-white;
+}
+
+.avaliable-btn-selected:hover:not(:disabled) {
+    @apply bg-blue-500
+}
+
+.avaliable-btn:hover:not(.avaliable-btn-selected):not(:disabled) {
+    @apply bg-blue-200;
+}
+</style>

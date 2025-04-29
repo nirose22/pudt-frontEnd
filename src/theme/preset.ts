@@ -16,8 +16,6 @@ const MyPreset = definePreset(Aura, {
             900: '{blue.900}',
             950: '{blue.950}'
         },
-        formField: {
-        },
     },
     // 添加Button组件的自定义样式
     components: {
@@ -41,10 +39,17 @@ const MyPreset = definePreset(Aura, {
         card: {
             root: {
                 background: '{gray.100}',
-                color: '{gray.900}',
             }
         },
-        // 使用colorScheme来定义亮色和暗色模式下的样式
+        galleria: {
+            root: {
+                borderWidth: '0',
+            },
+            thumbnailsContent: {
+                padding: '0.5rem',
+
+            },
+        },
     }
 });
 

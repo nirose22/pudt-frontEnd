@@ -1,27 +1,48 @@
+import type { Course, CourseAvailableTime } from '@/types/course'
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
-interface CourseSlot {
-  id: number
-  date: string
-  time: string
-  availableSeats: number
-  totalSeats: number
-}
 
 export const useCourseStore = defineStore('course', () => {
-const currentCourse = ref({
+  const currentCourse = ref<Course>({
     classuid: 1,
     title: '初學者瑜珈課程',
     description: '本課程適合初學者，從基礎姿勢開始教學，幫助您建立正確的瑜珈概念。',
     price: 1200,
     pointsRequired: 12,
-    images: [
-      'https://dummyjson.com/image/200x100',
-      'https://dummyjson.com/image/200x100',
-      'https://dummyjson.com/image/200x100',
-    ],
     joinCount: 10,
+    images: [
+      {
+        itemImageSrc: 'https://dummyjson.com/image/200x100',
+        thumbnailImageSrc: 'https://dummyjson.com/image/200x100',
+        alt: '課程圖片',
+      },
+      {
+        itemImageSrc: 'https://dummyjson.com/image/200x100',
+        thumbnailImageSrc: 'https://dummyjson.com/image/200x100',
+        alt: '課程圖片',
+      },
+      {
+        itemImageSrc: 'https://dummyjson.com/image/200x100',
+        thumbnailImageSrc: 'https://dummyjson.com/image/200x100',
+        alt: '課程圖片',
+      },
+      {
+        itemImageSrc: 'https://dummyjson.com/image/200x100',
+        thumbnailImageSrc: 'https://dummyjson.com/image/200x100',
+        alt: '課程圖片',
+      },
+      {
+        itemImageSrc: 'https://dummyjson.com/image/200x100',
+        thumbnailImageSrc: 'https://dummyjson.com/image/200x100',
+        alt: '課程圖片',
+      },
+      {
+        itemImageSrc: 'https://dummyjson.com/image/200x100',
+        thumbnailImageSrc: 'https://dummyjson.com/image/200x100',
+        alt: '課程圖片',
+      },
+    ],
     merchant: {
       id: 101,
       name: '和平瑜珈中心',
@@ -37,16 +58,17 @@ const currentCourse = ref({
     }
   })
 
-  const courseSlots = ref<CourseSlot[]>([
-    { id: 1, date: '2025-04-10', time: '10:00-12:00', availableSeats: 5, totalSeats: 15 },
-    { id: 2, date: '2025-04-10', time: '14:00-16:00', availableSeats: 8, totalSeats: 15 },
-    { id: 3, date: '2025-04-11', time: '10:00-12:00', availableSeats: 12, totalSeats: 15 },
-    { id: 4, date: '2025-04-11', time: '14:00-16:00', availableSeats: 3, totalSeats: 15 },
-    { id: 5, date: '2025-04-12', time: '10:00-12:00', availableSeats: 0, totalSeats: 15 },
-    { id: 6, date: '2025-04-12', time: '14:00-16:00', availableSeats: 10, totalSeats: 15 },
+  const courseTime = ref<CourseAvailableTime[]>([
+    { id: 1, date: new Date('2025-04-10'), time: '10:00-12:00', availableSeats: 5, totalSeats: 15 },
+    { id: 2, date: new Date('2025-04-10'), time: '14:00-16:00', availableSeats: 8, totalSeats: 15 },
+    { id: 3, date: new Date('2025-04-11'), time: '10:00-12:00', availableSeats: 12, totalSeats: 15 },
+    { id: 4, date: new Date('2025-04-11'), time: '14:00-16:00', availableSeats: 3, totalSeats: 15 },
+    { id: 5, date: new Date('2025-04-12'), time: '10:00-12:00', availableSeats: 0, totalSeats: 15 },
+    { id: 6, date: new Date('2025-04-12'), time: '14:00-16:00', availableSeats: 10, totalSeats: 15 },
+    { id: 7, date: new Date('2025-04-10'), time: '10:00-12:00', availableSeats: 0, totalSeats: 15 },
   ])
 
-  const selectedSlot = ref<CourseSlot | null>(null)
+  const selectedSlot = ref<CourseAvailableTime | null>(null)
   const userPoints = ref(50)
 
   const canBook = computed(() => {
@@ -56,13 +78,13 @@ const currentCourse = ref({
   })
 
   const bookCourse = () => {
+    console.log(selectedSlot.value)
     if (!selectedSlot.value || !canBook.value) return false
-    
     // 在實際應用中，這裡應該是一個API調用
     userPoints.value -= currentCourse.value.pointsRequired
     
     // 更新可用座位
-    const slot = courseSlots.value.find(s => s.id === selectedSlot.value?.id)
+    const slot = courseTime.value.find(s => s.id === selectedSlot.value?.id)
     if (slot) {
       slot.availableSeats--
     }
@@ -72,7 +94,7 @@ const currentCourse = ref({
 
   return {
     currentCourse,
-    courseSlots,
+    courseTime,
     selectedSlot,
     userPoints,
     canBook,

@@ -41,17 +41,18 @@
                         @click="handleCourseClick(course.id)" />
                 </div>
             </div>
+            <CourseDetail v-model:visible="visible" />
         </main>
     </div>
 </template>
 
 <script setup lang="ts">
 import CourseCard from '@/components/modal/CourseCard.vue'
-import { useRouter } from 'vue-router'
+import CourseDetail from '@/views/user/course/CourseDetail.vue'
+import { ref } from 'vue'
 
-const router = useRouter()
 const categories = ['瑜珈', '滑板', '攝影', '烘焙', '游泳']
-
+const visible = ref(false)
 const courses = [
     {
         id: 1,
@@ -74,7 +75,7 @@ const courses = [
 ]
 
 const handleCourseClick = (id: number) => {
-    router.push(`/course/${id}`)
+    visible.value = true
 }
 </script>
 <style scoped>

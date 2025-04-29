@@ -6,10 +6,10 @@ const routes = [
     name: 'Home',
     component: () => import('@/views/Home.vue') 
   },
-  { path: '/course/:id',
-    name: 'CourseDetail',
-    component: () => import('@/views/user/course/CourseDetail.vue') 
-  },
+  // { path: '/course/:id',
+  //   // name: 'CourseDetail',
+  //   // component: () => import('@/views/user/course/CourseDetail.vue') 
+  // },
   {
     path: '/profile',
     name: 'UserProfile',
