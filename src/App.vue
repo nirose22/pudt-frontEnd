@@ -1,6 +1,6 @@
 <template>
   <Header />
-  <div class="max-w-7xl mx-auto pt-20">
+  <div class="max-w-7xl mx-auto pt-10">
     <router-view></router-view>
   </div>
   <Footer />
@@ -31,10 +31,10 @@ html {
     font-size: 14px;
 }
 
-
+/* 
 button.p-button, button.p-button:not(:disabled):hover {
   color: #fff;
-}
+} */
 
 .form-field {
   display: flex;

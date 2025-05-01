@@ -7,6 +7,7 @@
       <div class="p-buttonset">
         <Button :class="{ 'p-button-outlined': viewMode !== 'list' }" icon="pi pi-list" @click="viewMode = 'list'" />
         <Button :class="{ 'p-button-outlined': viewMode !== 'calendar' }" icon="pi pi-calendar" @click="viewMode = 'calendar'" />
+        <Button :class="{ 'p-button-outlined': viewMode !== 'schedule' }" icon="pi pi-clock" @click="openScheduleBar" />
       </div>
     </div>
     
@@ -50,6 +51,9 @@
         <Button label="確認取消預約" class="p-button-danger" @click="cancelBooking" />
       </template>
     </Dialog>
+
+    <!-- 日程表組件 -->
+    <ScheduleBar ref="scheduleBarRef" />
   </div>
 </template>
 
@@ -64,6 +68,10 @@ import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+// 導入 ScheduleBar 組件
+import ScheduleBar from '@/components/layout/ScheduleBar.vue';
+// 導入 bookingStore
+import { useBookingStore } from '@/stores/bookingStore';
 
 const props = defineProps({
   bookings: {
@@ -77,6 +85,21 @@ const emit = defineEmits(['cancel-booking']);
 const viewMode = ref('list');
 const showCancelDialog = ref(false);
 const selectedBookingId = ref(null);
+const scheduleBarRef = ref(null);
+
+// 使用 bookingStore
+const bookingStore = useBookingStore();
+
+// 初始化
+onMounted(() => {
+  // 這裡可以加載 bookingStore 中的數據
+  // bookingStore.fetchUserBookings(userId);
+});
+
+// 打開日程表側邊欄
+const openScheduleBar = () => {
+  scheduleBarRef.value.openScheduleBar();
+};
 
 // 日曆事件
 const calendarEvents = computed(() => {
@@ -128,8 +151,12 @@ const confirmCancelBooking = (bookingId) => {
   showCancelDialog.value = true;
 };
 
-const cancelBooking = () => {
-  emit('cancel-booking', selectedBookingId.value);
+const cancelBooking = async () => {
+  // 使用 bookingStore 取消預約
+  const result = await bookingStore.cancelBooking(selectedBookingId.value);
+  if (result.success) {
+    emit('cancel-booking', selectedBookingId.value);
+  }
   showCancelDialog.value = false;
 };
 

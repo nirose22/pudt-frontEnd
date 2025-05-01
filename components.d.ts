@@ -12,9 +12,9 @@ declare module 'vue' {
     CourseCard: typeof import('./src/components/modal/CourseCard.vue')['default']
     Footer: typeof import('./src/components/layout/Footer.vue')['default']
     Header: typeof import('./src/components/layout/Header.vue')['default']
-    Input: typeof import('./src/components/ui/Input.vue')['default']
-    InputText: typeof import('primevue/inputtext')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    ScheduleBar: typeof import('./src/components/layout/ScheduleBar.vue')['default']
+    SideBar: typeof import('./src/components/layout/SideBar.vue')['default']
   }
 }

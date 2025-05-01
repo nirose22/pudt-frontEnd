@@ -22,7 +22,14 @@
 
                 <!-- 右側 - 課程信息 -->
                 <div class="flex flex-col space-y-6 overflow-hidden">
-                    <h1 class="text-3xl font-bold">{{ currentCourse.title }}</h1>
+                    <div class="flex justify-between items-start">
+                        <h1 class="text-3xl font-bold">{{ currentCourse.title }}</h1>
+                        <!-- 收藏按鈕 -->
+                        <Button rounded size="large" severity="secondary"
+                            :icon="isFavorite ? 'pi pi-heart-fill' : 'pi pi-heart'" :class="{
+                                'text-red-600': isFavorite,
+                            }" @click="toggleFavorite" :loading="favoriteLoading" aria-label="收藏課程" />
+                    </div>
                     <div class="flex items-center gap-2">
                         <Rating v-model="currentCourse.merchant.rating" readonly />
                         <span class="text-gray-600">
@@ -117,8 +124,12 @@
         <template #footer class="bg-sky-300">
             <Toolbar class="w-full bg-amber-100">
                 <template #start>
-                    <Button icon="pi pi-heart-fill" severity="secondary" text />
-                    <Button icon="pi pi-share-alt" severity="secondary" text />
+                    <Button text rounded size="large" severity="secondary"
+                            :icon="isFavorite ? 'pi pi-heart-fill' : 'pi pi-heart'" :class="{
+                                'text-red-600': isFavorite,
+                            }" @click="toggleFavorite" :loading="favoriteLoading" aria-label="收藏課程" />
+                    <Button text rounded size="large" icon="pi pi-share-alt" severity="secondary"
+                        @click="shareCourse" />
                 </template>
                 <template #center>
                     <div class="!text-lg font-bold !text-gray-800">
@@ -147,7 +158,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, toRef, onMounted, watch } from 'vue'
+import { ref, toRef, watch, computed, onMounted } from 'vue'
 import { useCourseStore } from '@/stores/courseStore'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm';
@@ -164,9 +175,11 @@ import Toolbar from 'primevue/toolbar';
 import ScrollPanel from 'primevue/scrollpanel';
 import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
+import { useUserStore } from '@/stores/userStore';
 
 
 const courseStore = useCourseStore();
+const userStore = useUserStore();
 const toast = useToast();
 const confirm = useConfirm()
 // 圖片展示
@@ -229,6 +242,85 @@ const handleBooking = async () => {
         }
     });
     // 顯示成功消息，實際應用中可使用toast組件
+}
+
+// 添加收藏
+const addFavorite = () => {
+    toast.add({ severity: 'success', summary: '收藏成功！', detail: '已成功收藏一門課程', life: 3000 });
+
+}
+
+// 收藏相關
+const favoriteLoading = ref(false);
+const isFavorite = computed(() => userStore.isFavorite(currentCourse.value.classuid));
+
+// 切換收藏狀態
+const toggleFavorite = async () => {
+    if (!userStore.userId) {
+        // 用戶未登入時的處理
+        toast.add({
+            severity: 'info',
+            summary: '提示',
+            detail: '請先登入以使用收藏功能',
+            life: 3000
+        });
+        // 可以選擇導向登入頁面
+        // router.push('/login');
+        return;
+    }
+
+    favoriteLoading.value = true;
+
+    try {
+        if (isFavorite.value) {
+            // 取消收藏
+            const result = await userStore.removeFromFavorites(currentCourse.value.classuid);
+            if (result.success) {
+                toast.add({
+                    severity: 'success',
+                    summary: '成功',
+                    detail: '已從收藏中移除',
+                    life: 3000
+                });
+            }
+        } else {
+            // 添加收藏
+            const result = await userStore.addToFavorites(currentCourse.value);
+            if (result.success) {
+                toast.add({
+                    severity: 'success',
+                    summary: '成功',
+                    detail: '已加入收藏',
+                    life: 3000
+                });
+            }
+        }
+    } catch (error) {
+        console.error('處理收藏操作時出錯:', error);
+        toast.add({
+            severity: 'error',
+            summary: '錯誤',
+            detail: '處理收藏請求時發生錯誤',
+            life: 3000
+        });
+    } finally {
+        favoriteLoading.value = false;
+    }
+};
+
+// 在組件掛載後檢查用戶登入狀態並初始化所需數據
+onMounted(async () => {
+    // ... 其他初始化邏輯 ...
+
+    // 如果用戶已登入但尚未加載收藏數據，則加載
+    if (userStore.userId && userStore.favoriteCourses.value.length === 0) {
+        await userStore.fetchFavoriteCourses();
+    }
+});
+
+const shareCourse = () => {
+    // navigator.clipboard.writeText(window.location.href);
+    toast.add({ severity: 'success', summary: '分享成功！', detail: '已成功分享課程', life: 3000 });
 }
 
 </script>

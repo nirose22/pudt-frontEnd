@@ -1,3 +1,4 @@
+import type { BookingStatus } from '@/enums/bookingStatus';
 import type { PhotoItem } from './photo'
 
 export interface Course {
@@ -12,7 +13,6 @@ export interface Course {
 }
 
 export interface MerchantInfo {
-  id: number;
   name: string;
   address: string;
   phone: string;
@@ -25,7 +25,7 @@ export interface MerchantInfo {
   googleMapUrl: string;
 }
 
-export interface CourseAvailableTime {
+export interface CourseTime {
   id: number;
   date: Date;
   time: string;
@@ -33,12 +33,18 @@ export interface CourseAvailableTime {
   totalSeats: number;
 }
 
+// 预约课程类型定义
 export interface CourseBooking {
   id: number;
   userId: number;
   courseId: number;
-  slotId: number;
+  courseTitle: string;
   date: string;
   time: string;
-  status: 'pending' | 'confirmed' | 'cancelled';
+  location: string;
+  instructor?: {
+    name: string;
+    avatar: string;
+  };
+  status: BookingStatus;
 }

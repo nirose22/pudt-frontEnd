@@ -9,7 +9,7 @@ import 'primeicons/primeicons.css'
 import Button from 'primevue/button';
 import ToastService from 'primevue/toastservice';
 import ConfirmationService from 'primevue/confirmationservice';
-import InputText from 'primevue/inputtext';
+import AutoComplete from 'primevue/autoComplete';
 import { MyPreset } from './theme/preset'
 import './assets/styles/fonts.css'
 import './assets/main.css'
@@ -29,13 +29,13 @@ app.use(PrimeVue, {
     }
 })
 
-app.use(createPinia())
-app.use(router)
+app.use(createPinia());
+app.use(router);
 
 app.use(ToastService);
 app.use(ConfirmationService);
 app.component('Button', Button);
-app.component('InputText', InputText);
+app.component('InputText', AutoComplete);
 
 app.mount('#app')
 

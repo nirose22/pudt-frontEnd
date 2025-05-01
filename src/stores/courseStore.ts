@@ -1,4 +1,4 @@
-import type { Course, CourseAvailableTime } from '@/types/course'
+import type { Course, CourseTime } from '@/types/course'
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
@@ -58,7 +58,7 @@ export const useCourseStore = defineStore('course', () => {
     }
   })
 
-  const courseTime = ref<CourseAvailableTime[]>([
+  const courseTime = ref<CourseTime[]>([
     { id: 1, date: new Date('2025-04-10'), time: '10:00-12:00', availableSeats: 5, totalSeats: 15 },
     { id: 2, date: new Date('2025-04-10'), time: '14:00-16:00', availableSeats: 8, totalSeats: 15 },
     { id: 3, date: new Date('2025-04-11'), time: '10:00-12:00', availableSeats: 12, totalSeats: 15 },
@@ -68,7 +68,7 @@ export const useCourseStore = defineStore('course', () => {
     { id: 7, date: new Date('2025-04-10'), time: '10:00-12:00', availableSeats: 0, totalSeats: 15 },
   ])
 
-  const selectedSlot = ref<CourseAvailableTime | null>(null)
+  const selectedSlot = ref<CourseTime | null>(null)
   const userPoints = ref(50)
 
   const canBook = computed(() => {
