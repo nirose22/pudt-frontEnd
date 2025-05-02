@@ -1,8 +1,8 @@
 import type { BookingStatus } from '@/enums/bookingStatus';
-import type { PhotoItem } from './photo'
+import type { Photo, PhotoItem } from './photo'
 
 export interface Course {
-  classuid: number;
+  courseId: number;
   title: string;
   description: string;
   price: number;
@@ -10,6 +10,14 @@ export interface Course {
   joinCount: number;
   images: PhotoItem[];       // 課程圖片
   merchant: MerchantInfo;
+}
+
+export interface CourseDTO {
+  courseId: number;
+  title: string;
+  pointsRequired: number;
+  image: Photo;       // 課程圖片
+  merchantName: string;
 }
 
 export interface MerchantInfo {

@@ -2,10 +2,9 @@ import type { Course, CourseTime } from '@/types/course'
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
-
 export const useCourseStore = defineStore('course', () => {
   const currentCourse = ref<Course>({
-    classuid: 1,
+    courseId: 1,
     title: '初學者瑜珈課程',
     description: '本課程適合初學者，從基礎姿勢開始教學，幫助您建立正確的瑜珈概念。',
     price: 1200,
@@ -44,7 +43,6 @@ export const useCourseStore = defineStore('course', () => {
       },
     ],
     merchant: {
-      id: 101,
       name: '和平瑜珈中心',
       address: '台北市信義區和平東路一段100號',
       rating: 4.8,
@@ -69,35 +67,60 @@ export const useCourseStore = defineStore('course', () => {
   ])
 
   const selectedSlot = ref<CourseTime | null>(null)
-  const userPoints = ref(50)
 
-  const canBook = computed(() => {
-    return selectedSlot.value && 
-           selectedSlot.value.availableSeats > 0 && 
-           userPoints.value >= currentCourse.value.pointsRequired
+  // 根據課程ID獲取課程
+  const getCourseById = (courseId: number) => {
+    // 實際應用中，這裡應該查詢課程列表或從API獲取
+    return courseId === currentCourse.value.courseId ? currentCourse.value : null
+  }
+
+  // 檢查課程時段是否有可用座位
+  const hasAvailableSeats = computed(() => {
+    return selectedSlot.value && selectedSlot.value.availableSeats > 0
   })
 
-  const bookCourse = () => {
-    console.log(selectedSlot.value)
-    if (!selectedSlot.value || !canBook.value) return false
-    // 在實際應用中，這裡應該是一個API調用
-    userPoints.value -= currentCourse.value.pointsRequired
-    
-    // 更新可用座位
-    const slot = courseTime.value.find(s => s.id === selectedSlot.value?.id)
+  // 更新課程時段的可用座位
+  const updateAvailableSeats = (timeSlotId: number, change: number) => {
+    const slot = courseTime.value.find(s => s.id === timeSlotId)
     if (slot) {
-      slot.availableSeats--
+      slot.availableSeats += change
+      // 確保座位數不會小於0或超過總座位數
+      slot.availableSeats = Math.max(0, Math.min(slot.availableSeats, slot.totalSeats))
+      return true
     }
-    
-    return true
+    return false
+  }
+
+  // 獲取課程時間列表
+  const getCourseTimeSlots = (courseId: number) => {
+    // 實際應用中，這裡應該查詢特定課程的時間槽
+    return courseTime.value
+  }
+
+  // 根據ID獲取課程時間槽
+  const getTimeSlotById = (timeSlotId: number) => {
+    return courseTime.value.find(slot => slot.id === timeSlotId) || null
+  }
+
+  // 設置選擇的時間槽
+  const selectTimeSlot = (timeSlotId: number) => {
+    const slot = getTimeSlotById(timeSlotId)
+    if (slot) {
+      selectedSlot.value = slot
+      return true
+    }
+    return false
   }
 
   return {
     currentCourse,
     courseTime,
     selectedSlot,
-    userPoints,
-    canBook,
-    bookCourse
+    getCourseById,
+    hasAvailableSeats,
+    updateAvailableSeats,
+    getCourseTimeSlots,
+    getTimeSlotById,
+    selectTimeSlot
   }
 }) 

@@ -1,22 +1,24 @@
 <template>
     <div class="shadow-lg rounded-lg hover:shadow-xl transition-shadow cursor-pointer">
-        <div class="p-4 space-y-3">
+        <div class="p-4">
             <div class="aspect-video bg-gray-200 rounded-lg" />
-            <h3 class="text-lg font-medium">{{ course.title }}</h3>
-            <p class="text-sm text-muted-foreground">{{ course.instructor }}</p>
+            <h3 class="text-lg font-bold mt-2">{{ course.title }}</h3>
+            <div class="flex items-center text-sm text-gray-600 mb-1">
+                <i class="pi pi-map-marker icon-class"></i>
+                <span>{{ course.merchantName }}</span>
+            </div>
             <div class="flex items-center justify-between">
-                <span class="text-blue-500 font-medium">${{ course.price }}</span>
+                <span class="border rounded-md px-2 py-1 text-xs text-blue-500 font-medium">{{ course.pointsRequired }}
+                    點</span>
                 <Button variant="outline" size="sm">預約</Button>
             </div>
         </div>
     </div>
 </template>
 <script setup lang="ts">
+import type { CourseDTO } from '@/types/course';
+
 defineProps<{
-    course: {
-        title: string
-        instructor: string
-        price: number
-    }
+    course: CourseDTO
 }>()
 </script>

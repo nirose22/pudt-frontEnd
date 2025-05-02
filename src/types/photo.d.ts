@@ -3,3 +3,8 @@ export interface PhotoItem {
   thumbnailImageSrc: string;
   alt: string;
 }
+
+export interface Photo {
+  imageSrc: string;
+  alt: string;
+}

@@ -46,7 +46,7 @@
                             點數: {{ currentCourse.pointsRequired }} 點
                         </p>
                         <p class="text-sm text-blue-600">
-                            您目前有 {{ courseStore.userPoints }} 點
+                            您目前有 {{ userPoints }} 點
                         </p>
                     </div>
                 </div>
@@ -143,8 +143,7 @@
                 </template>
                 <template #end>
                     <ConfirmDialog id="confirm" style="width: 450px;" />
-                    <Button size="large" @click="handleBooking" :disabled="!courseStore.canBook"
-                        :variant="courseStore.canBook ? 'default' : 'outline'">
+                    <Button size="large" @click="handleBooking" :disabled="!canBook">
                         <span class="text-lg font-medium">
                             {{
                                 !selectedSlot
@@ -176,17 +175,20 @@ import ScrollPanel from 'primevue/scrollpanel';
 import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import { useUserStore } from '@/stores/userStore';
-
+import { useBookingStore } from '@/stores/bookingStore';
+import type { CourseTime } from '@/types/course';
 
 const courseStore = useCourseStore();
 const userStore = useUserStore();
+const bookingStore = useBookingStore();
 const toast = useToast();
 const confirm = useConfirm()
 // 圖片展示
 const currentCourse = toRef(courseStore, 'currentCourse');
 const selectedSlot = toRef(courseStore, 'selectedSlot');
 const courseTime = toRef(courseStore, 'courseTime');
-const userPoints = toRef(courseStore, 'userPoints');
+const userPoints = toRef(userStore, 'userPoints');
+
 const visible = ref(false)
 const courseDlg = ref({
     header: {
@@ -209,7 +211,7 @@ const responsiveOptions = ref([
 
 // 日期時間選擇
 const selectedDate = ref(courseTime.value[0]?.date || '')
-const filteredTimeSlots = ref<any[]>([])
+const filteredTimeSlots = ref<CourseTime[]>([])
 
 
 watch(selectedDate, (newVal) => {
@@ -218,41 +220,67 @@ watch(selectedDate, (newVal) => {
 }, { immediate: true })
 
 // 選擇時段
-const selectTimeSlot = (slot: any) => {
+const selectTimeSlot = (slot: CourseTime) => {
     if (slot.availableSeats === 0) return
-    courseStore.selectedSlot = slot
+    courseStore.selectTimeSlot(slot.id);
 }
+
+// 新增計算屬性，檢查是否可以預約
+const canBook = computed(() => {
+    if (!selectedSlot.value) return false;
+    
+    const bookCheck = bookingStore.canBookCourse(
+        currentCourse.value.courseId,
+        selectedSlot.value.id
+    );
+    
+    return bookCheck.canBook;
+});
 
 // 處理預約
 const handleBooking = async () => {
-    if (!courseStore.canBook) return
+    if (!canBook.value || !selectedSlot.value || !selectedDate.value) return
+    if (userPoints.value < currentCourse.value.pointsRequired) {
+        toast.add({ severity: 'error', summary: '點數不足', detail: '請先購買點數', life: 3000 });
+        return;
+    }
+    if(!userStore.userId) {
+        toast.add({ severity: 'error', summary: '請先登入', detail: '請先登入以使用預約功能', life: 3000 });
+        return;
+    }
     confirm.require({
         message: '確認預約嗎?',
         header: '確認',
         acceptLabel: '確認',
         rejectLabel: '取消',
-        accept: () => {
-            const success = courseStore.bookCourse()
-            if (success) {
+        accept: async () => {
+            const result = await bookingStore.bookCourse(
+                currentCourse.value.courseId, 
+                selectedSlot.value!.id
+            );
+            
+            // 根據 bookCourse 方法的返回類型正確判斷
+            if (result && 'success' in result && result.success) {
                 toast.add({ severity: 'success', summary: '預約成功！', detail: '已成功預約一門課程', life: 3000 });
+                selectedSlot.value = null;
+            } else {
+                toast.add({ 
+                    severity: 'error', 
+                    summary: '預約失敗', 
+                    detail: 'reason' in result ? result.reason : '預約失敗，請稍後再試', 
+                    life: 3000 
+                });
             }
         },
         reject: () => {
             console.log('reject');
         }
     });
-    // 顯示成功消息，實際應用中可使用toast組件
-}
-
-// 添加收藏
-const addFavorite = () => {
-    toast.add({ severity: 'success', summary: '收藏成功！', detail: '已成功收藏一門課程', life: 3000 });
-
 }
 
 // 收藏相關
 const favoriteLoading = ref(false);
-const isFavorite = computed(() => userStore.isFavorite(currentCourse.value.classuid));
+const isFavorite = computed(() => userStore.isFavorite(currentCourse.value.courseId));
 
 // 切換收藏狀態
 const toggleFavorite = async () => {
@@ -274,7 +302,7 @@ const toggleFavorite = async () => {
     try {
         if (isFavorite.value) {
             // 取消收藏
-            const result = await userStore.removeFromFavorites(currentCourse.value.classuid);
+            const result = await userStore.removeFromFavorites(currentCourse.value.courseId);
             if (result.success) {
                 toast.add({
                     severity: 'success',
@@ -323,6 +351,9 @@ const shareCourse = () => {
     toast.add({ severity: 'success', summary: '分享成功！', detail: '已成功分享課程', life: 3000 });
 }
 
+defineExpose({
+    visible
+});
 </script>
 <style>
 @reference "tailwindcss";

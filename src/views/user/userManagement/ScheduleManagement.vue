@@ -20,7 +20,7 @@
                 <p class="text-gray-500">所選範圍內沒有課程預約</p>
             </div>
             <div v-else class="flex flex-col gap-2">
-                    <div v-for="date in Object.keys(bookingsByDate)" :key="date" class="flex flex-col gap-2">
+                <div v-for="date in Object.keys(bookingsByDate)" :key="date" class="flex flex-col gap-2">
                     <div class="text-yellow-600">{{ formatDateHeader(date) }}</div>
                     <div v-for="booking in bookingsByDate[date]" :key="booking.id"
                         class="rounded-2xl bg-blue-50 p-3 cursor-pointer hover:bg-blue-100">
@@ -32,15 +32,15 @@
                             <div class="flex-1">
                                 <div class="text-lg font-medium">{{ booking.courseTitle }}</div>
                                 <div class="flex items-center text-sm text-gray-600 mb-1">
-                                    <i class="pi pi-clock  icon-class"></i>
+                                    <i class="pi pi-clock icon-class"></i>
                                     <span>{{ booking.time }}</span>
                                 </div>
                                 <div class="flex items-center text-sm text-gray-600 mb-1">
-                                    <i class="pi pi-map-marker  icon-class"></i>
+                                    <i class="pi pi-map-marker icon-class"></i>
                                     <span>{{ booking.location }}</span>
                                 </div>
                                 <div class="flex items-center text-sm text-gray-600">
-                                    <i class="pi pi-user  icon-class"></i>
+                                    <i class="pi pi-user icon-class"></i>
                                     <span>{{ booking.instructor?.name }}</span>
                                 </div>
                             </div>
@@ -90,7 +90,7 @@ const formatDateHeader = (dateString: string) => {
 };
 
 </script>
-<style scoped>
+<style>
 @reference "tailwindcss";
 
 .icon-class {

@@ -34,11 +34,11 @@
         <div class="">
             <h2 class="text-2xl font-semibold text-center">熱門課程推薦</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                <CourseCard v-for="course in courses" :key="course.id" :course="course"
-                    @click="handleCourseClick(course.id)" />
+                <CourseCard v-for="course in courses" :key="course.courseId" :course="course"
+                    @click="handleCourseClick()" />
             </div>
         </div>
-        <CourseDetail v-model:visible="visible" />
+        <CourseDetail ref="courseDetailRef" />
     </div>
 </template>
 
@@ -48,9 +48,10 @@ import CourseDetail from '@/views/user/course/CourseDetail.vue'
 import { ref } from 'vue'
 import Chip from 'primevue/chip';
 import InputChips from 'primevue/inputchips';
-import AutoComplete from 'primevue/autoComplete';
+import type { CourseDTO } from '@/types/course';
 const tags = ref<string[]>([])
-
+const courseDetailRef = ref<InstanceType<typeof CourseDetail> | null>(null)
+    
 const suggestions = ['瑜珈', '滑板', '攝影', '烘焙', '游泳'];
 
 function addChip(tag: string) {
@@ -58,30 +59,43 @@ function addChip(tag: string) {
     tags.value.push(tag)
   }
 }
-const visible = ref(false)
-const courses = [
+const courses: CourseDTO[] = [
     {
-        id: 1,
+        courseId: 1,
         title: '初學者瑜珈課程',
-        instructor: '王老師',
-        price: 1200
+        pointsRequired: 10,
+        image: {
+            imageSrc: 'https://via.placeholder.com/150',
+            alt: '瑜珈課程圖片'
+        },
+        merchantName: '瑜珈教室'
     },
     {
-        id: 2,
+        courseId: 2,
         title: '進階攝影技巧',
-        instructor: '李老師',
-        price: 1500
+        pointsRequired: 5,
+        image: {
+            imageSrc: 'https://via.placeholder.com/150',
+            alt: '攝影課程圖片'
+        },
+        merchantName: '攝影教室'
     },
     {
-        id: 3,
+        courseId: 3,
         title: '甜點烘焙入門',
-        instructor: '張老師',
-        price: 1800
+        pointsRequired: 5,
+        image: {
+            imageSrc: 'https://via.placeholder.com/150',
+            alt: '烘焙課程圖片'
+        },
+        merchantName: '烘焙教室'
     }
 ]
 
-const handleCourseClick = (id: number) => {
-    visible.value = true
+const handleCourseClick = () => {
+    if (courseDetailRef.value) {
+        courseDetailRef.value.visible = true
+    }
 }
 </script>
 <style scoped>
