@@ -14,7 +14,9 @@
                     <i class="pi pi-calendar !text-[1.7rem]"></i>
                 </OverlayBadge>
             </Button>
-            <ScheduleBar v-model:visible="visibleScheduleBar"></ScheduleBar>
+            <Drawer v-model:visible="visibleScheduleBar" position="right" header="課程行程表" :pt="menuPt">
+                <ScheduleManagement></ScheduleManagement>
+            </Drawer>
         </nav>
     </header>
 </template>
@@ -24,12 +26,29 @@ import { ref } from 'vue';
 import BaseLogo from '@/components/layout/BaseLogo.vue';
 import { useRouter } from 'vue-router';
 import Sidebar from '@/components/layout/SideBar.vue';
-import ScheduleBar from '@/components/layout/ScheduleBar.vue';
+import ScheduleManagement from '@/views/user/userManagement/ScheduleManagement.vue';
 import OverlayBadge from 'primevue/overlaybadge';
+import Drawer from 'primevue/drawer';
 
 const visibleMenu = ref(false);
 const visibleScheduleBar = ref(false);
 const router = useRouter();
 const hasNewSchedule = ref(false);
+
+const menuPt = ref({
+    header: {
+        class: '!text-yellow-600 !text-xl'
+    },
+    mask: {
+        class: '!bg-gray-500/10'
+    },
+    root: {
+        class: '!bg-white !text-primary !border-0 !min-w-[25rem]'
+    },
+    closeButton: {
+        class: 'text-red-500 hover:text-red-700'
+    }
+});
+
 </script>
 <style scoped></style>
