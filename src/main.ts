@@ -2,17 +2,18 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
-
+import piniaPersist from 'pinia-plugin-persistedstate'
 
 import PrimeVue from 'primevue/config';
 import 'primeicons/primeicons.css'
 import Button from 'primevue/button';
 import ToastService from 'primevue/toastservice';
 import ConfirmationService from 'primevue/confirmationservice';
-import AutoComplete from 'primevue/autoComplete';
+import InputText from 'primevue/inputtext';
 import { MyPreset } from './theme/preset'
 import './assets/styles/fonts.css'
 import './assets/main.css'
+
 
 const app = createApp(App)
 
@@ -29,13 +30,15 @@ app.use(PrimeVue, {
     }
 })
 
-app.use(createPinia());
+const pinia = createPinia()
+pinia.use(piniaPersist)   // 全域註冊
+app.use(pinia)
 app.use(router);
 
 app.use(ToastService);
 app.use(ConfirmationService);
 app.component('Button', Button);
-app.component('InputText', AutoComplete);
+app.component('InputText', InputText);
 
 app.mount('#app')
 

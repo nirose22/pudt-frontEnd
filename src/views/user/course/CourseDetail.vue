@@ -57,7 +57,6 @@
         <Card class="mb-8">
             <template #title>{{ currentCourse.merchant.name }}</template>
             <template #content>
-                <p class="m-0">
                 <p class="text-gray-700 mb-4">{{ currentCourse.merchant.description }}</p>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
                     <div>
@@ -80,7 +79,6 @@
                         <span>{{ currentCourse.merchant.type }}</span>
                     </div>
                 </div>
-                </p>
             </template>
         </Card>
 
@@ -176,28 +174,38 @@ import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import { useUserStore } from '@/stores/userStore';
 import { useBookingStore } from '@/stores/bookingStore';
-import type { CourseTime } from '@/types/course';
+import type { CourseTime } from '@/types';
+import { useRouter } from 'vue-router';
+import Listbox from 'primevue/listbox';
+import { UserRole } from '@/enums/UserRole';
+defineProps<{
+    courseId: number
+}>()
 
+const router = useRouter()
 const courseStore = useCourseStore();
 const userStore = useUserStore();
 const bookingStore = useBookingStore();
+
 const toast = useToast();
 const confirm = useConfirm()
 // 圖片展示
 const currentCourse = toRef(courseStore, 'currentCourse');
 const selectedSlot = toRef(courseStore, 'selectedSlot');
 const courseTime = toRef(courseStore, 'courseTime');
-const userPoints = toRef(userStore, 'userPoints');
+const userPoints = toRef(userStore, 'points');
+const userProfile = toRef(userStore, 'profile');
 
-const visible = ref(false)
+
+const visible = defineModel<boolean>('visible', { required: true })
+
+
 const courseDlg = ref({
     header: {
         padding: '0.5rem 0.5rem 0 0.5rem',
     }
 })
-
 // 商家信息展示控制
-
 const responsiveOptions = ref([
     {
         breakpoint: '1300px',
@@ -228,13 +236,11 @@ const selectTimeSlot = (slot: CourseTime) => {
 // 新增計算屬性，檢查是否可以預約
 const canBook = computed(() => {
     if (!selectedSlot.value) return false;
-    
-    const bookCheck = bookingStore.canBookCourse(
+    const bookCheck = bookingStore.canBook(
         currentCourse.value.courseId,
         selectedSlot.value.id
     );
-    
-    return bookCheck.canBook;
+    return bookCheck;
 });
 
 // 處理預約
@@ -242,19 +248,32 @@ const handleBooking = async () => {
     if (!canBook.value || !selectedSlot.value || !selectedDate.value) return
     if (userPoints.value < currentCourse.value.pointsRequired) {
         toast.add({ severity: 'error', summary: '點數不足', detail: '請先購買點數', life: 3000 });
-        return;
+            return;
     }
-    if(!userStore.userId) {
-        toast.add({ severity: 'error', summary: '請先登入', detail: '請先登入以使用預約功能', life: 3000 });
-        return;
-    }
-    confirm.require({
-        message: '確認預約嗎?',
-        header: '確認',
-        acceptLabel: '確認',
-        rejectLabel: '取消',
-        accept: async () => {
-            const result = await bookingStore.bookCourse(
+
+    if(!userProfile.value?.id) {
+        confirm.require({
+            message: '請先登入',
+            header: '提示',
+            acceptLabel: '我要登入',
+            rejectLabel: '稍後登入',
+            rejectClass: 'p-button-secondary',
+            accept: () => {
+                router.push('/login')
+            },
+            reject: () => {
+                console.log('reject');
+            }
+        })
+    } else {
+        confirm.require({
+            message: '確認預約嗎?',
+            header: '確認',
+            acceptLabel: '確認',
+            rejectLabel: '取消',
+            rejectClass: 'p-button-secondary',
+            accept: async () => {
+            const result = await bookingStore.book(
                 currentCourse.value.courseId, 
                 selectedSlot.value!.id
             );
@@ -271,11 +290,12 @@ const handleBooking = async () => {
                     life: 3000 
                 });
             }
-        },
+            },
         reject: () => {
-            console.log('reject');
-        }
-    });
+                console.log('reject');
+            }
+        });
+    }
 }
 
 // 收藏相關
@@ -284,7 +304,7 @@ const isFavorite = computed(() => userStore.isFavorite(currentCourse.value.cours
 
 // 切換收藏狀態
 const toggleFavorite = async () => {
-    if (!userStore.userId) {
+    if (userStore.displayName == UserRole.Guest) {
         // 用戶未登入時的處理
         toast.add({
             severity: 'info',
@@ -302,23 +322,23 @@ const toggleFavorite = async () => {
     try {
         if (isFavorite.value) {
             // 取消收藏
-            const result = await userStore.removeFromFavorites(currentCourse.value.courseId);
+            const result = await userStore.removeFavorite(currentCourse.value.courseId);
             if (result.success) {
                 toast.add({
                     severity: 'success',
                     summary: '成功',
-                    detail: '已從收藏中移除',
+                    detail: result.message,
                     life: 3000
                 });
             }
         } else {
             // 添加收藏
-            const result = await userStore.addToFavorites(currentCourse.value);
+            const result = await userStore.addFavorite(currentCourse.value);
             if (result.success) {
                 toast.add({
                     severity: 'success',
                     summary: '成功',
-                    detail: '已加入收藏',
+                    detail: result.message,
                     life: 3000
                 });
             }
@@ -336,24 +356,13 @@ const toggleFavorite = async () => {
     }
 };
 
-// 在組件掛載後檢查用戶登入狀態並初始化所需數據
 onMounted(async () => {
-    // ... 其他初始化邏輯 ...
-
-    // 如果用戶已登入但尚未加載收藏數據，則加載
-    if (userStore.userId && userStore.favoriteCourses.value.length === 0) {
-        await userStore.fetchFavoriteCourses();
-    }
 });
 
 const shareCourse = () => {
     // navigator.clipboard.writeText(window.location.href);
     toast.add({ severity: 'success', summary: '分享成功！', detail: '已成功分享課程', life: 3000 });
 }
-
-defineExpose({
-    visible
-});
 </script>
 <style>
 @reference "tailwindcss";

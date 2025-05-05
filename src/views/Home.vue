@@ -3,7 +3,7 @@
         <div class="space-y-4 banner-container">
             <!-- Logo & Branding -->
             <div class="flex flex-col items-center">
-                <div class="inline-flex w-130 text-center">
+                <div class="inline-flex max-w-xl text-center sm: w-7/12 mt-6">
                     <img src="../assets/image/pudt_logo-xl.png" alt="logo">
                 </div>
                 <p class="text-3xl">Put Your Dots Together</p>
@@ -34,31 +34,43 @@
         <div class="">
             <h2 class="text-2xl font-semibold text-center">熱門課程推薦</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                <CourseCard v-for="course in courses" :key="course.courseId" :course="course"
-                    @click="handleCourseClick()" />
+                <CourseCard v-for="course in courses" :key="course.courseId" :course="course" @click="visible = true" />
             </div>
         </div>
-        <CourseDetail ref="courseDetailRef" />
+        <CourseDetail v-model:visible="visible" :courseId="currentCourse.courseId" />
     </div>
 </template>
 
 <script setup lang="ts">
 import CourseCard from '@/components/modal/CourseCard.vue'
 import CourseDetail from '@/views/user/course/CourseDetail.vue'
-import { ref } from 'vue'
+import { ref, toRef } from 'vue'
 import Chip from 'primevue/chip';
 import InputChips from 'primevue/inputchips';
 import type { CourseDTO } from '@/types/course';
-const tags = ref<string[]>([])
-const courseDetailRef = ref<InstanceType<typeof CourseDetail> | null>(null)
-    
-const suggestions = ['瑜珈', '滑板', '攝影', '烘焙', '游泳'];
+import { useCourseStore } from '@/stores/courseStore';
+import { useUserStore } from '@/stores/userStore';
+import { useRouter } from 'vue-router';
 
+const tags = ref<string[]>([])
+const visible = ref(false)
+const suggestions = ['瑜珈', '滑板', '攝影', '烘焙', '游泳'];
+// const userStore = useUserStore()
+// const displayName = toRef(userStore, 'displayName')
+// const router = useRouter()
+// if (displayName.value == '訪客') {
+//     router.push('/login')
+// }
+
+
+const courseStore = useCourseStore()
+const currentCourse = toRef(courseStore, 'currentCourse')
 function addChip(tag: string) {
   if (!tags.value.includes(tag)) {
     tags.value.push(tag)
   }
 }
+
 const courses: CourseDTO[] = [
     {
         courseId: 1,
@@ -92,11 +104,6 @@ const courses: CourseDTO[] = [
     }
 ]
 
-const handleCourseClick = () => {
-    if (courseDetailRef.value) {
-        courseDetailRef.value.visible = true
-    }
-}
 </script>
 <style scoped>
 .banner-container {

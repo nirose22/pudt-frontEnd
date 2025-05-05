@@ -68,20 +68,21 @@ onMounted(() => {
     // 設置結束日期為開始日期後5天
     endDate.value = startDate.value;
     endDate.value.setDate(startDate.value.getDate() + 5);
-
-    bookingStore.setDateRange(startDate.value, endDate.value);
+    bookingStore.setRange(startDate.value, endDate.value);
 });
+
+
 
 // 應用日期範圍
 const applyDateRange = () => {
-    bookingStore.setDateRange(startDate.value, endDate.value);
+    bookingStore.setRange(startDate.value, endDate.value);
 };
 
 // 獲取範圍內的預約
-const bookingsInRange = computed(() => bookingStore.getBookingsInRange);
+const bookingsInRange = computed(() => bookingStore.inRange);
 
 // 按日期分組的預約
-const bookingsByDate = computed(() => bookingStore.bookingsByDate);
+const bookingsByDate = computed(() => bookingStore.byDate);
 
 // 格式化日期標題
 const formatDateHeader = (dateString: string) => {
@@ -92,7 +93,6 @@ const formatDateHeader = (dateString: string) => {
 </script>
 <style>
 @reference "tailwindcss";
-
 .icon-class {
     @apply text-sm text-blue-400 mr-1;
 }

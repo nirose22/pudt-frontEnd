@@ -1,4 +1,4 @@
-import type { Course, CourseTime } from '@/types/course'
+import type { Course, CourseTime } from '@/types'
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 

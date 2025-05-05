@@ -1,140 +1,154 @@
-// stores/userStore.ts
-import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
-import axios from 'axios';  // 假設使用 axios 進行 API 請求
-import type { Course } from '@/types/course';
-import type { User } from '@/types/user';
+// stores/userStore.ts – Pinia + pinia-plugin-persistedstate version
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import type { User, Course, CourseBooking } from '@/types'
+import { UserRole } from '@/enums/UserRole';
+import { BookingStatus } from '@/enums/bookingStatus';
+// import * as userApi from '@/services/userApi'
 
 export const useUserStore = defineStore('user', () => {
-  // 用戶基本資料
-  const userId = ref<number | null>(null);
-  const userInfo = ref<User | null>(null);
-  const userPoints = ref(50);
+  /* ---------- state (auto‑persist) ---------- */
+  const profile = ref<User | null>(null)
+  const points = ref<number>(0)
+  const favs = ref<Course[]>([])
 
-  // 收藏的課程列表
-  const favoriteCourses = ref<Course[]>([]);
+  /* ---------- getters ---------- */
+  const isLoggedIn = computed(() => !!profile.value)
+  const displayName = computed(() => profile.value?.name ?? UserRole.Guest)
+  const isFavorite = (id: number) => favs.value.some(c => c.courseId === id)
 
-  // 計算屬性：檢查課程是否已收藏
-  const isFavorite = computed(() => {
-    return (courseId: number) => favoriteCourses.value.some(course => course.courseId === courseId);
-  });
+  /* ---------- actions ---------- */
+  async function fetchProfile(id?: number) {
+    // const { success, data } = await userApi.fetchProfile(id)
 
-  // 初始化：從後端獲取用戶收藏課程
-  const fetchFavoriteCourses = async () => {
-    try {
-      // 假設 API 端點：/api/users/{userId}/favorites
-      const response = await axios.get(`/api/users/${userId.value}/favorites`);
-      favoriteCourses.value = response.data;
-    } catch (error) {
-      console.error('獲取收藏課程失敗:', error);
+    const data: User = {
+      id: 1, name: 'John', points: 100,
+      email: 'john@example.com', phone: '1234567890',
+      avatar: 'https://example.com/avatar.jpg',
+      createdAt: new Date(),
+      lastLogin: new Date(),
     }
-  };
 
-  // 添加課程到收藏
-  const addToFavorites = async (course: Course) => {
-    try {
-      // 向後端 API 發送添加收藏請求
-      await axios.post(`/api/users/${userId.value}/favorites`, { courseId: course.courseId });
-
-      // 更新本地狀態
-      // 避免重複添加
-      if (!isFavorite.value(course.courseId)) {
-        favoriteCourses.value.push(course);
-      }
-
-      return { success: true };
-    } catch (error) {
-      console.error('添加收藏失敗:', error);
-      return { success: false, error };
+    if (data) {
+      profile.value = data
+      points.value = data.points ?? 0
     }
-  };
+    return data
+  }
 
-  // 從收藏中移除課程
-  const removeFromFavorites = async (courseId: number) => {
-    try {
-      // 向後端 API 發送移除收藏請求
-      await axios.delete(`/api/users/${userId.value}/favorites/${courseId}`);
+  async function fetchBookings() {
+    // const { success, data } = await userApi.fetchBookings(profile.value?.id)
+    const data: CourseBooking[] = [
+      {
+        id: 1,
+        userId: 1,
+        courseId: 101,
+        courseTitle: '初级瑜伽课程',
+        date: '2025-05-01',
+        time: '10:00-12:00',
+        location: '和平瑜伽中心 - 信义店',
+        instructor: {
+          name: '李老师',
+          avatar: 'https://via.placeholder.com/50',
+        },
+        status: BookingStatus.Confirmed,
+      },
+      {
+        id: 2,
+        userId: 1,
+        courseId: 102,
+        courseTitle: '冥想与放松',
+        date: '2025-05-01',
+        time: '14:00-16:00',
+        location: '和平瑜伽中心 - 中山店',
+        instructor: {
+          name: '张老师',
+          avatar: 'https://via.placeholder.com/50',
+        },
+        status: BookingStatus.Pending,
+      },
+      {
+        id: 3,
+        userId: 1,
+        courseId: 103,
+        courseTitle: '高级瑜伽课程',
+        date: '2025-05-04',
+        time: '18:00-20:00',
+        location: '和平瑜伽中心 - 信义店',
+        instructor: {
+          name: '王老师',
+          avatar: 'https://via.placeholder.com/50',
+        },
+        status: BookingStatus.Canceled,
+      },
+      {
+        id: 4,
+        userId: 1,
+        courseId: 104,
+        courseTitle: '瑜伽基础课程',
+        date: '2025-05-05',
+        time: '10:00-12:00',
+        location: '和平瑜伽中心 - 中山店',
+        instructor: {
+          name: '赵老师',
+          avatar: 'https://via.placeholder.com/50',
+        },
+        status: BookingStatus.Canceled
+      },
+    ]
+    return data
+  }
 
-      // 更新本地狀態
-      favoriteCourses.value = favoriteCourses.value.filter(course => course.courseId !== courseId);
+  // async function updateProfile(payload: Partial<User>) {
+  //   if (!profile.value) return { success: false, message: '尚未載入' }
+  //   const { success, data } = await userApi.updateProfile(profile.value.id, payload)
+  //   if (success && data) profile.value = data
+  //   return { success, data }
+  // }
 
-      return { success: true };
-    } catch (error) {
-      console.error('移除收藏失敗:', error);
-      return { success: false, error };
-    }
-  };
+  function adjustPoints(amount: number) {
+    if (!profile.value) return { success: false, message: '尚未載入' }
+    if (points.value - amount < 0) return { success: false, message: '點數不足' }
+    points.value -= amount
+    return { success: true, data: points.value }
+  }
 
-  // 獲取用戶點數
-  const fetchUserPoints = async () => {
-    try {
-      // 實際應用中，應該從後端 API 獲取最新點數
-      // const response = await axios.get(`/api/users/${userId.value}/points`);
-      // userPoints.value = response.data.points;
-      console.log('獲取用戶點數');
-      return { success: true, points: userPoints.value };
-    } catch (error) {
-      console.error('獲取用戶點數失敗:', error);
-      return { success: false, error };
-    }
-  };
-
-  // 添加點數
-  const addPoints = async (points: number) => {
-    try {
-      // 實際應用中，應該呼叫後端 API 添加點數
-      // const response = await axios.post(`/api/users/${userId.value}/points/add`, { points });
-      userPoints.value += points;
-      return { success: true, newPoints: userPoints.value };
-    } catch (error) {
-      console.error('添加點數失敗:', error);
-      return { success: false, error };
-    }
-  };
-
-  // 扣除點數
-  const deductPoints = async (points: number) => {
-    try {
-      if (userPoints.value < points) {
-        return { success: false, reason: '點數不足' };
-      }
-
-      // 實際應用中，應該呼叫後端 API 扣除點數
-      // const response = await axios.post(`/api/users/${userId.value}/points/deduct`, { points });
-      userPoints.value -= points;
-      return { success: true, remainingPoints: userPoints.value };
-    } catch (error) {
-      console.error('扣除點數失敗:', error);
-      return { success: false, error };
-    }
-  };
-
-  // 檢查點數是否足夠
-  const hasEnoughPoints = (requiredPoints: number) => {
-    return userPoints.value >= requiredPoints;
-  };
-
-  // 用戶登入後初始化數據
-  const initUserData = async (id: number) => {
-    userId.value = id;
-    await fetchFavoriteCourses();
-    await fetchUserPoints();
-    // 其他用戶數據初始化...
-  };
+  /* 收藏 */
+  function addFavorite(course: Course) {
+    if (!isFavorite(course.courseId)) favs.value.push(course)
+    // api
+    return { success: true, message: '已加入收藏' }
+  }
+  function removeFavorite(id: number) {
+    favs.value = favs.value.filter(c => c.courseId !== id)
+    // api
+    return { success: true, message: '已從收藏中移除' }
+  }
 
   return {
-    userId,
-    userInfo,
-    userPoints,
-    favoriteCourses,
+    // state
+    profile,
+    points,
+    favs,
+    // getters
+    isLoggedIn,
+    displayName,
     isFavorite,
-    fetchFavoriteCourses,
-    addToFavorites,
-    removeFromFavorites,
-    fetchUserPoints,
-    addPoints,
-    deductPoints,
-    hasEnoughPoints,
-    initUserData
-  };
-});
+    // actions
+    fetchProfile,
+    // updateProfile,
+    adjustPoints,
+    addFavorite,
+    removeFavorite,
+    fetchBookings
+  }
+},
+  {
+    // ---------- persist plugin options ----------
+    persist: {
+      key: 'user',                // localStorage key
+      storage: localStorage,      // 可改 sessionStorage
+      pick: ['profile', 'points', 'favs']
+    }
+  }
+)

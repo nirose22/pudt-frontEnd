@@ -9,13 +9,13 @@
                 </Button>
                 <BaseLogo class="h-full w-25 cursor-pointer" @click="router.push('/')" />
             </div>
-            <Button class="mr-2  w-11" text rounded @click="visibleScheduleBar = true">
+            <Button class="mr-2 w-11" text rounded @click="visibleScheduleBar = true">
                 <OverlayBadge severity="danger" class="text-red-600" :unstyled="!hasNewSchedule">
                     <i class="pi pi-calendar !text-[1.7rem]"></i>
                 </OverlayBadge>
             </Button>
             <Drawer v-model:visible="visibleScheduleBar" position="right" header="課程行程表" :pt="menuPt">
-                <ScheduleManagement></ScheduleManagement>
+                <ScheduleManagement />
             </Drawer>
         </nav>
     </header>

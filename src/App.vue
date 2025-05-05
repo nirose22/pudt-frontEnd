@@ -1,13 +1,27 @@
 <template>
-  <Header />
-  <div class="max-w-7xl mx-auto pt-10">
-    <router-view></router-view>
+  <div class="min-h-screen h-full overflow-hidden flex flex-col">
+    <Header />
+    <div class="w-full max-w-7xl pt-10 grow mx-auto flex flex-col">
+      <router-view></router-view>
+    </div>
+    <Footer />
   </div>
-  <Footer />
 </template>
 <script setup lang="ts">
 import Header from '@/components/layout/Header.vue'
 import Footer from '@/components/layout/Footer.vue'
+import { useAuthStore } from '@/stores/authStore'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+router.beforeEach((to) => {
+  const authStore = useAuthStore()
+  if (to.meta.requiresAuth && !authStore.isLoggedIn) return '/login'
+  if (authStore.isAdmin) {
+    return '/'
+  }
+})
 </script>
 <style>
 
