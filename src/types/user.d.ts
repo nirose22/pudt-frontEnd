@@ -1,3 +1,5 @@
+import { UserGender } from '@/enums/User';
+
 export interface User {
   id: number;
   name: string;
@@ -9,7 +11,7 @@ export interface User {
   lastLogin?: Date;
   address?: string;
   birthday?: Date;
-  gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say';
+  gender?: UserGender;
 }
 
 export interface UserProfile extends Omit<User, 'role'> {

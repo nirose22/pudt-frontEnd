@@ -1,7 +1,7 @@
 // stores/authStore.ts
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { UserRole } from '@/enums/UserRole'
+import { UserRole } from '@/enums/User'
 import { useUserStore } from './userStore'
 import type { Result } from '@/types'
 // import * as api from '@/services/authApi'          // 你的登入 API

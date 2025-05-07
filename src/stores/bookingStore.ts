@@ -1,11 +1,12 @@
 // stores/bookingStore.ts
 import { defineStore } from 'pinia'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { isEqual, isWithinInterval } from 'date-fns'
 import type { CourseBooking, Result } from '@/types'
-import { BookingStatus } from '@/enums/bookingStatus'
+import { BookingStatus } from '@/enums/BookingStatus'
 import { useCourseStore } from './courseStore'
 import { useUserStore } from './userStore'
+// import api from '@/utils/api'
 
 export const useBookingStore = defineStore('booking', () => {
     /* ---------- state ---------- */
@@ -13,48 +14,132 @@ export const useBookingStore = defineStore('booking', () => {
 
     const courseStore = useCourseStore()
     const userStore = useUserStore()
-    // const userBookings = ref<CourseBooking[]>([])
-    const userBookings = ref<CourseBooking[]>([])
+    const bookings = ref<CourseBooking[]>([])
     /* ---------- getters ---------- */
-    onMounted(async () => {
-        await fetchBookings()
-    })
 
-    const fetchBookings = async () => {
-        try {
-            const bookings = await userStore.fetchBookings()
-            userBookings.value = bookings
-        } catch (err) {
-            console.error('取得訂單失敗', err)
-            const res: Result = {
-                success: false,
-                error: err
-            }
-            return res
-        }
+    // 取得預約紀錄
+
+    const fetchBookings = async (userId?: number) => {
+        // const { success, data } = await api.get(`/users/${userId}/bookings`)
+        const data: CourseBooking[] = [
+            {
+                id: 1,
+                userId: 1,
+                courseId: 101,
+                courseTitle: '初级瑜伽课程',
+                date: new Date('2025-05-01'),
+                time: '10:00-12:00',
+                location: '和平瑜伽中心 - 信义店',
+                instructor: {
+                    name: '李老师',
+                    avatar: 'https://via.placeholder.com/50',
+                },
+                status: BookingStatus.Confirmed,
+                points: 4,
+            },
+            {
+                id: 2,
+                userId: 1,
+                courseId: 102,
+                courseTitle: '冥想与放松',
+                date: new Date('2025-05-01'),
+                time: '14:00-16:00',
+                location: '和平瑜伽中心 - 中山店',
+                instructor: {
+                    name: '张老师',
+                    avatar: 'https://via.placeholder.com/50',
+                },
+                status: BookingStatus.Pending,
+                points: 4,
+            },
+            {
+                id: 3,
+                userId: 1,
+                courseId: 102,
+                courseTitle: '冥想与放松',
+                date: new Date('2025-05-01'),
+                time: '14:00-16:00',
+                location: '和平瑜伽中心 - 中山店',
+                instructor: {
+                    name: '张老师',
+                    avatar: 'https://via.placeholder.com/50',
+                },
+                status: BookingStatus.Pending,
+                points: 3,
+            },
+            {
+                id: 4,
+                userId: 1,
+                courseId: 103,
+                courseTitle: '高级瑜伽课程',
+                date: new Date('2025-05-04'),
+                time: '18:00-20:00',
+                location: '和平瑜伽中心 - 信义店',
+                instructor: {
+                    name: '王老师',
+                    avatar: 'https://via.placeholder.com/50',
+                },
+                status: BookingStatus.Canceled,
+                points: 4,
+            },
+            {
+                id: 5,
+                userId: 1,
+                courseId: 104,
+                courseTitle: '瑜伽基础课程',
+                date: new Date('2025-05-05'),
+                time: '10:00-12:00',
+                location: '和平瑜伽中心 - 中山店',
+                instructor: {
+                    name: '赵老师',
+                    avatar: 'https://via.placeholder.com/50',
+                },
+                status: BookingStatus.Canceled,
+                points: 4,
+            },
+            {
+                id: 6,
+                userId: 1,
+                courseId: 104,
+                courseTitle: '12312312321',
+                date: new Date('2025-05-05'),
+                time: '10:00-12:00',
+                location: '和平瑜伽中心 - 中山店',
+                instructor: {
+                    name: '赵老师',
+                    avatar: 'https://via.placeholder.com/50',
+                },
+                status: BookingStatus.Pending,
+                points: 3,
+            },
+        ]
+        bookings.value = data
     }
+
+    const byStatus = (s: BookingStatus) => bookings.value.filter(b => b.status === s);
 
     const inRange = computed(() =>
         !range.value
-            ? userBookings.value
-            : userBookings.value.filter(b =>
+            ? bookings.value
+            : bookings.value.filter(b =>
+                b.status !== BookingStatus.Canceled &&
+                b.status !== BookingStatus.Pending &&
                 isWithinInterval(new Date(b.date), range.value!)
             )
     )
     const byDate = computed(() => {
         return inRange.value.reduce<Record<string, CourseBooking[]>>((map, b) => {
-            if (!map[b.date]) {
-                map[b.date] = []
+            if (!map[b.date.toISOString()]) {
+                map[b.date.toISOString()] = []
             }
-            map[b.date].push(b)
+            map[b.date.toISOString()].push(b)
             return map
         }, {})
     })
-    const byStatus = (s: BookingStatus) => userBookings.value.filter(b => b.status === s);
 
     /* ---------- helpers ---------- */
     function hasTimeConflict(date: Date, time: string) {
-        return userBookings.value.some(
+        return bookings.value.some(
             b =>
                 isEqual(new Date(b.date), date) &&
                 b.time === time &&
@@ -86,7 +171,7 @@ export const useBookingStore = defineStore('booking', () => {
         const slot = courseStore.getTimeSlotById(slotId)!
 
         // 1. 扣點
-        userStore.adjustPoints(course.pointsRequired)
+        userStore.adjustPoints(-course.pointsRequired)
         // 2. 減座位
         courseStore.updateAvailableSeats(slotId, -1)
         // 3. 建立本地紀錄 (實戰應從 API response)
@@ -95,23 +180,24 @@ export const useBookingStore = defineStore('booking', () => {
             userId: userStore.profile?.id!,
             courseId,
             courseTitle: course.title,
-            date: slot.date.toISOString().slice(0, 10),
+            date: new Date(slot.date.toISOString().slice(0, 10)),
             time: slot.time,
+            points: course.pointsRequired,
             location: course.merchant.name,
             instructor: { name: '教練', avatar: '' },
             status: BookingStatus.Confirmed
         }
-        userBookings.value.push(newBook)
+        bookings.value.push(newBook)
         return { success: true, bookingId: newBook.id }
     }
 
-    async function cancel(id: number) {
-        const idx = userBookings.value.findIndex(b => b.id === id)
-        if (idx === -1) return { success: false, reason: '預約不存在' }
-        const bk = userBookings.value[idx]
-        if (bk.status === BookingStatus.Canceled)
-            return { success: false, reason: '已取消' }
-
+    async function cancel(id: number): Promise<Result> {
+        const idx = bookings.value.findIndex(b => b.id === id)
+        if (idx === -1) return { success: false, message: '預約不存在' }
+        const bk = bookings.value[idx]
+        if (bk.status === BookingStatus.Canceled) {
+            return { success: false, message: '課程已被取消' }
+        }
         // 還原座位、點數
         const course = courseStore.getCourseById(bk.courseId)
         if (course) {
@@ -119,12 +205,12 @@ export const useBookingStore = defineStore('booking', () => {
             userStore.adjustPoints(course.pointsRequired)
         }
         bk.status = BookingStatus.Canceled
-        return { success: true }
+        return { success: true, message: '您的課程已取消' }
     }
 
     /* ---------- expose ---------- */
     return {
-        userBookings,
+        bookings,
         range,
         inRange,
         byDate,
@@ -135,9 +221,4 @@ export const useBookingStore = defineStore('booking', () => {
         book,
         cancel
     }
-},
-    //   {
-    //     /* 持久化（可選） */
-    //     persist: true
-    //   }
-)
+})

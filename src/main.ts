@@ -13,7 +13,7 @@ import InputText from 'primevue/inputtext';
 import { MyPreset } from './theme/preset'
 import './assets/styles/fonts.css'
 import './assets/main.css'
-
+import Toast from 'primevue/toast';
 
 const app = createApp(App)
 
@@ -39,6 +39,6 @@ app.use(ToastService);
 app.use(ConfirmationService);
 app.component('Button', Button);
 app.component('InputText', InputText);
-
+app.component('Toast', Toast);
 app.mount('#app')
 

@@ -123,9 +123,9 @@
             <Toolbar class="w-full bg-amber-100">
                 <template #start>
                     <Button text rounded size="large" severity="secondary"
-                            :icon="isFavorite ? 'pi pi-heart-fill' : 'pi pi-heart'" :class="{
-                                'text-red-600': isFavorite,
-                            }" @click="toggleFavorite" :loading="favoriteLoading" aria-label="收藏課程" />
+                        :icon="isFavorite ? 'pi pi-heart-fill' : 'pi pi-heart'" :class="{
+                            'text-red-600': isFavorite,
+                        }" @click="toggleFavorite" :loading="favoriteLoading" aria-label="收藏課程" />
                     <Button text rounded size="large" icon="pi pi-share-alt" severity="secondary"
                         @click="shareCourse" />
                 </template>
@@ -166,7 +166,6 @@ import DatePicker from 'primevue/datepicker';
 import IftaLabel from 'primevue/iftalabel';
 import Divider from 'primevue/divider';
 import Dialog from 'primevue/dialog';
-import Button from 'primevue/button';
 import { isSameDate } from '@/utils/common';
 import Toolbar from 'primevue/toolbar';
 import ScrollPanel from 'primevue/scrollpanel';
@@ -176,11 +175,12 @@ import { useUserStore } from '@/stores/userStore';
 import { useBookingStore } from '@/stores/bookingStore';
 import type { CourseTime } from '@/types';
 import { useRouter } from 'vue-router';
-import Listbox from 'primevue/listbox';
-import { UserRole } from '@/enums/UserRole';
+import { UserRole } from '@/enums/User';
+
 defineProps<{
     courseId: number
 }>()
+const visible = defineModel<boolean>('visible', { required: true })
 
 const router = useRouter()
 const courseStore = useCourseStore();
@@ -188,17 +188,13 @@ const userStore = useUserStore();
 const bookingStore = useBookingStore();
 
 const toast = useToast();
-const confirm = useConfirm()
+const confirm = useConfirm();
 // 圖片展示
 const currentCourse = toRef(courseStore, 'currentCourse');
 const selectedSlot = toRef(courseStore, 'selectedSlot');
 const courseTime = toRef(courseStore, 'courseTime');
-const userPoints = toRef(userStore, 'points');
-const userProfile = toRef(userStore, 'profile');
-
-
-const visible = defineModel<boolean>('visible', { required: true })
-
+const userPoints = userStore.points;
+const userProfile = userStore.profile;
 
 const courseDlg = ref({
     header: {
@@ -246,12 +242,12 @@ const canBook = computed(() => {
 // 處理預約
 const handleBooking = async () => {
     if (!canBook.value || !selectedSlot.value || !selectedDate.value) return
-    if (userPoints.value < currentCourse.value.pointsRequired) {
+    if (userPoints < currentCourse.value.pointsRequired) {
         toast.add({ severity: 'error', summary: '點數不足', detail: '請先購買點數', life: 3000 });
-            return;
+        return;
     }
 
-    if(!userProfile.value?.id) {
+    if (!userProfile?.id) {
         confirm.require({
             message: '請先登入',
             header: '提示',
@@ -273,25 +269,25 @@ const handleBooking = async () => {
             rejectLabel: '取消',
             rejectClass: 'p-button-secondary',
             accept: async () => {
-            const result = await bookingStore.book(
-                currentCourse.value.courseId, 
-                selectedSlot.value!.id
-            );
-            
-            // 根據 bookCourse 方法的返回類型正確判斷
-            if (result && 'success' in result && result.success) {
-                toast.add({ severity: 'success', summary: '預約成功！', detail: '已成功預約一門課程', life: 3000 });
-                selectedSlot.value = null;
-            } else {
-                toast.add({ 
-                    severity: 'error', 
-                    summary: '預約失敗', 
-                    detail: 'reason' in result ? result.reason : '預約失敗，請稍後再試', 
-                    life: 3000 
-                });
-            }
+                const result = await bookingStore.book(
+                    currentCourse.value.courseId,
+                    selectedSlot.value!.id
+                );
+
+                // 根據 bookCourse 方法的返回類型正確判斷
+                if (result && 'success' in result && result.success) {
+                    toast.add({ severity: 'success', summary: '預約成功！', detail: '已成功預約一門課程', life: 3000 });
+                    selectedSlot.value = null;
+                } else {
+                    toast.add({
+                        severity: 'error',
+                        summary: '預約失敗',
+                        detail: 'reason' in result ? result.reason : '預約失敗，請稍後再試',
+                        life: 3000
+                    });
+                }
             },
-        reject: () => {
+            reject: () => {
                 console.log('reject');
             }
         });
@@ -365,8 +361,7 @@ const shareCourse = () => {
 }
 </script>
 <style>
-@reference "tailwindcss";
-
+ 
 .avaliable-btn {
     @apply px-4 py-3 rounded-lg border cursor-pointer border-gray-300 transition-colors;
 }
@@ -386,4 +381,4 @@ const shareCourse = () => {
 .avaliable-btn:hover:not(.avaliable-btn-selected):not(:disabled) {
     @apply bg-blue-200;
 }
-</style>
+</style>@/enums/User

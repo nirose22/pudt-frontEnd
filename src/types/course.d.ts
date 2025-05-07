@@ -1,4 +1,4 @@
-import type { BookingStatus } from '@/enums/bookingStatus';
+import type { BookingStatus } from '@/enums/BookingStatus';
 import type { Photo, PhotoItem } from './photo'
 
 export interface Course {
@@ -47,7 +47,7 @@ export interface CourseBooking {
   userId: number;
   courseId: number;
   courseTitle: string;
-  date: string;
+  date: Date;
   time: string;
   location: string;
   instructor?: {
@@ -55,4 +55,5 @@ export interface CourseBooking {
     avatar: string;
   };
   status: BookingStatus;
+  points: number;
 }

@@ -1,9 +1,9 @@
 // stores/userStore.ts – Pinia + pinia-plugin-persistedstate version
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { User, Course, CourseBooking } from '@/types'
-import { UserRole } from '@/enums/UserRole';
-import { BookingStatus } from '@/enums/bookingStatus';
+import type { User, Course, CourseBooking, Result } from '@/types'
+import { UserGender, UserRole } from '@/enums/User';
+import { BookingStatus } from '@/enums/BookingStatus';
 // import * as userApi from '@/services/userApi'
 
 export const useUserStore = defineStore('user', () => {
@@ -20,13 +20,15 @@ export const useUserStore = defineStore('user', () => {
   /* ---------- actions ---------- */
   async function fetchProfile(id?: number) {
     // const { success, data } = await userApi.fetchProfile(id)
-
     const data: User = {
       id: 1, name: 'John', points: 100,
       email: 'john@example.com', phone: '1234567890',
       avatar: 'https://example.com/avatar.jpg',
       createdAt: new Date(),
       lastLogin: new Date(),
+      address: '台北市信義區',
+      gender: UserGender.Male,
+      birthday: new Date('1990-01-01'),
     }
 
     if (data) {
@@ -36,81 +38,43 @@ export const useUserStore = defineStore('user', () => {
     return data
   }
 
-  async function fetchBookings() {
-    // const { success, data } = await userApi.fetchBookings(profile.value?.id)
-    const data: CourseBooking[] = [
-      {
-        id: 1,
-        userId: 1,
-        courseId: 101,
-        courseTitle: '初级瑜伽课程',
-        date: '2025-05-01',
-        time: '10:00-12:00',
-        location: '和平瑜伽中心 - 信义店',
-        instructor: {
-          name: '李老师',
-          avatar: 'https://via.placeholder.com/50',
-        },
-        status: BookingStatus.Confirmed,
-      },
-      {
-        id: 2,
-        userId: 1,
-        courseId: 102,
-        courseTitle: '冥想与放松',
-        date: '2025-05-01',
-        time: '14:00-16:00',
-        location: '和平瑜伽中心 - 中山店',
-        instructor: {
-          name: '张老师',
-          avatar: 'https://via.placeholder.com/50',
-        },
-        status: BookingStatus.Pending,
-      },
-      {
-        id: 3,
-        userId: 1,
-        courseId: 103,
-        courseTitle: '高级瑜伽课程',
-        date: '2025-05-04',
-        time: '18:00-20:00',
-        location: '和平瑜伽中心 - 信义店',
-        instructor: {
-          name: '王老师',
-          avatar: 'https://via.placeholder.com/50',
-        },
-        status: BookingStatus.Canceled,
-      },
-      {
-        id: 4,
-        userId: 1,
-        courseId: 104,
-        courseTitle: '瑜伽基础课程',
-        date: '2025-05-05',
-        time: '10:00-12:00',
-        location: '和平瑜伽中心 - 中山店',
-        instructor: {
-          name: '赵老师',
-          avatar: 'https://via.placeholder.com/50',
-        },
-        status: BookingStatus.Canceled
-      },
-    ]
-    return data
-  }
-
-  // async function updateProfile(payload: Partial<User>) {
-  //   if (!profile.value) return { success: false, message: '尚未載入' }
-  //   const { success, data } = await userApi.updateProfile(profile.value.id, payload)
-  //   if (success && data) profile.value = data
-  //   return { success, data }
-  // }
-
-  function adjustPoints(amount: number) {
+  function adjustPoints(amount: number): Result {
     if (!profile.value) return { success: false, message: '尚未載入' }
-    if (points.value - amount < 0) return { success: false, message: '點數不足' }
-    points.value -= amount
-    return { success: true, data: points.value }
+    
+    // 如果是扣點，檢查點數是否足夠
+    if (amount < 0 && points.value + amount < 0) {
+      return { success: false, message: '點數不足' }
+    }
+    
+    // 更新點數 (加點數用正值，扣點數用負值)
+    points.value += amount
+    
+    // 同時更新 profile 中的 points 值
+    if (profile.value) {
+      profile.value.points = points.value
+    }
+    
+    // API call 記錄點數歷史
+    // await api.post(`/users/${profile.value.id}/points/history`, { amount, reason, balance: points.value });
+    
+    return { success: true, data: points.value, message: amount > 0 ? '成功添加點數' : '成功扣除點數' }
+  }
+  
+  // 更新用戶資料
+  function updateProfile(payload: Partial<User>) {
+    if (!profile.value) return { success: false, message: '尚未載入' }
+    
+    // 更新資料
+    profile.value = { ...profile.value, ...payload }
+    
+    // 如果更新了點數，同步 points state
+    if (payload.points !== undefined) {
+      points.value = payload.points
+    }
+    // 呼叫 API
+    // await api.put(`/users/${profile.value.id}`, payload)
+    
+    return { success: true, data: profile.value }
   }
 
   /* 收藏 */
@@ -136,11 +100,10 @@ export const useUserStore = defineStore('user', () => {
     isFavorite,
     // actions
     fetchProfile,
-    // updateProfile,
     adjustPoints,
+    updateProfile,
     addFavorite,
     removeFavorite,
-    fetchBookings
   }
 },
   {

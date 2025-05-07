@@ -65,7 +65,7 @@ const visibleMenu = defineModel<boolean>('visible', { required: true });
 const router = useRouter();
 const userStore = useUserStore();
 const authStore = useAuthStore();
-const profile = toRef(userStore, 'profile');
+const profile = computed(() => userStore.profile);
 
 const toast = useToast();
 
@@ -124,10 +124,8 @@ const handleProfile = () => {
 
 </script>
 <style scoped>
-@reference "tailwindcss";
-
 .menu-item {
-    @apply flex items-center text-base font-normal rounded-md p-2 gap-5 cursor-pointer text-sky-600
+    @apply flex items-center text-base font-normal rounded-md p-2 gap-5 cursor-pointer text-gray-800
 }
 
 .menu-item>i {

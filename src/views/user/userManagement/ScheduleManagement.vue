@@ -63,6 +63,12 @@ const bookingStore = useBookingStore();
 const startDate = ref(new Date());
 const endDate = ref(new Date());
 
+
+// 獲取範圍內的預約
+const bookingsInRange = computed(() => bookingStore.inRange);
+// 按日期分組的預約
+const bookingsByDate = computed(() => bookingStore.byDate);
+
 // 初始化設定日期範圍
 onMounted(() => {
     // 設置結束日期為開始日期後5天
@@ -71,18 +77,11 @@ onMounted(() => {
     bookingStore.setRange(startDate.value, endDate.value);
 });
 
-
-
 // 應用日期範圍
 const applyDateRange = () => {
     bookingStore.setRange(startDate.value, endDate.value);
 };
 
-// 獲取範圍內的預約
-const bookingsInRange = computed(() => bookingStore.inRange);
-
-// 按日期分組的預約
-const bookingsByDate = computed(() => bookingStore.byDate);
 
 // 格式化日期標題
 const formatDateHeader = (dateString: string) => {
@@ -92,8 +91,7 @@ const formatDateHeader = (dateString: string) => {
 
 </script>
 <style>
-@reference "tailwindcss";
-.icon-class {
+ .icon-class {
     @apply text-sm text-blue-400 mr-1;
 }
 </style>

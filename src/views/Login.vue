@@ -52,7 +52,7 @@ import Select from 'primevue/select';
 import Message from 'primevue/message';
 import FloatLabel from 'primevue/floatlabel';
 import { Form, FormField } from '@primevue/forms';
-import { UserRole, UserRoleLabel } from '@/enums/UserRole';
+import { UserRole, UserRoleLabel } from '@/enums/User';
 import { z } from 'zod';
 import { zodResolver } from '@primevue/forms/resolvers/zod';
 import { useToast } from 'primevue/usetoast';
@@ -109,4 +109,4 @@ const onFormSubmit = async (e) => {
 ::v-deep input {
     width: 100% !important;
 }
-</style>
+</style>@/enums/User
