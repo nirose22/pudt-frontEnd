@@ -8,11 +8,15 @@ import { PurchaseStatus, PurchasePaymentMethod } from '@/enums/Purchase'
 import { PointType } from '@/enums/Point'
 import { useUserStore } from './userStore'
 import { CardType } from '@/enums/Cards'
-import type { PointHistoryItem, PointsCard } from '@/types/pointItems'
+import type { PointHistoryItem } from '@/types/pointItems'
+
 /**
  * 購買記錄 Store - 管理會員購買歷史和未付清項目
  */
 export const usePurchaseStore = defineStore('purchase', () => {
+  const userStore = useUserStore()
+  const pointsStore = usePointsStore()
+
   /* ---------- state ---------- */
   /** 購買歷史記錄 */
   const purchaseHistory = ref<PurchaseItem[]>([])
@@ -35,11 +39,6 @@ export const usePurchaseStore = defineStore('purchase', () => {
       .reduce((sum, item) => sum + item.amount, 0)
   )
 
-  /** 未付清總金額 */
-  const totalUnpaid = computed(() =>
-    unpaidItems.value.reduce((sum, item) => sum + item.amountDue, 0)
-  )
-
   /** 購買點數總數 */
   const totalPointsPurchased = computed(() =>
     purchaseHistory.value
@@ -53,7 +52,7 @@ export const usePurchaseStore = defineStore('purchase', () => {
    * 獲取購買歷史
    * @param userId 用戶ID，未提供時默認獲取當前用戶
    */
-  const fetchHistory = async (userId?: number): Promise<Result> => {
+  const fetchHistory = async (userId?: number): Promise<Result<PurchaseItem[]>> => {
     loading.value.history = true
     try {
       // 實際環境使用 API
@@ -77,7 +76,7 @@ export const usePurchaseStore = defineStore('purchase', () => {
           cardType: CardType.Advanced,
           amount: 1800,
           points: 20,
-          status: PurchaseStatus.Paid,
+          status: PurchaseStatus.Unpaid,
           paymentMethod: PurchasePaymentMethod.CreditCard,
           invoiceNo: 'INV-002'
         },
@@ -90,6 +89,36 @@ export const usePurchaseStore = defineStore('purchase', () => {
           status: PurchaseStatus.Paid,
           paymentMethod: PurchasePaymentMethod.CreditCard,
           invoiceNo: 'INV-003'
+        },
+        {
+          id: 4,
+          date: '2025-02-10',
+          cardType: CardType.VIP,
+          amount: 2000,
+          points: 50,
+          status: PurchaseStatus.Unpaid,
+          paymentMethod: PurchasePaymentMethod.CreditCard,
+          invoiceNo: 'INV-004'
+        },
+        {
+          id: 5,
+          date: '2025-01-01',
+          cardType: CardType.VIP,
+          amount: 1000,
+          points: 10,
+          status: PurchaseStatus.Paid,
+          paymentMethod: PurchasePaymentMethod.CreditCard,
+          invoiceNo: 'INV-005'
+        },
+        {
+          id: 6,
+          date: '2025-01-01',
+          cardType: CardType.VIP,
+          amount: 1000,
+          points: 10,
+          status: PurchaseStatus.Cancelled,
+          paymentMethod: PurchasePaymentMethod.CreditCard,
+          invoiceNo: 'INV-006'
         }
       ]
       purchaseHistory.value = data
@@ -103,10 +132,16 @@ export const usePurchaseStore = defineStore('purchase', () => {
   }
 
   /**
+   * 獲取狀態
+   * @param s 狀態
+   */
+  const byStatus = (s: PurchaseStatus) => purchaseHistory.value.filter(b => b.status === s);
+
+  /**
    * 獲取未付清項目
    * @param userId 用戶ID，未提供時默認獲取當前用戶
    */
-  const fetchUnpaid = async (userId?: number): Promise<Result> => {
+  const fetchUnpaid = async (userId?: number): Promise<Result<UnpaidItem[]>> => {
     loading.value.unpaid = true
     try {
       // 實際環境使用 API
@@ -117,19 +152,15 @@ export const usePurchaseStore = defineStore('purchase', () => {
         {
           id: 1,
           date: '2025-03-20',
-          itemName: '專業課程套裝',
+          cardType: CardType.Professional,
           amount: 5000,
-          amountPaid: 3000,
-          amountDue: 2000,
           dueDate: '2025-06-20'
         },
         {
           id: 2,
           date: '2025-04-10',
-          itemName: '私人課程預約',
+          cardType: CardType.Professional,
           amount: 2500,
-          amountPaid: 1000,
-          amountDue: 1500,
           dueDate: '2025-05-10'
         }
       ]
@@ -149,7 +180,7 @@ export const usePurchaseStore = defineStore('purchase', () => {
    * @param itemId 項目ID
    * @param amount 支付金額
    */
-  const payUnpaidItem = async (itemId: number, amount: number): Promise<Result> => {
+  const payUnpaidItem = async (itemId: number, amount: number): Promise<Result<void>> => {
     try {
       // 實際環境使用 API
       // await api.post(`/payments/unpaid/${itemId}`, { amount })
@@ -160,14 +191,13 @@ export const usePurchaseStore = defineStore('purchase', () => {
         const item = unpaidItems.value[itemIndex]
 
         // 更新已付金額和未付金額
-        const newAmountPaid = item.amountPaid + amount
+        const newAmountPaid = item.amount + amount
         const newAmountDue = Math.max(0, item.amount - newAmountPaid)
 
         // 更新項目
         unpaidItems.value[itemIndex] = {
           ...item,
-          amountPaid: newAmountPaid,
-          amountDue: newAmountDue
+          amount: newAmountPaid,
         }
 
         // 如果已全部付清，從未付清列表移除
@@ -189,58 +219,75 @@ export const usePurchaseStore = defineStore('purchase', () => {
     }
   }
   
-  // 購買課卡
-  // API 新增: /api/user/points-history
-  const buyPointsCard = async (cardId: number): Promise<Result> => {
-    const userStore = useUserStore()
-    const pointsStore = usePointsStore()
-
-    const selectedCard = pointsStore.pointsCards.find(pkg => pkg.id === cardId)
-    if (!selectedCard) {
-      return { success: false, message: '課卡不存在' }
+  /**
+   * 購買課卡
+   * @param cardId 課卡ID
+   * @returns 購買結果
+   */
+  const buyPointsCard = async (cardId: number): Promise<Result<void>> => {
+    try {
+      const selectedCard = pointsStore.pointsCards.find(pkg => pkg.id === cardId)
+      if (!selectedCard) {
+        return { success: false, message: '課卡不存在' }
+      }
+    
+      // 向後端發送購買請求（實際環境使用）
+      // const response = await api.post('/points/buy', { cardId })
+      
+      // 在前端模擬處理
+      const currentDate = new Date().toISOString().split('T')[0]
+      
+      // 嘗試更新使用者點數（假設Points是購買的點數）
+      const adjustResult = userStore.adjustPoints(selectedCard.points)
+      if (!adjustResult.success) {
+        return { success: false, message: adjustResult.message || '點數調整失敗' }
+      }
+      
+      const newBalance = adjustResult.data as number
+    
+      // 建立點數歷史記錄
+      const pointHistoryItem: PointHistoryItem = {
+        date: currentDate,
+        type: PointType.Course,
+        description: selectedCard.type,
+        points: selectedCard.points,
+        balance: newBalance
+      }
+      
+      // 新增到點數歷史
+      pointsStore.addPointsHistory(pointHistoryItem)
+    
+      // 建立購買記錄
+      const purchaseItem: PurchaseItem = {
+        id: Date.now(), // 臨時ID，實際應由後端生成
+        date: currentDate,
+        cardType: selectedCard.type,
+        amount: selectedCard.price,
+        points: selectedCard.points,
+        status: PurchaseStatus.Paid,
+        paymentMethod: PurchasePaymentMethod.CreditCard,
+        invoiceNo: `INV-${Date.now().toString().slice(-6)}` // 臨時發票號，實際應由後端生成
+      }
+      
+      // 新增到購買歷史
+      purchaseHistory.value.unshift(purchaseItem)
+    
+      return { success: true, message: '購買課卡成功' }
+    } catch (error) {
+      console.error('購買課卡失敗:', error)
+      return { success: false, message: '購買過程中發生錯誤', error }
     }
-  
-    // 向後端發送購買請求（如有）
-    // const { data } = await api.post('/points/buy', { cardId })
-  
-    // 嘗試扣點
-    const res = userStore.adjustPoints(selectedCard.points)
-    if (!res.success) {
-      return { success: false, message: '扣點失敗' }
-    }
-  
-    const currentDate = new Date().toISOString().split('T')[0]
-    const balance = res.data as number
-  
-    // 更新使用者 points（如果後端沒自動回傳 profile）
-    userStore.updateProfile({ points: balance })
-  
-    // 加入點數歷史紀錄
-    const newPointItem: PointHistoryItem = {
-      date: currentDate,
-      type: PointType.Course,
-      description: selectedCard.type,
-      points: selectedCard.points,
-      balance
-    }
-    pointsStore.addPointsHistory(newPointItem)
-  
-    // 加入購買歷史紀錄
-    const newPurchaseItem: PurchaseItem = {
-      id: purchaseHistory.value.length + 1,
-      date: currentDate,
-      cardType: selectedCard.type,
-      amount: selectedCard.price,
-      points: selectedCard.points,
-      status: PurchaseStatus.Paid,
-      paymentMethod: PurchasePaymentMethod.CreditCard,
-      invoiceNo: `INV-${purchaseHistory.value.length + 1}`
-    }
-    purchaseHistory.value.unshift(newPurchaseItem)
-  
-    return { success: true, message: '購買課卡成功' }
   }
 
+  /**
+   * 初始化購買記錄數據
+   */
+  const init = async () => {
+    await Promise.all([
+      fetchHistory(),
+      fetchUnpaid()
+    ])
+  }
 
   return {
     // state
@@ -250,13 +297,14 @@ export const usePurchaseStore = defineStore('purchase', () => {
 
     // getters
     totalSpent,
-    totalUnpaid,
     totalPointsPurchased,
 
     // actions
     fetchHistory,
+    byStatus,
     fetchUnpaid,
     payUnpaidItem,
-    buyPointsCard
+    buyPointsCard,
+    init
   }
 }) 

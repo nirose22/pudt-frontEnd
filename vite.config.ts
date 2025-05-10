@@ -4,7 +4,7 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 import Component from 'unplugin-vue-components/vite'
 import tailwindcss from '@tailwindcss/vite'
 import autoprefixer from 'autoprefixer'
-import path from 'path'
+import { fileURLToPath } from 'url'
 
 export default defineConfig({
   plugins: [
@@ -22,7 +22,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
-    }
+      '@': fileURLToPath(new URL('./src', import.meta.url))
+  }
   }
 })

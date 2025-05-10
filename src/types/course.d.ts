@@ -18,6 +18,7 @@ export interface CourseDTO {
   pointsRequired: number;
   image: Photo;       // 課程圖片
   merchantName: string;
+  description?: string;
 }
 
 export interface MerchantInfo {

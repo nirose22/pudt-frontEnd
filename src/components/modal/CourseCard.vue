@@ -1,5 +1,5 @@
 <template>
-    <div class="shadow-lg rounded-lg hover:shadow-xl transition-shadow cursor-pointer">
+    <div class="shadow-lg rounded-lg hover:shadow-xl transition-shadow cursor-pointer bg-white">
         <div class="p-4">
             <div class="aspect-video bg-gray-200 rounded-lg" />
             <h3 class="text-lg font-bold mt-2">{{ course.title }}</h3>

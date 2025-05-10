@@ -1,7 +1,7 @@
 // stores/bookingStore.ts
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import { isEqual, isWithinInterval } from 'date-fns'
+import { ref } from 'vue'
+import { isEqual } from 'date-fns'
 import type { CourseBooking, Result } from '@/types'
 import { BookingStatus } from '@/enums/BookingStatus'
 import { useCourseStore } from './courseStore'
@@ -10,8 +10,6 @@ import { useUserStore } from './userStore'
 
 export const useBookingStore = defineStore('booking', () => {
     /* ---------- state ---------- */
-    const range = ref<{ start: Date; end: Date } | null>(null)
-
     const courseStore = useCourseStore()
     const userStore = useUserStore()
     const bookings = ref<CourseBooking[]>([])
@@ -27,14 +25,14 @@ export const useBookingStore = defineStore('booking', () => {
                 userId: 1,
                 courseId: 101,
                 courseTitle: '初级瑜伽课程',
-                date: new Date('2025-05-01'),
+                date: new Date('2025-05-09'),
                 time: '10:00-12:00',
                 location: '和平瑜伽中心 - 信义店',
                 instructor: {
                     name: '李老师',
                     avatar: 'https://via.placeholder.com/50',
                 },
-                status: BookingStatus.Confirmed,
+                status: BookingStatus.Canceled,
                 points: 4,
             },
             {
@@ -57,14 +55,14 @@ export const useBookingStore = defineStore('booking', () => {
                 userId: 1,
                 courseId: 102,
                 courseTitle: '冥想与放松',
-                date: new Date('2025-05-01'),
+                date: new Date('2025-05-11'),
                 time: '14:00-16:00',
                 location: '和平瑜伽中心 - 中山店',
                 instructor: {
                     name: '张老师',
                     avatar: 'https://via.placeholder.com/50',
                 },
-                status: BookingStatus.Pending,
+                status: BookingStatus.Confirmed,
                 points: 3,
             },
             {
@@ -72,14 +70,14 @@ export const useBookingStore = defineStore('booking', () => {
                 userId: 1,
                 courseId: 103,
                 courseTitle: '高级瑜伽课程',
-                date: new Date('2025-05-04'),
+                date: new Date('2025-05-11'),
                 time: '18:00-20:00',
                 location: '和平瑜伽中心 - 信义店',
                 instructor: {
                     name: '王老师',
                     avatar: 'https://via.placeholder.com/50',
                 },
-                status: BookingStatus.Canceled,
+                status: BookingStatus.Confirmed,
                 points: 4,
             },
             {
@@ -87,14 +85,14 @@ export const useBookingStore = defineStore('booking', () => {
                 userId: 1,
                 courseId: 104,
                 courseTitle: '瑜伽基础课程',
-                date: new Date('2025-05-05'),
+                date: new Date('2025-05-15'),
                 time: '10:00-12:00',
                 location: '和平瑜伽中心 - 中山店',
                 instructor: {
                     name: '赵老师',
                     avatar: 'https://via.placeholder.com/50',
                 },
-                status: BookingStatus.Canceled,
+                status: BookingStatus.Confirmed,
                 points: 4,
             },
             {
@@ -102,14 +100,14 @@ export const useBookingStore = defineStore('booking', () => {
                 userId: 1,
                 courseId: 104,
                 courseTitle: '12312312321',
-                date: new Date('2025-05-05'),
+                date: new Date('2025-05-15'),
                 time: '10:00-12:00',
                 location: '和平瑜伽中心 - 中山店',
                 instructor: {
                     name: '赵老师',
                     avatar: 'https://via.placeholder.com/50',
                 },
-                status: BookingStatus.Pending,
+                status: BookingStatus.Confirmed,
                 points: 3,
             },
         ]
@@ -117,25 +115,6 @@ export const useBookingStore = defineStore('booking', () => {
     }
 
     const byStatus = (s: BookingStatus) => bookings.value.filter(b => b.status === s);
-
-    const inRange = computed(() =>
-        !range.value
-            ? bookings.value
-            : bookings.value.filter(b =>
-                b.status !== BookingStatus.Canceled &&
-                b.status !== BookingStatus.Pending &&
-                isWithinInterval(new Date(b.date), range.value!)
-            )
-    )
-    const byDate = computed(() => {
-        return inRange.value.reduce<Record<string, CourseBooking[]>>((map, b) => {
-            if (!map[b.date.toISOString()]) {
-                map[b.date.toISOString()] = []
-            }
-            map[b.date.toISOString()].push(b)
-            return map
-        }, {})
-    })
 
     /* ---------- helpers ---------- */
     function hasTimeConflict(date: Date, time: string) {
@@ -211,12 +190,8 @@ export const useBookingStore = defineStore('booking', () => {
     /* ---------- expose ---------- */
     return {
         bookings,
-        range,
-        inRange,
-        byDate,
         byStatus,
         fetchBookings,
-        setRange: (s: Date, e: Date) => (range.value = { start: s, end: e }),
         canBook,
         book,
         cancel

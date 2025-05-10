@@ -211,13 +211,6 @@ const saveProfile = ({ valid, values }: any) => {
         toast.add({ severity: 'error', summary: '請檢查輸入資料', life: 3000 })
         return
     }
-    console.log(form);
-    console.log('--------------------------------');
-    
-    console.log(values);
-    
-    console.log(values.gender);
-    
     const profileData = values;
     const res: Result = {
         success: true,
@@ -234,6 +227,7 @@ const saveProfile = ({ valid, values }: any) => {
 };
 </script>
 <style scoped>
+@reference "tailwindcss";
  
 .form-label {
     @apply block text-sm font-medium text-gray-700 mb-1

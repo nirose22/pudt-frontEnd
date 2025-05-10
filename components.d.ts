@@ -10,11 +10,13 @@ declare module 'vue' {
   export interface GlobalComponents {
     BaseLogo: typeof import('./src/components/layout/BaseLogo.vue')['default']
     CourseCard: typeof import('./src/components/modal/CourseCard.vue')['default']
+    DateRangeFilter: typeof import('./src/components/common/DateRangeFilter.vue')['default']
     Footer: typeof import('./src/components/layout/Footer.vue')['default']
     Header: typeof import('./src/components/layout/Header.vue')['default']
+    PaymentDialog: typeof import('./src/components/payment/PaymentDialog.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SearchBar: typeof import('./src/components/layout/SearchBar.vue')['default']
     SideBar: typeof import('./src/components/layout/SideBar.vue')['default']
-    Toast: typeof import('primevue/toast')['default']
   }
 }

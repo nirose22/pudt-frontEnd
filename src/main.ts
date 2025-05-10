@@ -10,10 +10,12 @@ import Button from 'primevue/button';
 import ToastService from 'primevue/toastservice';
 import ConfirmationService from 'primevue/confirmationservice';
 import InputText from 'primevue/inputtext';
-import { MyPreset } from './theme/preset'
+import { MyPreset } from '@/theme/preset'
 import './assets/styles/fonts.css'
 import './assets/main.css'
 import Toast from 'primevue/toast';
+import ConfirmDialog from 'primevue/confirmdialog';
+import Dialog from 'primevue/dialog';
 
 const app = createApp(App)
 
@@ -26,7 +28,7 @@ app.use(PrimeVue, {
     },
     cssLayer: {
         name: 'primevue',
-        order: 'theme, base, components, utilities, keyframes'
+        order: 'theme, base, primevue'
     }
 })
 
@@ -40,5 +42,8 @@ app.use(ConfirmationService);
 app.component('Button', Button);
 app.component('InputText', InputText);
 app.component('Toast', Toast);
+app.component('ConfirmDialog', ConfirmDialog);
+app.component('Dialog', Dialog);
+
 app.mount('#app')
 

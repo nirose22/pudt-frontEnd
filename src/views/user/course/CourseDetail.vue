@@ -166,7 +166,7 @@ import DatePicker from 'primevue/datepicker';
 import IftaLabel from 'primevue/iftalabel';
 import Divider from 'primevue/divider';
 import Dialog from 'primevue/dialog';
-import { isSameDate } from '@/utils/common';
+import { isSameDate } from '@/utils/date';
 import Toolbar from 'primevue/toolbar';
 import ScrollPanel from 'primevue/scrollpanel';
 import Toast from 'primevue/toast';
@@ -361,6 +361,7 @@ const shareCourse = () => {
 }
 </script>
 <style>
+@reference "tailwindcss";
  
 .avaliable-btn {
     @apply px-4 py-3 rounded-lg border cursor-pointer border-gray-300 transition-colors;

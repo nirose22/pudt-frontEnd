@@ -52,7 +52,7 @@
 import Drawer from 'primevue/drawer';
 import Divider from 'primevue/divider';
 import BaseLogo from '@/components/layout/BaseLogo.vue';
-import { ref, computed, onMounted, toRef } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/userStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -124,6 +124,8 @@ const handleProfile = () => {
 
 </script>
 <style scoped>
+@reference "tailwindcss";
+
 .menu-item {
     @apply flex items-center text-base font-normal rounded-md p-2 gap-5 cursor-pointer text-gray-800
 }

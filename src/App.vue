@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen h-full overflow-y-auto flex flex-col max-h-screen items-center">
     <Header />
-    <div class="w-full max-w-11/12 pt-10 grow mx-auto flex flex-col">
+    <div class="w-full max-w-11/12 grow mx-auto flex flex-col">
       <router-view></router-view>
     </div>
     <Footer />
@@ -25,10 +25,17 @@ router.beforeEach((to) => {
 </script>
 <style>
 @reference "tailwindcss";
- 
-@media (prefers-color-scheme: dark) {
-  :root { color-scheme: light; }
+
+.card {
+  @apply flex-1 p-4 shadow-sm bg-gray-50;
 }
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: light;
+  }
+}
+
 :root {
   color-scheme: light;
   --font-color: #1d1d1f;
@@ -43,7 +50,11 @@ router.beforeEach((to) => {
 }
 
 html {
-    font-size: 14px;
+  font-size: 14px;
+}
+
+.p-autocomplete input {
+  width: 100% !important;
 }
 
 /* 
@@ -68,4 +79,7 @@ button.p-button, button.p-button:not(:disabled):hover {
   gap: 0.5rem;
 }
 
+.p-tab-active {
+    @apply !bg-blue-100;
+}
 </style>

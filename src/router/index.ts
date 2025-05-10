@@ -31,7 +31,16 @@ const routes = [
     component: () => import('@/views/Login.vue'),
   },
 
-  // { path: '/register', component: Register }
+  { 
+    path: '/register', 
+    name: 'Register',
+    component: () => import('@/views/Register.vue') 
+  },
+  {
+    path: '/search',
+    name: 'Search',
+    component: () => import('@/views/user/SearchResultView.vue'),
+  }
 ];
 
 const router = createRouter({

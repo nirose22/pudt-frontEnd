@@ -1,6 +1,5 @@
 <template>
     <div class="h-full w-full">
-        <Toast />
         <h2 class="text-2xl font-bold mb-6">點數與課卡管理</h2>
 
         <div class="bg-blue-50 p-6 rounded-lg mb-8">
@@ -13,23 +12,22 @@
             </div>
         </div>
         <h3 class="text-lg font-medium mb-4">購買課卡點數</h3>
-        <ConfirmDialog class="max-w-lg w-full"/>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card v-for="pkg in pointsCards" :key="pkg.id"
+            <Card v-for="pc in pointsCards" :key="pc.id"
                 class="rounded-lg !shadow-md !bg-blue-50 transition-shadow">
                 <template #title>
-                    <h4 class="text-lg text-sky-600">{{ pkg.name }}</h4>
+                    <h4 class="text-lg text-sky-600">{{ cardsLabel(pc.type) }}</h4>
                 </template>
                 <template #content>
-                    <p class="text-3xl font-bold">{{ pkg.points }} <span class="text-sm font-normal">點</span></p>
-                    <p class="text-gray-600 my-2">{{ pkg.description }}</p>
+                    <p class="text-3xl font-bold">{{ pc.points }} <span class="text-sm font-normal">點</span></p>
+                    <p class="text-gray-600 my-2">{{ pc.description }}</p>
                     <div class="flex items-baseline">
-                        <span class="text-xl font-bold">NT$ {{ pkg.price }}</span>
-                        <span v-if="pkg.discount" class="ml-2 text-sm text-green-600">{{ pkg.discount }}</span>
+                        <span class="text-xl font-bold">NT$ {{ pc.price }}</span>
+                        <span v-if="pc.discount" class="ml-2 text-sm text-green-600">{{ pc.discount }}</span>
                     </div>
                 </template>
                 <template #footer>
-                    <Button label="購買" class="w-full" @click="handlePurchase(pkg.id)"/>
+                    <Button label="購買" class="w-full" @click="handlePurchase(pc.id)"/>
                 </template>
             </Card>
         </div>
@@ -57,70 +55,42 @@
     </div>
 </template>
 
-<script setup>
-import { ref, computed, onMounted } from 'vue';
+<script setup lang="ts">
+import { ref, toRef, type PropType } from 'vue';
 import Dialog from 'primevue/dialog';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Card from 'primevue/card';
-import { useUserStore } from '@/stores/userStore';
-import { usePointsStore } from '@/stores/pointsStore';
-import { useConfirm } from 'primevue/useconfirm';
-import { useToast } from 'primevue/usetoast';
-import { formatDateString } from '@/utils/common';
-import ConfirmDialog from 'primevue/confirmdialog';
-import Toast from 'primevue/toast';
+import { formatDateString } from '@/utils/date';
+import type { PointsCard, PointHistoryItem } from '@/types';
+import { CardTypeLabel, CardType } from '@/enums/Cards';
 
-const userStore = useUserStore();
-const confirm = useConfirm();
-const toast = useToast();
-const profile = userStore.profile;
-const points = userStore.points;
-
-const pointsStore = usePointsStore();
-const showHistory = ref(false);
-
-onMounted(() => {
-  pointsStore.init()  // 一次拉歷史 + 課卡包
+const props = defineProps({
+    points: {
+        type: Number,
+        required: true
+    },
+    pointsCards: {
+        type: Array as PropType<PointsCard[]>,
+        required: true
+    },
+    pointsHistory: {
+        type: Array as PropType<PointHistoryItem[]>,
+        required: true
+    }
 })
-// 點數套餐
-const pointsCards = pointsStore.pointsCards;
-// 點數歷史
-const pointsHistory = pointsStore.pointsHistory;
+const points = toRef(props, 'points');
+const pointsCards = toRef(props, 'pointsCards');
+const pointsHistory = toRef(props, 'pointsHistory');
 
-const handlePurchase = (cardId) => {
-    if (!profile.value) return;
-    confirm.require({
-        message: `確認購買課卡點數? 將扣除 ${pointsCards.value.find(pkg => pkg.id === cardId).price} 元`,
-        header: '提示',
-        acceptLabel: '確認',
-        rejectLabel: '取消',
-        acceptClass: 'p-button-primary p-button-lg',
-        rejectClass: 'p-button-secondary p-button-lg',
-        accept: async () => {
-            if (cardId && profile.value) {
-                const res = await pointsStore.buyPointsCard(cardId)
-                if (res.success) {
-                    toast.add({ 
-                        severity: 'success', 
-                        summary: '成功', 
-                        detail: res.message, 
-                        life: 3000 
-                    });
-                } else {
-                    toast.add({ 
-                        severity: 'error', 
-                        summary: '失敗', 
-                        detail: res.message || '購買點數失敗', 
-                        life: 3000 
-                    });
-                }
-            }
-        },
-        reject: () => {
-            // 用戶取消，不執行任何動作
-        }
-    });
+const showHistory = ref(false);
+const emit = defineEmits(['purchase']);
+
+const handlePurchase = (cardId: number) => {
+    emit('purchase', cardId);
 }
 
+const cardsLabel = (type: CardType) => {
+    return CardTypeLabel[type];
+}
 </script>

@@ -17,3 +17,10 @@ export const CardTypeLabel: Record<CardType, string> = {
     [CardType.Professional]: '專業課卡',
     [CardType.VIP]: 'VIP課卡'
 }
+
+export const CardTypePrice: Record<CardType, number> = {
+    [CardType.Basic]: 1000,
+    [CardType.Advanced]: 1800,
+    [CardType.Professional]: 4000,
+    [CardType.VIP]: 8000
+}

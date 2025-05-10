@@ -9,3 +9,16 @@ export * from './platform'
 export * from './order'
 export * from './merchant'
 export * from './admin'
+export * from './pointItems'
+
+/**
+ * API 响应通用接口
+ */
+export interface ApiResponse<T = any> {
+  success: boolean;
+  data?: T;
+  message?: string;
+  error?: any;
+}
+
+export interface Result<T = any> extends ApiResponse<T> {} 

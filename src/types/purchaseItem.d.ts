@@ -21,9 +21,7 @@ export interface PurchaseItem {
 export interface UnpaidItem {
   id: number
   date: string | Date
-  itemName: string
-  amount: number
-  amountPaid: number
-  amountDue: number
-  dueDate?: string | Date
+  cardType: CardType // 課卡名稱
+  amount: number // 金額
+  dueDate?: string | Date // 到期日
 }

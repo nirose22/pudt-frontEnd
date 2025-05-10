@@ -1,5 +1,5 @@
 <template>
-    <header class="w-full fixed top-0 left-0 z-50">
+    <header class="w-full z-10">
         <nav class="flex justify-between items-center py-1 px-3 h-14 overflow-hidden">
             <!-- Logo -->
             <div class="flex flex-row h-full gap-3 overflow-hidden">
@@ -9,6 +9,15 @@
                 </Button>
                 <BaseLogo class="h-full w-25 cursor-pointer" @click="router.push('/')" />
             </div>
+            <!-- 搜索栏 - 仅在搜索页面显示 -->
+            <div v-if="route.name === 'search'" class="flex-grow max-w-2xl mx-4">
+                <SearchBar 
+                    v-model="keyword" 
+                    placeholder="搜尋課程、教師或地點..."
+                    @search="searchAgain" 
+                />
+            </div>
+            <!-- 課程行程表 -->
             <Button class="mr-2 w-11" text rounded @click="visibleScheduleBar = true">
                 <OverlayBadge severity="danger" class="text-red-600" :unstyled="!hasNewSchedule">
                     <i class="pi pi-calendar !text-[1.7rem]"></i>
@@ -22,10 +31,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watchEffect } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import BaseLogo from '@/components/layout/BaseLogo.vue';
-import { useRouter } from 'vue-router';
 import Sidebar from '@/components/layout/SideBar.vue';
+import SearchBar from '@/components/layout/SearchBar.vue';
 import ScheduleManagement from '@/views/user/userManagement/ScheduleManagement.vue';
 import OverlayBadge from 'primevue/overlaybadge';
 import Drawer from 'primevue/drawer';
@@ -33,7 +43,10 @@ import Drawer from 'primevue/drawer';
 const visibleMenu = ref(false);
 const visibleScheduleBar = ref(false);
 const router = useRouter();
+const route = useRoute();
 const hasNewSchedule = ref(false);
+
+const keyword = ref('');
 
 const menuPt = ref({
     header: {
@@ -50,5 +63,29 @@ const menuPt = ref({
     }
 });
 
+// 搜索功能
+const searchAgain = (value: string) => {
+    if (value && value.trim()) {
+        if (route.name !== 'search') {
+            router.push({
+                name: 'search',
+                query: { keyword: value }
+            });
+        } else {
+            // 如果已经在搜索页面，只更新查询参数
+            router.replace({
+                query: { ...route.query, keyword: value }
+            });
+        }
+    }
+};
+
+// 当路由变化时，更新搜索关键词
+watchEffect(() => {
+    if (route.name === 'search' && route.query.keyword) {
+        keyword.value = route.query.keyword as string;
+    }
+});
 </script>
+
 <style scoped></style>

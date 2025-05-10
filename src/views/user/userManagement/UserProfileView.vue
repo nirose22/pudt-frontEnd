@@ -23,7 +23,6 @@
                 </div>
             </nav>
 
-            <!-- 主要內容區域 -->
             <div class="flex flex-col flex-1 sm:overflow-hidden md:flex-row">
                 <!-- 左側菜單 -->
                 <div class="w-full md:w-1/4 border-r border-gray-200">
@@ -51,7 +50,8 @@
 
                     <!-- 2. 點數管理與課卡購買 -->
                     <template v-if="activeTab === 'points'">
-                        <PointsManagement />
+                        <PointsManagement :points="userStore.points" :pointsHistory="pointsHistory"
+                            :pointsCards="pointsCards" @purchase="handlePurchase" />
                     </template>
 
                     <!-- 3. 預約行程管理 -->
@@ -61,15 +61,19 @@
 
                     <!-- 4. 活動紀錄 -->
                     <template v-if="activeTab === 'history'">
-                        <ActivityHistory :courseHistory="userBookings" :purchaseHistory="purchaseHistory"
-                            :absenceRecords="absenceRecords" :unpaidRecords="unpaidRecords" />
+                        <ActivityHistory :courseHistory="userBookings" :absenceRecords="absenceRecords"/>
+                    </template>
+
+                    <!-- 5. 購買紀錄 -->
+                    <template v-if="activeTab === 'purchase'">
+                        <PurchaseHistory :purchaseHistory="purchaseHistory" :unpaidRecords="unpaidRecords" />
                     </template>
                 </section>
             </div>
         </div>
     </div>
     <Toast />
-
+    <ConfirmDialog class="max-w-lg w-full" />
     <!-- 頭像上傳對話框 -->
     <Dialog v-model:visible="showPhotoDialog" header="更新頭像" :style="{ width: '450px' }">
         <div class="flex flex-col items-center gap-4">
@@ -93,59 +97,73 @@ import { useToast } from 'primevue/usetoast';
 import Avatar from 'primevue/avatar';
 import Chip from 'primevue/chip';
 import Dialog from 'primevue/dialog';
+import ConfirmDialog from 'primevue/confirmdialog';
 import { useUserStore } from '@/stores/userStore';
-// 子組件導入
+
 import ProfileManagement from '@/views/user/userManagement/ProfileManagement.vue';
 import PointsManagement from '@/views/user/userManagement/PointsManagement.vue';
 import BookingsManagement from '@/views/user/userManagement/BookingsManagement.vue';
 import ActivityHistory from '@/views/user/userManagement/ActivityHistory.vue';
-import type { User, CourseBooking } from '@/types';
+import PurchaseHistory from '@/views/user/userManagement/PurchaseHistory.vue';
+
+import type { User } from '@/types';
 import { useBookingStore } from '@/stores/bookingStore';
 import { BookingStatus } from '@/enums/BookingStatus';
 import { usePointsStore } from '@/stores/pointsStore';
 import { usePurchaseStore } from '@/stores/purchaseStore';
+import { useConfirm } from 'primevue/useconfirm';
+import { useAuthStore } from '@/stores/authStore';
+import { PurchaseStatus } from '@/enums/Purchase';
+import { useRouter } from 'vue-router';
+
 const toast = useToast();
 const activeTab = ref('profile');
 const showPhotoDialog = ref(false);
 const fileInput = ref<HTMLInputElement | null>(null);
 const selectedPhoto = ref<File | null>(null);
 
+const confirm = useConfirm();
 const userStore = useUserStore();
 const bookingStore = useBookingStore();
 const pointsStore = usePointsStore();
 const purchaseStore = usePurchaseStore();
-// 購買歷史
-const purchaseHistory = purchaseStore.purchaseHistory;
+const router = useRouter();
+
 // 用戶資料
 onMounted(async () => {
     await userStore.fetchProfile();
-    await pointsStore.fetchPointsHistory();
+    await pointsStore.init();
     await bookingStore.fetchBookings();
+    await purchaseStore.fetchHistory();
 })
-const userBookings = bookingStore.bookings;
 
+
+const purchaseHistory = computed(() => purchaseStore.purchaseHistory);
+const userBookings = computed(() => bookingStore.bookings);
+const pointsCards = computed(() => pointsStore.pointsCards);
+const pointsHistory = computed(() => pointsStore.pointsHistory);
 // 菜單項目
 const menuItems = [
     { id: 'profile', label: '會員資料管理', icon: 'pi-user' },
     { id: 'points', label: '點數與課卡', icon: 'pi-wallet' },
     { id: 'bookings', label: '預約行程管理', icon: 'pi-calendar' },
-    { id: 'history', label: '活動紀錄', icon: 'pi-history' }
+    { id: 'history', label: '活動紀錄', icon: 'pi-history' },
+    { id: 'purchase', label: '購買紀錄', icon: 'pi-shopping-cart' }
 ];
-
 
 const userActiveBookings = computed(() => {
     return bookingStore.byStatus(BookingStatus.Confirmed)
 })
 
 // 缺席記錄
-const absenceRecords = ref([
-    { id: 1, courseTitle: '高級瑜珈', date: '2025-04-10', time: '14:00-16:00', points: 12 }
-]);
+const absenceRecords = computed(() => {
+    return bookingStore.byStatus(BookingStatus.Pending)
+});
 
 // 未付費記錄
-const unpaidRecords = ref([
-    ...bookingStore.byStatus(BookingStatus.Pending)
-]);
+const unpaidRecords = computed(() => {
+    return purchaseStore.byStatus(PurchaseStatus.Unpaid)
+});
 
 const handlePhotoUpload = () => {
     showPhotoDialog.value = true;
@@ -194,8 +212,53 @@ const cancelBooking = async (bookingId: number) => {
 
 const handleLogout = () => {
     // 在實際應用中，這裡應該調用登出 API
-    toast.add({ severity: 'info', summary: '登出', detail: '您已成功登出', life: 3000 });
-    // 導航到登入頁面
-    // router.push('/login');
+    confirm.require({
+        message: '確認登出?',
+        header: '提示',
+        acceptLabel: '確認',
+        rejectLabel: '取消',
+        accept: () => {
+            useAuthStore().logout().then(() => {
+                router.push('/login');
+            });
+        }
+    });
 };
+
+
+const handlePurchase = (cardId: number) => {
+    if (!userStore.profile) return;
+    confirm.require({
+        message: `確認購買課卡點數? 將扣除 ${pointsCards.value.find(pkg => pkg.id === cardId)?.price} 元`,
+        header: '提示',
+        acceptLabel: '確認',
+        rejectLabel: '取消',
+        acceptClass: 'p-button-primary p-button-lg',
+        rejectClass: 'p-button-secondary p-button-lg',
+        accept: async () => {
+            if (cardId && userStore.profile) {
+                const res = await purchaseStore.buyPointsCard(cardId)
+                if (res.success) {
+                    toast.add({
+                        severity: 'success',
+                        summary: '成功',
+                        detail: res.message,
+                        life: 3000
+                    });
+                } else {
+                    toast.add({
+                        severity: 'error',
+                        summary: '失敗',
+                        detail: res.message || '購買點數失敗',
+                        life: 3000
+                    });
+                }
+            }
+        },
+        reject: () => {
+            // 用戶取消，不執行任何動作
+        }
+    });
+}
+
 </script>

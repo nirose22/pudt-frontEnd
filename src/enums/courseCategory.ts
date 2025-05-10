@@ -101,3 +101,5 @@ export const SubCategoryLabel: Record<SubCategory, string> = {
   // Outdoor
   [SubCategory.Bouldering]: '攀岩抱石'
 }
+
+export const SubCategoryLabelList = Object.values(SubCategoryLabel);

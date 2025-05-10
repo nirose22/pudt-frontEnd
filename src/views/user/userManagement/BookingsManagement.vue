@@ -74,7 +74,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import ButtonGroup from 'primevue/buttongroup';
 import Divider from 'primevue/divider';
-import { formatDateString } from '@/utils/common';
+import { formatDateString } from '@/utils/date';
 import type { CalendarOptions, EventClickArg, EventInput, EventApi } from '@fullcalendar/core';
 import type { CourseBooking } from '@/types';
 
@@ -161,6 +161,7 @@ const cancelBooking = () => {
 
 </script>
 <style scoped>
+@reference "tailwindcss";
  
 ::v-deep(a.fc-event) {
     @apply bg-blue-50 rounded-md p-2 overflow-hidden;
