@@ -251,16 +251,16 @@ const onFormSubmit = async (e: any) => {
     color: white;
 }
 
-::v-deep .p-inputtext,
-::v-deep .p-password-input {
+::v-deep(.p-inputtext),
+::v-deep(.p-password-input) {
     width: 100% !important;
 }
 
-::v-deep .p-inputnumber {
+::v-deep(.p-inputnumber) {
     width: 100%;
 }
 
-::v-deep .p-inputnumber-input {
+::v-deep(.p-inputnumber-input) {
     width: 100% !important;
 }
 </style>

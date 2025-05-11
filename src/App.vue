@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen h-full overflow-y-auto flex flex-col max-h-screen items-center">
+  <div class="min-h-screen h-full overflow-y-auto flex flex-col max-h-screen items-center bg-gray-50">
     <Header />
     <div class="w-full max-w-11/12 grow mx-auto flex flex-col">
       <router-view></router-view>
@@ -56,6 +56,7 @@ html {
 .p-autocomplete input {
   width: 100% !important;
 }
+
 
 /* 
 button.p-button, button.p-button:not(:disabled):hover {

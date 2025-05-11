@@ -3,6 +3,7 @@ import type { Photo, PhotoItem } from './photo'
 
 export interface Course {
   courseId: number;
+  merchantId: number;
   title: string;
   description: string;
   price: number;
@@ -13,6 +14,7 @@ export interface Course {
 }
 
 export interface CourseDTO {
+  merchantId: number;
   courseId: number;
   title: string;
   pointsRequired: number;
@@ -22,6 +24,7 @@ export interface CourseDTO {
 }
 
 export interface MerchantInfo {
+  id: number;
   name: string;
   address: string;
   phone: string;

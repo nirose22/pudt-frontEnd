@@ -1,18 +1,18 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import 'primeicons/primeicons.css';
+import './assets/styles/fonts.css'
+import './assets/main.css'
 import App from './App.vue'
 import router from './router'
 import piniaPersist from 'pinia-plugin-persistedstate'
 
 import PrimeVue from 'primevue/config';
-import 'primeicons/primeicons.css'
 import Button from 'primevue/button';
 import ToastService from 'primevue/toastservice';
 import ConfirmationService from 'primevue/confirmationservice';
 import InputText from 'primevue/inputtext';
 import { MyPreset } from '@/theme/preset'
-import './assets/styles/fonts.css'
-import './assets/main.css'
 import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import Dialog from 'primevue/dialog';

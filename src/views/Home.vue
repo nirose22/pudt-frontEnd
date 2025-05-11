@@ -16,10 +16,8 @@
                 </p>
             </div>
             <!-- Search Bar -->
-            <div class="flex flex-col md:flex-row items-center gap-4 max-w-2xl w-full">
-                <AutoComplete v-model="searchQuery" :suggestions="suggestions" @complete="handleComplete"
-                    placeholder="搜尋課程或商家..." class="w-full" />
-                <Button class="flex-shrink-0" @click="handleSearch">搜尋</Button>
+            <div class="searchbar-container flex flex-col md:flex-row items-center gap-4 max-w-2xl w-full">
+                <SearchBar v-model="searchQuery" @search="handleSearch"/>
             </div>
         </div>
         <!-- Featured Courses -->
@@ -36,27 +34,25 @@
                         class="p-button-sm" />
                 </div>
             </div>
-
-            <div class="flex justify-center mb-4 flex-wrap gap-2">
-                <div class="flex justify-center">
-                    <TabMenu :model="categoryTabs" v-model:activeIndex="activeCategory" />
+            <Tabs :value="categoryTabs[0].label">
+                <TabList class="self-center">
+                    <Tab v-for="tab in categoryTabs" :key="tab.label" :value="tab.label">
+                        <i :class="tab.icon + ' mr-2'"></i>
+                        {{ tab.label }}
+                    </Tab>
+                </TabList>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <CourseCard v-for="course in displayedCourses" :key="course.courseId" :course="course"
+                        @click="selectCourse(course)" />
+                    <div v-if="displayedCourses.length === 0" class="col-span-3 text-center py-8">
+                        <i class="pi pi-search text-4xl text-gray-400"></i>
+                        <p class="mt-2 text-gray-500">沒有找到相關課程，試試其他分類或重置篩選條件吧！</p>
+                    </div>
                 </div>
-            </div>
-
-            <!-- 课程列表 -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                <CourseCard v-for="course in displayedCourses" :key="course.courseId" :course="course"
-                    @click="selectCourse(course)" />
-                <div v-if="displayedCourses.length === 0" class="col-span-3 text-center py-8">
-                    <i class="pi pi-search text-4xl text-gray-400"></i>
-                    <p class="mt-2 text-gray-500">沒有找到相關課程，試試其他分類或重置篩選條件吧！</p>
+                <div v-if="displayedCourses.length > 0" class="flex justify-center mt-8">
+                    <Button rounded label="查看更多課程" icon="pi pi-arrow-right" iconPos="right" @click="loadMoreCourses" size="large" />
                 </div>
-            </div>
-
-            <!-- "加载更多"按钮 -->
-            <div v-if="displayedCourses.length > 0" class="flex justify-center mt-4">
-                <Button outlined label="查看更多課程" icon="pi pi-arrow-right" iconPos="right" @click="loadMoreCourses" />
-            </div>
+            </Tabs>
         </div>
 
         <!-- 偏好设置对话框 -->
@@ -87,18 +83,16 @@ import CourseCard from '@/components/modal/CourseCard.vue'
 import CourseDetail from '@/views/user/course/CourseDetail.vue'
 import { ref, toRef, computed, onMounted, watch } from 'vue'
 import Chip from 'primevue/chip';
-import AutoComplete from 'primevue/autocomplete';
-
-import TabMenu from 'primevue/tabmenu';
-import Select from 'primevue/select';
+import SearchBar from '@/components/layout/SearchBar.vue';
+import Tabs from 'primevue/tabs';
+import TabList from 'primevue/tablist';
+import Tab from 'primevue/tab';
 import { useCourseStore } from '@/stores/courseStore';
 import { useUserStore } from '@/stores/userStore';
 import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
-
 import type { CourseDTO } from '@/types/course';
 import { CourseService } from '@/service/CourseService';
-import { SubCategoryLabelList } from '@/enums/CourseCategory';
 
 const visible = ref(false)
 const showPreferenceDialog = ref(false);
@@ -111,7 +105,6 @@ const currentCourse = toRef(courseStore, 'currentCourse')
 const isLoggedIn = userStore.isLoggedIn
 const activeCategory = ref(0);
 const searchQuery = ref('');
-const suggestions = ref<string[]>([]);
 const showAll = ref(false);
 
 const allCategories = ['瑜珈', '滑板', '攝影'];
@@ -266,12 +259,6 @@ function selectCourse(course: CourseDTO) {
     visible.value = true;
 }
 
-function handleComplete() {
-    const query = searchQuery.value.trim();
-    if (query) {
-        suggestions.value = SubCategoryLabelList.filter(category => category.toLowerCase().includes(query.toLowerCase()));
-    }
-}
 
 function handleSearch() {
     if (searchQuery.value.trim()) {

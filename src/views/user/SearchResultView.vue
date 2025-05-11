@@ -1,20 +1,21 @@
 <template>
-	<div class="flex flex-col min-h-screen overflow-hidden ">
+	<div class="flex flex-col min-h-screen overflow-hidden">
+		<!-- Toast 组件用于显示错误消息 -->
+		<Toast />
+		
 		<!-- 主要内容區 -->
 		<div class="container mx-auto p-4 flex-grow flex flex-col md:flex-row gap-6">
 			<!-- 左側篩選區 -->
 			<div class="md:w-1/4 shrink-0">
 				<div class="bg-white rounded-lg shadow p-4 sticky top-4">
 					<h2 class="text-xl font-bold mb-4">篩選條件</h2>
-
 					<!-- 地區篩選 -->
 					<div class="mb-6">
 						<h3 class="text-lg font-medium mb-2">地區</h3>
 						<div class="flex flex-wrap gap-2">
 							<Chip v-for="region in regions" :key="region.code" :label="region.name"
-								:class="isRegionSelected(region.code) ? 'bg-primary-100' : 'bg-gray-100'"
-								@click="toggleRegion(region.code)"
-								class="cursor-pointer hover:bg-primary-50 transition-colors" />
+								:class="{ 'chip-selected': isRegionSelected(region.code) }"
+								@click="toggleRegion(region.code)" class="chip" />
 						</div>
 					</div>
 
@@ -23,22 +24,19 @@
 						<h3 class="text-lg font-medium mb-2">課程類別</h3>
 						<div class="flex flex-wrap gap-2">
 							<Chip v-for="category in categories" :key="category.code" :label="category.name"
-								:class="isCategorySelected(category.code) ? 'bg-primary-100' : 'bg-gray-100'"
-								@click="toggleCategory(category.code)"
-								class="cursor-pointer hover:bg-primary-50 transition-colors" />
+								:class="{ 'chip-selected': isCategorySelected(category.code) }"
+								@click="toggleCategory(category.code)" class="chip" />
 						</div>
 					</div>
 
 					<!-- 點數區間篩選 -->
 					<div class="mb-6">
 						<h3 class="text-lg font-medium mb-2">點數區間</h3>
-						<div class="px-2">
-							<Slider v-model="pointsRange" range class="my-4" />
-							<div class="flex justify-between">
-								<InputNumber v-model="pointsRange[0]" showButtons :min="0" :max="pointsRange[1]" />
-								<span class="self-center">至</span>
-								<InputNumber v-model="pointsRange[1]" showButtons :min="pointsRange[0]" :max="100" />
-							</div>
+						<Slider v-model="pointsRange" range class="my-4" />
+						<div class="flex justify-around">
+							<InputNumber v-model="pointsRange[0]" :min="0" :max="pointsRange[1]" />
+							<span class="self-center">至</span>
+							<InputNumber v-model="pointsRange[1]" :min="pointsRange[0]" :max="100" />
 						</div>
 					</div>
 
@@ -63,8 +61,13 @@
 
 					<!-- 篩選按鈕 -->
 					<div class="flex gap-2">
-						<Button label="套用篩選" icon="pi pi-filter" @click="applyFilters" class="w-full" />
-						<Button label="重置" icon="pi pi-refresh" outlined @click="resetFilters" class="w-full" />
+						<!-- 使用 loading 状态禁用按钮防止重复点击 -->
+						<Button label="套用篩選" icon="pi pi-filter" @click="applyFilters" 
+							:loading="isCoursesLoading" :disabled="isCoursesLoading" 
+							class="w-full" />
+						<Button label="重置" icon="pi pi-refresh" outlined @click="resetFilters" 
+							:disabled="isCoursesLoading"
+							class="w-full" />
 					</div>
 				</div>
 			</div>
@@ -73,7 +76,7 @@
 			<div class="flex-grow">
 				<!-- 搜尋結果概要 -->
 				<div class="mb-4 flex flex-wrap justify-between items-center">
-					<div>
+					<div v-if="keyword">
 						<h1 class="text-2xl font-bold">「{{ keyword }}」的搜尋結果</h1>
 						<p class="text-gray-600">共找到 {{ filteredCourses.length }} 個符合的課程</p>
 					</div>
@@ -81,7 +84,7 @@
 					<!-- 排序選項 -->
 					<div class="flex items-center gap-2">
 						<label for="sortBy" class="whitespace-nowrap">排序方式：</label>
-						<Dropdown v-model="sortBy" :options="sortOptions" optionLabel="label" optionValue="value"
+						<Select v-model="sortBy" :options="sortOptions" optionLabel="label" optionValue="value"
 							placeholder="選擇排序方式" class="w-40" />
 					</div>
 				</div>
@@ -110,13 +113,30 @@
 
 				<!-- 課程列表 -->
 				<div>
-					<DataView :value="filteredCourses" :layout="layout" paginator :rows="9"
+					<!-- 加载状态显示 -->
+					<div v-if="isCoursesLoading" class="text-center py-8">
+						<ProgressSpinner style="width:50px;height:50px" strokeWidth="5" />
+						<p class="mt-3 text-gray-600">載入課程中，請稍候...</p>
+					</div>
+					
+					<!-- 错误状态显示 -->
+					<div v-else-if="coursesLoadError" class="p-6 text-center bg-white rounded-lg shadow">
+						<i class="pi pi-exclamation-triangle text-5xl text-red-500 mb-4"></i>
+						<h3 class="text-xl font-semibold mb-2">獲取課程數據時出錯</h3>
+						<p class="text-gray-600 mb-4">{{ coursesLoadError }}</p>
+						<Button label="重試" icon="pi pi-refresh" @click="fetchCourses" />
+					</div>
+					
+					<!-- 正常状态显示数据 -->
+					<DataView v-else :value="filteredCourses" :layout="layout" paginator :rows="9"
 						:rowsPerPageOptions="[9, 18, 27]">
 						<template #header>
 							<div class="flex justify-end">
 								<div class="p-dataview-layout-options">
-									<Button icon="pi pi-th-large" @click="layout = 'grid'" :text="layout === 'grid'" :outlined="layout !== 'grid'" />
-									<Button icon="pi pi-list" @click="layout = 'list'" :text="layout === 'list'" :outlined="layout !== 'list'" />
+									<Button icon="pi pi-th-large" @click="layout = 'grid'" :text="layout === 'grid'"
+										:outlined="layout !== 'grid'" />
+									<Button icon="pi pi-list" @click="layout = 'list'" :text="layout === 'list'"
+										:outlined="layout !== 'list'" />
 								</div>
 							</div>
 						</template>
@@ -150,7 +170,10 @@
 											<span class="text-lg font-bold text-primary-700">
 												{{ course.pointsRequired }} 點數
 											</span>
-											<Button label="查看詳情" @click="viewCourseDetail(course)" />
+											<!-- 详情按钮禁用状态 -->
+											<Button label="查看詳情" @click="viewCourseDetail(course)" 
+												:loading="courseStore.loading && selectedCourseId === course.courseId"
+												:disabled="courseStore.loading" />
 										</div>
 									</div>
 								</div>
@@ -161,7 +184,9 @@
 						<template #grid="slotProps">
 							<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 								<CourseCard v-for="course in slotProps.items" :key="course.courseId" :course="course"
-									@click="viewCourseDetail(course)" />
+									@click="viewCourseDetail(course)"
+									:disabled="courseStore.loading"
+									:class="{'opacity-70 pointer-events-none': courseStore.loading && selectedCourseId === course.courseId}" />
 							</div>
 						</template>
 
@@ -185,29 +210,38 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 import CourseCard from '@/components/modal/CourseCard.vue';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import Card from 'primevue/card';
 import CourseDetail from '@/views/user/course/CourseDetail.vue';
 import type { CourseDTO } from '@/types/course';
-import { useCourseStore } from '@/stores/courseStore';
-import InputText from 'primevue/inputtext';
 import Slider from 'primevue/slider';
 import InputNumber from 'primevue/inputnumber';
 import Checkbox from 'primevue/checkbox';
 import Chip from 'primevue/chip';
 import DataView from 'primevue/dataview';
-import Dropdown from 'primevue/dropdown';
+import Select from 'primevue/select';
+import Button from 'primevue/button';
 import { CourseService } from '@/service/CourseService';
+import { useCourseStore } from '@/stores/courseStore';
+import Toast from 'primevue/toast';
+import { useToast } from 'primevue/usetoast';
+import ProgressSpinner from 'primevue/progressspinner';
 
 const route = useRoute();
+const courseStore = useCourseStore();
+const toast = useToast();
 
 // 視圖狀態
 const layout = ref('grid');
 const detailVisible = ref(false);
 const selectedCourseId = ref(0);
+
+// 數據加載狀態
+const isCoursesLoading = ref(false);
+const coursesLoadError = ref<string | null>(null);
 
 // 搜尋與篩選狀態
 const keyword = ref('');
@@ -223,10 +257,8 @@ const sortBy = ref('relevance');
 
 // 監聽路由變化，更新搜尋關鍵字
 watch(() => route.query.keyword, (newKeyword) => {
-    if (newKeyword) {
-        keyword.value = newKeyword as string;
-        fetchCourses();  // 重新獲取課程數據
-    }
+	keyword.value = newKeyword as string;
+	fetchCourses();  // 重新獲取課程數據
 }, { immediate: true });
 
 // 排序選項
@@ -270,11 +302,32 @@ onMounted(async () => {
 	await fetchCourses();
 });
 
-// 模擬獲取課程數據
+// 獲取課程數據
 async function fetchCourses() {
-	// 實際應用中應調用API
-	return CourseService.getCourseData();
-
+	// 設置 loading 狀態
+	isCoursesLoading.value = true;
+	coursesLoadError.value = null;
+	
+	try {
+		// 獲取課程數據
+		const data = await CourseService.getCourse();
+		allCourses.value = data;
+	} catch (err) {
+		// 處理錯誤
+		console.error('獲取課程列表失敗:', err);
+		coursesLoadError.value = err instanceof Error ? err.message : '獲取課程列表失敗';
+		
+		// 顯示錯誤提示
+		toast.add({ 
+			severity: 'error', 
+			summary: '獲取課程失敗', 
+			detail: coursesLoadError.value, 
+			life: 5000 
+		});
+	} finally {
+		// 完成後重置 loading 狀態
+		isCoursesLoading.value = false;
+	}
 }
 
 // 處理函數
@@ -304,6 +357,7 @@ function toggleCategory(code: string): void {
 	}
 }
 
+// 應用篩選器 - 現在可以顯示加載狀態
 function applyFilters(): void {
 	// 實際應用中應重新請求篩選後的數據
 	console.log('Apply filters', {
@@ -313,6 +367,9 @@ function applyFilters(): void {
 		filters: filters.value,
 		sortBy: sortBy.value
 	});
+	
+	// 在這裡可以調用 fetchCourses() 或專門的篩選 API
+	fetchCourses();
 }
 
 function resetFilters(): void {
@@ -325,11 +382,33 @@ function resetFilters(): void {
 		favourites: false
 	};
 	sortBy.value = 'relevance';
+	
+	// 重置後重新獲取數據
+	fetchCourses();
 }
 
-function viewCourseDetail(course: CourseDTO): void {
+/**
+ * 查看課程詳情
+ * 使用courseStore加載課程詳情並打開彈窗
+ */
+async function viewCourseDetail(course: CourseDTO): Promise<void> {
 	selectedCourseId.value = course.courseId;
-	detailVisible.value = true;
+	
+	// 使用courseStore的loadCourseDetail方法加載課程數據
+	const success = await courseStore.loadCourseDetail(course.courseId);
+	
+	if (success) {
+		// 成功加載後打開詳情彈窗
+		detailVisible.value = true;
+	} else if (courseStore.error) {
+		// 顯示錯誤提示
+		toast.add({ 
+			severity: 'error', 
+			summary: '無法查看課程詳情', 
+			detail: courseStore.error, 
+			life: 3000 
+		});
+	}
 }
 
 // 計算屬性
@@ -380,10 +459,24 @@ const latestCourses = computed(() => {
 <style scoped>
 @reference "tailwindcss";
 
-.line-clamp-2 {
-	display: -webkit-box;
-	-webkit-line-clamp: 2;
-	-webkit-box-orient: vertical;
-	overflow: hidden;
+::v-deep(.p-inputnumber > input) {
+	width: 100px !important;
+}
+
+.chip {
+	@apply cursor-pointer hover:bg-blue-200 ! transition-colors
+}
+
+
+.chip:hover:not(.chip-selected) {
+	@apply bg-blue-100 !
+}
+
+.chip-selected {
+	@apply bg-blue-400 ! text-white !
+}
+
+.chip.chip-selected:hover {
+	@apply bg-blue-500 !
 }
 </style>
