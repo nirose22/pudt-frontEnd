@@ -65,6 +65,8 @@ const searchAgain = (value: string) => {
             query: { keyword: value }
         });
     } else {
+        console.log('searchAgain', value);
+        
         router.replace({
             query: { ...route.query, keyword: value }
         });

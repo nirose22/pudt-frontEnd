@@ -6,114 +6,19 @@ import type { CourseBooking, Result } from '@/types'
 import { BookingStatus } from '@/enums/BookingStatus'
 import { useCourseStore } from './courseStore'
 import { useUserStore } from './userStore'
-// import api from '@/utils/api'
+import { BookingService } from '@/service/BookingService'
 
 export const useBookingStore = defineStore('booking', () => {
     /* ---------- state ---------- */
     const courseStore = useCourseStore()
     const userStore = useUserStore()
     const bookings = ref<CourseBooking[]>([])
+    const loading = ref(false)
+    const error = ref<string | null>(null)
+    const conflictSlots = ref<number[]>([])
+
     /* ---------- getters ---------- */
-
-    // 取得預約紀錄
-
-    const fetchBookings = async (userId?: number) => {
-        // const { success, data } = await api.get(`/users/${userId}/bookings`)
-        const data: CourseBooking[] = [
-            {
-                id: 1,
-                userId: 1,
-                courseId: 101,
-                courseTitle: '初级瑜伽课程',
-                date: new Date('2025-05-09'),
-                time: '10:00-12:00',
-                location: '和平瑜伽中心 - 信义店',
-                instructor: {
-                    name: '李老师',
-                    avatar: 'https://via.placeholder.com/50',
-                },
-                status: BookingStatus.Canceled,
-                points: 4,
-            },
-            {
-                id: 2,
-                userId: 1,
-                courseId: 102,
-                courseTitle: '冥想与放松',
-                date: new Date('2025-05-01'),
-                time: '14:00-16:00',
-                location: '和平瑜伽中心 - 中山店',
-                instructor: {
-                    name: '张老师',
-                    avatar: 'https://via.placeholder.com/50',
-                },
-                status: BookingStatus.Pending,
-                points: 4,
-            },
-            {
-                id: 3,
-                userId: 1,
-                courseId: 102,
-                courseTitle: '冥想与放松',
-                date: new Date('2025-05-11'),
-                time: '14:00-16:00',
-                location: '和平瑜伽中心 - 中山店',
-                instructor: {
-                    name: '张老师',
-                    avatar: 'https://via.placeholder.com/50',
-                },
-                status: BookingStatus.Confirmed,
-                points: 3,
-            },
-            {
-                id: 4,
-                userId: 1,
-                courseId: 103,
-                courseTitle: '高级瑜伽课程',
-                date: new Date('2025-05-11'),
-                time: '18:00-20:00',
-                location: '和平瑜伽中心 - 信义店',
-                instructor: {
-                    name: '王老师',
-                    avatar: 'https://via.placeholder.com/50',
-                },
-                status: BookingStatus.Confirmed,
-                points: 4,
-            },
-            {
-                id: 5,
-                userId: 1,
-                courseId: 104,
-                courseTitle: '瑜伽基础课程',
-                date: new Date('2025-05-15'),
-                time: '10:00-12:00',
-                location: '和平瑜伽中心 - 中山店',
-                instructor: {
-                    name: '赵老师',
-                    avatar: 'https://via.placeholder.com/50',
-                },
-                status: BookingStatus.Confirmed,
-                points: 4,
-            },
-            {
-                id: 6,
-                userId: 1,
-                courseId: 104,
-                courseTitle: '12312312321',
-                date: new Date('2025-05-15'),
-                time: '10:00-12:00',
-                location: '和平瑜伽中心 - 中山店',
-                instructor: {
-                    name: '赵老师',
-                    avatar: 'https://via.placeholder.com/50',
-                },
-                status: BookingStatus.Confirmed,
-                points: 3,
-            },
-        ]
-        bookings.value = data
-    }
-
+    // 按状态过滤预约
     const byStatus = (s: BookingStatus) => bookings.value.filter(b => b.status === s);
 
     /* ---------- helpers ---------- */
@@ -128,70 +33,208 @@ export const useBookingStore = defineStore('booking', () => {
 
     /* ---------- can‑book logic ---------- */
     function canBook(courseId: number, slotId: number): boolean {
-        const course = courseStore.getCourseById(courseId)
+        const course = courseStore.currentCourse
         const slot = courseStore.getTimeSlotById(slotId)
-        if (
-            !course ||
-            !slot ||
-            slot.availableSeats <= 0 ||
-            hasTimeConflict(slot.date, slot.time)
-        ) {
+        
+        if (!course || !slot) {
             return false
         }
-        return true // 可訂
+        
+        // 检查座位数
+        if (slot.availableSeats <= 0) {
+            return false
+        }
+        
+        // 检查时间冲突
+        if (hasTimeConflict(slot.date, slot.time)) {
+            return false
+        }
+        
+        // 检查是否在冲突时间槽列表中
+        if (conflictSlots.value.includes(slotId)) {
+            return false
+        }
+        
+        return true
     }
 
     /* ---------- actions ---------- */
-    async function book(courseId: number, slotId: number) {
-        const err = canBook(courseId, slotId)
-        if (err) return { success: false, reason: err }
-
-        const course = courseStore.getCourseById(courseId)!
-        const slot = courseStore.getTimeSlotById(slotId)!
-
-        // 1. 扣點
-        userStore.adjustPoints(-course.pointsRequired)
-        // 2. 減座位
-        courseStore.updateAvailableSeats(slotId, -1)
-        // 3. 建立本地紀錄 (實戰應從 API response)
-        const newBook: CourseBooking = {
-            id: Date.now(),
-            userId: userStore.profile?.id!,
-            courseId,
-            courseTitle: course.title,
-            date: new Date(slot.date.toISOString().slice(0, 10)),
-            time: slot.time,
-            points: course.pointsRequired,
-            location: course.merchant.name,
-            instructor: { name: '教練', avatar: '' },
-            status: BookingStatus.Confirmed
+    // 获取用户的预约记录
+    const fetchBookings = async (userId?: number): Promise<boolean> => {
+        loading.value = true
+        error.value = null
+        
+        try {
+            if (!userId && userStore.profile) {
+                userId = userStore.profile.id
+            }
+            
+            if (!userId) {
+                error.value = '未登录或用户ID无效'
+                return false
+            }
+            
+            // 从 BookingService 获取预约记录
+            const data = await BookingService.getUserBookings(userId)
+            bookings.value = data
+            return true
+        } catch (err) {
+            error.value = err instanceof Error ? err.message : '获取预约记录失败'
+            return false
+        } finally {
+            loading.value = false
         }
-        bookings.value.push(newBook)
-        return { success: true, bookingId: newBook.id }
+    }
+    
+    // 加载课程预约详情
+    const loadCourseBookingDetail = async (courseId: number): Promise<Result> => {
+        loading.value = true
+        error.value = null
+        
+        try {
+            // 从 BookingService 获取课程预约详情
+            const { course, timeSlots, bookingStatus } = await BookingService.fetchCourseBookingDetail(courseId)
+            
+            // 更新 course store 中的数据
+            courseStore.currentCourse = course
+            courseStore.courseTime = timeSlots
+            
+            // 保存冲突时间槽
+            conflictSlots.value = bookingStatus.conflictSlots
+            
+            return {
+                success: true,
+                message: '课程预约详情加载成功'
+            }
+        } catch (err) {
+            error.value = err instanceof Error ? err.message : '加载课程预约详情失败'
+            return {
+                success: false,
+                message: error.value
+            }
+        } finally {
+            loading.value = false
+        }
     }
 
+    // 预约课程
+    async function book(courseId: number, slotId: number): Promise<Result> {
+        loading.value = true
+        error.value = null
+        
+        try {
+            // 检查是否可以预约
+            if (!canBook(courseId, slotId)) {
+                error.value = '无法预约该课程时段'
+                return { 
+                    success: false, 
+                    message: error.value 
+                }
+            }
+
+            const course = courseStore.currentCourse
+            const slot = courseStore.getTimeSlotById(slotId)
+            
+            if (!course || !slot || !userStore.profile) {
+                error.value = '课程信息不完整或未登录'
+                return { 
+                    success: false, 
+                    message: error.value 
+                }
+            }
+
+            // 调用 BookingService 创建预约
+            const result = await BookingService.createBooking(
+                userStore.profile.id,
+                courseId,
+                slotId
+            )
+            
+            if (result.success) {
+                // 1. 扣点
+                userStore.adjustPoints(-course.pointsRequired)
+                // 2. 减座位
+                courseStore.updateAvailableSeats(slotId, -1)
+                // 3. 添加到本地预约记录
+                const newBook: CourseBooking = {
+                    id: result.data?.bookingId || Date.now(),
+                    userId: userStore.profile.id,
+                    courseId,
+                    courseTitle: course.title,
+                    date: new Date(slot.date.toISOString().slice(0, 10)),
+                    time: slot.time,
+                    points: course.pointsRequired,
+                    merchantName: course.merchant.name,
+                    instructor: { name: '教练', avatar: '' },
+                    status: BookingStatus.Confirmed
+                }
+                bookings.value.push(newBook)
+            }
+            
+            return result
+        } catch (err) {
+            error.value = err instanceof Error ? err.message : '预约失败'
+            return { 
+                success: false, 
+                message: error.value 
+            }
+        } finally {
+            loading.value = false
+        }
+    }
+
+    // 取消预约
     async function cancel(id: number): Promise<Result> {
-        const idx = bookings.value.findIndex(b => b.id === id)
-        if (idx === -1) return { success: false, message: '預約不存在' }
-        const bk = bookings.value[idx]
-        if (bk.status === BookingStatus.Canceled) {
-            return { success: false, message: '課程已被取消' }
+        loading.value = true
+        error.value = null
+        
+        try {
+            const idx = bookings.value.findIndex(b => b.id === id)
+            if (idx === -1) {
+                error.value = '预约不存在'
+                return { success: false, message: error.value }
+            }
+            
+            const bk = bookings.value[idx]
+            if (bk.status === BookingStatus.Canceled) {
+                error.value = '课程已被取消'
+                return { success: false, message: error.value }
+            }
+            
+            // 调用 BookingService 取消预约
+            const result = await BookingService.cancelBooking(id)
+            
+            if (result.success) {
+                // 更新本地数据
+                bk.status = BookingStatus.Canceled
+                
+                // 还原点数
+                const course = courseStore.currentCourse
+                if (course && course.courseId === bk.courseId) {
+                    userStore.adjustPoints(course.pointsRequired)
+                }
+            }
+            
+            return result
+        } catch (err) {
+            error.value = err instanceof Error ? err.message : '取消预约失败'
+            return { 
+                success: false, 
+                message: error.value 
+            }
+        } finally {
+            loading.value = false
         }
-        // 還原座位、點數
-        const course = courseStore.getCourseById(bk.courseId)
-        if (course) {
-            courseStore.updateAvailableSeats(/* slotId */ 0, 1)
-            userStore.adjustPoints(course.pointsRequired)
-        }
-        bk.status = BookingStatus.Canceled
-        return { success: true, message: '您的課程已取消' }
     }
 
     /* ---------- expose ---------- */
     return {
         bookings,
         byStatus,
+        loading,
+        error,
         fetchBookings,
+        loadCourseBookingDetail,
         canBook,
         book,
         cancel

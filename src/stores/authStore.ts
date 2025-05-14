@@ -6,6 +6,16 @@ import { useUserStore } from './userStore'
 import type { Result } from '@/types'
 // import * as api from '@/services/authApi'          // 你的登入 API
 
+export interface RegisterData {
+	name: string;
+	email: string;
+	password: string;
+	age: number | null;
+	gender?: string;
+	location?: string;
+	interests: string[];
+}
+
 export const useAuthStore = defineStore('auth', () => {
 	/* ---------- state ---------- */
 	const token = ref<string | null>(null)
@@ -38,13 +48,50 @@ export const useAuthStore = defineStore('auth', () => {
 		}
 	}
 
+	async function register(data: RegisterData): Promise<Result> {
+		// 這裡應該調用實際的 API 註冊用戶
+		// const res = await api.register(data)
+
+		// 模擬後端註冊響應
+		console.log('註冊數據：', data);
+		
+		// 模擬成功情況
+		const res = {
+			success: true,
+			token: 'fake-token',
+			role: UserRole.User
+		};
+
+		if (res.success && res.token) {
+			token.value = res.token;
+			role.value = res.role;
+
+			// 保存用戶偏好到本地存儲，用於個性化推薦
+			localStorage.setItem('userInterests', JSON.stringify(data.interests));
+			localStorage.setItem('userAge', data.age?.toString() || '');
+
+			// 獲取用戶資料
+			useUserStore().fetchProfile();
+			
+			return { 
+				success: true, 
+				message: '註冊成功！' 
+			};
+		} else {
+			return { 
+				success: false, 
+				message: '註冊失敗，請稍後再試' 
+			};
+		}
+	}
+
 	async function logout() {
 		// await api.logout()        // 如果後端需要
 		token.value = null
 		role.value = null
 	}
 
-	return { token, role, isAdmin, isLoggedIn, login, logout }
+	return { token, role, isAdmin, isLoggedIn, login, logout, register }
 }, {
 	persist: {
 		key: 'auth',                 // localStorage key => auth

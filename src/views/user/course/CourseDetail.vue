@@ -4,7 +4,7 @@
         <template #header>
             <p> </p>
         </template>
-        <div class="max-w-6xl mx-auto p-6 sm:px-2">
+        <div v-if="currentCourse" class="max-w-6xl mx-auto p-6 sm:px-2">
             <Toast />
             <!-- 課程頂部信息 -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 overflow-hidden">
@@ -54,7 +54,7 @@
         </div>
 
         <!-- 商家信息卡片 -->
-        <Card class="mb-8">
+        <Card v-if="currentCourse?.merchant" class="mb-8">
             <template #title>{{ currentCourse.merchant.name }}</template>
             <template #content>
                 <p class="text-gray-700 mb-4">{{ currentCourse.merchant.description }}</p>
@@ -83,7 +83,7 @@
         </Card>
 
         <!-- 預約區塊 -->
-        <div class=" bg-gray-50 rounded-lg p-4">
+        <div v-if="currentCourse" class=" bg-gray-50 rounded-lg p-4">
             <div class="form-field-frame flex-col">
                 <h2 class="form-field-label">選擇預約時間</h2>
                 <!-- 日期選擇 -->
@@ -146,7 +146,7 @@
                             {{
                                 !selectedSlot
                                     ? '請選擇時段'
-                                    : userPoints < (currentCourse.pointsRequired) ? '點數不足' : '立即預約' }} </span>
+                                    : !currentCourse || userPoints < (currentCourse.pointsRequired) ? '點數不足' : '立即預約' }} </span>
                     </Button>
                 </template>
             </Toolbar>
@@ -155,7 +155,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, toRef, watch, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useCourseStore } from '@/stores/courseStore'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm';
@@ -177,30 +177,64 @@ import type { CourseTime } from '@/types';
 import { useRouter } from 'vue-router';
 import { UserRole } from '@/enums/User';
 
-defineProps<{
+// 在 script setup 顶部获取 props
+const props = defineProps<{
     courseId: number
-}>()
-const visible = defineModel<boolean>('visible', { required: true })
+}>();
 
-const router = useRouter()
+const visible = defineModel<boolean>('visible', { required: true });
+
+const router = useRouter();
 const courseStore = useCourseStore();
 const userStore = useUserStore();
 const bookingStore = useBookingStore();
 
 const toast = useToast();
 const confirm = useConfirm();
-// 圖片展示
-const currentCourse = toRef(courseStore, 'currentCourse');
-const selectedSlot = toRef(courseStore, 'selectedSlot');
-const courseTime = toRef(courseStore, 'courseTime');
+
+// 使用 computed 确保 currentCourse 有值
+const currentCourse = computed(() => courseStore.currentCourse);
+const selectedSlot = computed(() => courseStore.selectedSlot);
+const courseTime = computed(() => courseStore.courseTime);
 const userPoints = userStore.points;
 const userProfile = userStore.profile;
+
+// 监听 visible 和 courseId 属性变化，加载课程详情
+watch(
+    [() => visible.value, () => props.courseId],
+    async ([newVisible, newCourseId]) => {
+        if (newVisible && newCourseId && (!currentCourse.value || currentCourse.value.courseId !== newCourseId)) {
+            try {
+                // 使用新的 bookingStore.loadCourseBookingDetail 方法
+                const result = await bookingStore.loadCourseBookingDetail(newCourseId);
+                if (!result.success) {
+                    toast.add({ 
+                        severity: 'error', 
+                        summary: '加载失败', 
+                        detail: result.message || '加载课程详情失败', 
+                        life: 3000 
+                    });
+                }
+            } catch (error) {
+                console.error('加载课程详情错误:', error);
+                toast.add({ 
+                    severity: 'error', 
+                    summary: '错误', 
+                    detail: '加载课程详情时发生错误',
+                    life: 3000 
+                });
+            }
+        }
+    },
+    { immediate: true }
+);
 
 const courseDlg = ref({
     header: {
         padding: '0.5rem 0.5rem 0 0.5rem',
     }
-})
+});
+
 // 商家信息展示控制
 const responsiveOptions = ref([
     {
@@ -211,27 +245,34 @@ const responsiveOptions = ref([
         breakpoint: '575px',
         numVisible: 1
     }
-])
+]);
 
 // 日期時間選擇
-const selectedDate = ref(courseTime.value[0]?.date || '')
-const filteredTimeSlots = ref<CourseTime[]>([])
+const selectedDate = ref(new Date());
 
+// 监听 courseTime 变化，设置初始日期
+watch(() => courseStore.courseTime, (newVal) => {
+    if (newVal && newVal.length > 0) {
+        selectedDate.value = newVal[0].date || new Date();
+    }
+}, { immediate: true });
 
-watch(selectedDate, (newVal) => {
-    selectedSlot.value = null
-    filteredTimeSlots.value = courseTime.value.filter(slot => isSameDate(slot.date, newVal))
-}, { immediate: true })
+const filteredTimeSlots = computed(() => {
+    if (!courseTime.value || courseTime.value.length === 0) return [];
+    return courseTime.value.filter(slot => isSameDate(slot.date, selectedDate.value));
+});
 
 // 選擇時段
 const selectTimeSlot = (slot: CourseTime) => {
-    if (slot.availableSeats === 0) return
+    if (slot.availableSeats === 0) return;
+    console.log(slot);
+    
     courseStore.selectTimeSlot(slot.id);
-}
+};
 
 // 新增計算屬性，檢查是否可以預約
 const canBook = computed(() => {
-    if (!selectedSlot.value) return false;
+    if (!selectedSlot.value || !currentCourse.value) return false;
     const bookCheck = bookingStore.canBook(
         currentCourse.value.courseId,
         selectedSlot.value.id
@@ -241,7 +282,7 @@ const canBook = computed(() => {
 
 // 處理預約
 const handleBooking = async () => {
-    if (!canBook.value || !selectedSlot.value || !selectedDate.value) return
+    if (!canBook.value || !selectedSlot.value || !selectedDate.value || !currentCourse.value) return;
     if (userPoints < currentCourse.value.pointsRequired) {
         toast.add({ severity: 'error', summary: '點數不足', detail: '請先購買點數', life: 3000 });
         return;
@@ -269,6 +310,8 @@ const handleBooking = async () => {
             rejectLabel: '取消',
             rejectClass: 'p-button-secondary',
             accept: async () => {
+                if (!currentCourse.value) return;
+                
                 const result = await bookingStore.book(
                     currentCourse.value.courseId,
                     selectedSlot.value!.id
@@ -277,7 +320,7 @@ const handleBooking = async () => {
                 // 根據 bookCourse 方法的返回類型正確判斷
                 if (result && 'success' in result && result.success) {
                     toast.add({ severity: 'success', summary: '預約成功！', detail: '已成功預約一門課程', life: 3000 });
-                    selectedSlot.value = null;
+                    courseStore.selectedSlot = null;
                 } else {
                     toast.add({
                         severity: 'error',
@@ -292,11 +335,14 @@ const handleBooking = async () => {
             }
         });
     }
-}
+};
 
 // 收藏相關
 const favoriteLoading = ref(false);
-const isFavorite = computed(() => userStore.isFavorite(currentCourse.value.courseId));
+const isFavorite = computed(() => {
+    if (!currentCourse.value) return false;
+    return userStore.isFavorite(currentCourse.value.courseId);
+});
 
 // 切換收藏狀態
 const toggleFavorite = async () => {
@@ -310,6 +356,16 @@ const toggleFavorite = async () => {
         });
         // 可以選擇導向登入頁面
         // router.push('/login');
+        return;
+    }
+
+    if (!currentCourse.value) {
+        toast.add({
+            severity: 'error',
+            summary: '錯誤',
+            detail: '課程信息不完整，無法收藏',
+            life: 3000
+        });
         return;
     }
 
@@ -352,13 +408,36 @@ const toggleFavorite = async () => {
     }
 };
 
+// 在组件挂载时，如果有 courseId 并且当前没有加载课程或者课程ID与传入ID不同，则加载课程详情
 onMounted(async () => {
+    if (props.courseId && (!currentCourse.value || currentCourse.value.courseId !== props.courseId)) {
+        try {
+            // 使用新的 bookingStore.loadCourseBookingDetail 方法
+            const result = await bookingStore.loadCourseBookingDetail(props.courseId);
+            if (!result.success) {
+                toast.add({ 
+                    severity: 'error', 
+                    summary: '加载失败', 
+                    detail: result.message || '加载课程详情失败', 
+                    life: 3000 
+                });
+            }
+        } catch (error) {
+            console.error('加载课程详情错误:', error);
+            toast.add({ 
+                severity: 'error', 
+                summary: '错误', 
+                detail: '加载课程详情时发生错误',
+                life: 3000 
+            });
+        }
+    }
 });
 
 const shareCourse = () => {
     // navigator.clipboard.writeText(window.location.href);
     toast.add({ severity: 'success', summary: '分享成功！', detail: '已成功分享課程', life: 3000 });
-}
+};
 </script>
 <style>
 @reference "tailwindcss";

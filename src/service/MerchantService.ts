@@ -16,7 +16,7 @@ export const MerchantService = {
             address: '台北市信義區和平東路一段100號',
             phone: '02-2345-6789',
             description: '專業課程提供商，提供多種優質課程選擇。',
-            rating: 4.5 + Math.random() * 0.5, // 4.5-5.0 之間的隨機評分
+            rating: Number((4.5 + Math.random() * 0.5).toFixed(1)), 
             reviewCount: Math.floor(Math.random() * 50) + 10, // 10-60 之間的隨機評論數
             businessHours: '週一至週五 9:00-21:00，週六至週日 10:00-18:00',
             type: '教育培訓',

@@ -77,7 +77,7 @@
                         </div>
                         <div class="flex justify-between mb-2">
                             <span class="text-gray-600">地點：</span>
-                            <span>{{ selectedBooking.location }}</span>
+                            <span>{{ selectedBooking.merchantName }}</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">點數：</span>
@@ -204,9 +204,5 @@ const formatDateHeader = (dateString: string) => {
 
 .date-header {
     @apply py-2 px-4 bg-yellow-50 rounded-lg mb-2;
-}
-
-.line-clamp-1 {
-    @apply overflow-hidden whitespace-nowrap text-ellipsis;
 }
 </style>

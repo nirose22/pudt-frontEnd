@@ -21,6 +21,11 @@ export interface CourseDTO {
   image: Photo;       // 課程圖片
   merchantName: string;
   description?: string;
+  createdAt?: Date;   // 課程創建日期，用於判斷新上架
+  region?: string;    // 課程所在地區
+  categories?: string[]; // 課程分類
+  joinCount?: number; // 課程參與人數
+  recommended?: boolean; // 是否為推薦課程
 }
 
 export interface MerchantInfo {
@@ -45,7 +50,7 @@ export interface CourseTime {
   totalSeats: number;
 }
 
-// 预约课程类型定义
+// 預約課程
 export interface CourseBooking {
   id: number;
   userId: number;
@@ -53,7 +58,7 @@ export interface CourseBooking {
   courseTitle: string;
   date: Date;
   time: string;
-  location: string;
+  merchantName: string;
   instructor?: {
     name: string;
     avatar: string;

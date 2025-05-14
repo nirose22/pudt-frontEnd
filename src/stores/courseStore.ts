@@ -1,5 +1,5 @@
 import { CourseService } from '@/service/CourseService'
-import type { Course, CourseTime } from '@/types'
+import type { Course, CourseTime, Result } from '@/types'
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
@@ -11,7 +11,7 @@ export const useCourseStore = defineStore('course', () => {
     const error = ref<string | null>(null);
 
     // 加载课程详情和时间槽
-    const loadCourseDetail = async (courseId: number): Promise<boolean> => {
+    const loadCourseDetail = async (courseId: number): Promise<Result> => {
         loading.value = true;
         error.value = null;
 
@@ -19,10 +19,15 @@ export const useCourseStore = defineStore('course', () => {
             const { course, timeSlots } = await CourseService.fetchCourseDetail(courseId);
             currentCourse.value = course;
             courseTime.value = timeSlots;
-            return true;
+            return {
+                success: true,
+            };
         } catch (err) {
             error.value = err instanceof Error ? err.message : '加載課程詳情失敗';
-            return false;
+            return {
+                success: false,
+                message: err instanceof Error ? err.message : '加載課程詳情失敗'
+            };
         } finally {
             loading.value = false;
         }
@@ -55,6 +60,7 @@ export const useCourseStore = defineStore('course', () => {
         const slot = getTimeSlotById(timeSlotId);
         if (slot) {
             selectedSlot.value = slot;
+            console.log(selectedSlot.value);
             return true;
         }
         return false;

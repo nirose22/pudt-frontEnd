@@ -8,8 +8,11 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AsyncCarousel: typeof import('./src/components/common/AsyncCarousel.vue')['default']
+    AsyncState: typeof import('./src/components/common/AsyncState.vue')['default']
     BaseLogo: typeof import('./src/components/layout/BaseLogo.vue')['default']
     CourseCard: typeof import('./src/components/modal/CourseCard.vue')['default']
+    CourseCarousel: typeof import('./src/components/modal/CourseCarousel.vue')['default']
     DateRangeFilter: typeof import('./src/components/common/DateRangeFilter.vue')['default']
     Footer: typeof import('./src/components/layout/Footer.vue')['default']
     Header: typeof import('./src/components/layout/Header.vue')['default']

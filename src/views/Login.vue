@@ -33,8 +33,10 @@
                             <label for="on_label">登入模式</label>
                         </FloatLabel>
                     </FormField>
-
-                    <Button type="submit" label="登入" size="large" rounded class="w-full"></Button>
+                    <div class="flex gap-3 mt-10">
+                        <Button type="button" label="註冊" size="large" variant="outlined" rounded class="w-full" @click="router.push('/register')"></Button>
+                        <Button type="submit" label="登入" size="large" rounded class="w-full"></Button>
+                    </div>
                 </Form>
             </div>
         </div>
@@ -102,8 +104,8 @@ const onFormSubmit = async (e) => {
 .login-bg-frame {
     background-image: url('@/assets/image/pudt_logo-xl.png');
     background-repeat: no-repeat;
-    background-position: center;
-    height: 80vh;
+    background-position: bottom;
+    background-size: 40%;
 }
 
 ::v-deep input {

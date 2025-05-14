@@ -115,7 +115,7 @@ const events = computed(() =>
         start: booking.date,
         end: booking.date + booking.time,
         extendedProps: {
-            location: booking.location
+            location: booking.merchantName
         }
     }))
 )

@@ -2,7 +2,7 @@
   <div class="searchbar-container max-w-6xl w-full">
     <div class="flex max-w-6xl w-full">
       <AutoComplete v-model="modelValue" :suggestions="suggestions" @complete="handleComplete" placeholder="搜尋課程或商家..."
-        class="w-full" />
+        class="w-full" @keyup.enter="onSearch" />
       <Button v-if="showButton" icon="pi pi-search" label="搜尋" class="flex-shrink-0" @click="onSearch" />
     </div>
   </div>
@@ -31,6 +31,7 @@ const onSearch = () => {
   if (modelValue.value && modelValue.value.trim()) {
     emit('search', modelValue.value);
   } else {
+    console.log('onSearch', modelValue.value);
     emit('search', '');
   }
 };
