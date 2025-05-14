@@ -279,17 +279,18 @@ const registerSchema = z.object({
 });
 
 // 處理下一步
-const nextStep = (event: any) => {
-    event.preventDefault();
-    
+const nextStep = () => {
     try {
         // 手動驗證表單數據
         registerSchema.parse(formData);
+        console.log('formData', formData);
         
         // 驗證通過，清空錯誤並前進到下一步
         Object.keys(errors).forEach(key => delete errors[key]);
         currentStep.value++;
     } catch (validationError: any) {
+        console.log('validationError', validationError);
+        
         // 處理驗證錯誤
         if (validationError.errors) {
             validationError.errors.forEach((err: any) => {

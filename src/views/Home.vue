@@ -284,7 +284,7 @@ onMounted(async () => {
 
 </script>
 <style scoped>
-.banner-container {
+.pudt-banner {
     background-image: url('../assets/image/pudt_bg.png');
     background-size: 85%;
     background-position: center;
