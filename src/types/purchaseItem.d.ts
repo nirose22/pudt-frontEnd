@@ -1,5 +1,5 @@
 import type { CardType } from "@/enums/Cards"
-import type { PurchaseStatus, PurchaseType, PurchasePaymentMethod } from "@/enums/Purchase"
+import { OrderStatus, PaymentMethod } from '@/enums/PurchaseStatus'
 
 /**
  * 購買歷史記錄項目
@@ -10,8 +10,8 @@ export interface PurchaseItem {
   cardType: CardType,    // 課卡名稱
   amount: number      // 金額
   points: number      // 點數
-  status: PurchaseStatus
-  paymentMethod?: PurchasePaymentMethod // 付款方式
+  status: OrderStatus
+  paymentMethod?: PaymentMethod // 付款方式
   invoiceNo?: string  // 發票號碼
 }
 

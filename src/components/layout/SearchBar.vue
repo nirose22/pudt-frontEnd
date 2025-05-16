@@ -9,7 +9,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits, defineModel, ref } from 'vue';
+import { ref } from 'vue';
 import Button from 'primevue/button';
 import AutoComplete from 'primevue/autocomplete';
 import { SubCategoryLabelList } from '@/enums/CourseCategory';
@@ -49,17 +49,17 @@ function handleComplete() {
 
 .searchbar-container {}
 
-.searchbar-container ::v-deep(.p-autocomplete) {
+.searchbar-container :deep(.p-autocomplete) {
   @apply w-full;
 }
 
-.searchbar-container ::v-deep(.p-autocomplete input) {
+.searchbar-container :deep(.p-autocomplete input) {
   @apply w-full rounded-full border-0 bg-white py-3 !px-5;
   border-radius: 20px 0 0 20px;
   box-shadow: 0 4px 16px #00000014 !important;
 }
 
-::v-deep(.p-button) {
+:deep(.p-button) {
   border-radius: 0 20px 20px 0;
 }
 </style>

@@ -1,8 +1,9 @@
-import type { Course, CourseTime } from '@/types/course';
-import type { CourseBooking, Result } from '@/types';
+import type { Course, Booking, CourseSession } from '@/types/course';
+import type { Result } from '@/types';
 import { CourseService } from './CourseService';
 import { MerchantService } from './MerchantService';
 import { BookingStatus } from '@/enums/BookingStatus';
+import { SubCategory } from '@/enums/CourseCategory';
 
 export const BookingService = {
     /**
@@ -10,57 +11,36 @@ export const BookingService = {
      * @param userId 用户ID
      * @returns 预约记录列表Promise
      */
-    async getUserBookings(userId: number): Promise<CourseBooking[]> {
+    async getUserBookings(userId: number): Promise<Booking[]> {
         try {
             // TODO: 实际环境调用后端API
             // API: GET /api/users/{userId}/bookings
             
             // 模拟数据
-            const mockBookings: CourseBooking[] = [
+            const mockBookings: Booking[] = [
                 {
                     id: 1,
                     userId: userId,
-                    courseId: 101,
-                    courseTitle: '初级瑜伽课程',
-                    date: new Date('2025-05-09'),
-                    time: '10:00-12:00',
-                    merchantName: '和平瑜伽中心 - 信义店',
-                    instructor: {
-                        name: '李老师',
-                        avatar: 'https://via.placeholder.com/50',
-                    },
-                    status: BookingStatus.Canceled,
+                    sessionId: 101,
                     points: 4,
+                    status: BookingStatus.Canceled,
+                    createdAt: new Date('2025-05-09')
                 },
                 {
                     id: 2,
                     userId: userId,
-                    courseId: 102,
-                    courseTitle: '冥想与放松',
-                    date: new Date('2025-05-01'),
-                    time: '14:00-16:00',
-                    merchantName: '和平瑜伽中心 - 中山店',
-                    instructor: {
-                        name: '张老师',
-                        avatar: 'https://via.placeholder.com/50',
-                    },
-                    status: BookingStatus.Pending,
+                    sessionId: 102,
                     points: 4,
+                    status: BookingStatus.Pending,
+                    createdAt: new Date('2025-05-01')
                 },
                 {
                     id: 3,
                     userId: userId,
-                    courseId: 102,
-                    courseTitle: '冥想与放松',
-                    date: new Date('2025-05-11'),
-                    time: '14:00-16:00',
-                    merchantName: '和平瑜伽中心 - 中山店',
-                    instructor: {
-                        name: '张老师',
-                        avatar: 'https://via.placeholder.com/50',
-                    },
-                    status: BookingStatus.Confirmed,
+                    sessionId: 102,
                     points: 3,
+                    status: BookingStatus.Confirmed,
+                    createdAt: new Date('2025-05-11')
                 },
                 // 更多模拟数据...
             ];
@@ -79,7 +59,7 @@ export const BookingService = {
      */
     async fetchCourseBookingDetail(courseId: number): Promise<{
         course: Course;
-        timeSlots: CourseTime[];
+        timeSlots: CourseSession[];
         bookingStatus: {
             canBook: boolean;
             conflictSlots: number[];

@@ -24,37 +24,36 @@ export const useAuthStore = defineStore('auth', () => {
 	/* ---------- getters ---------- */
 	const isLoggedIn = computed(() => !!token.value && !!role.value)
 	const isAdmin = computed(() => role.value === UserRole.Admin)
-	// const isMerchant = computed(() => role.value === UserRole.Merchant)
+	const isMerchant = computed(() => role.value === UserRole.Merchant)
 	// const isUser = computed(() => role.value === UserRole.User)
 
 	/* ---------- actions ---------- */
 	async function login(creds: any): Promise<Result> {
-		// const res = await api.login(type, creds)
+		// TODO: 實際應用：const res = await api.login(type, creds)
 		const res = {
 			success: true,
 			token: 'fake-token',
 			role: creds.role
 		}
+
 		if (res.success && res.token) {
 			token.value = res.token
 			role.value = res.role
-
 			if (res.role == UserRole.User) {
 				useUserStore().fetchProfile()
 			}
-			return { success: true, message: '登入成功' }
+			return { success: true, message: '登入成功', data: res.role }
 		} else {
 			return { success: false, message: '登入失敗' }
 		}
 	}
 
 	async function register(data: RegisterData): Promise<Result> {
+		// TODO: 實際應用：const res = await api.register(data)
 		// 這裡應該調用實際的 API 註冊用戶
-		// const res = await api.register(data)
-
 		// 模擬後端註冊響應
 		console.log('註冊數據：', data);
-		
+
 		// 模擬成功情況
 		const res = {
 			success: true,
@@ -72,26 +71,26 @@ export const useAuthStore = defineStore('auth', () => {
 
 			// 獲取用戶資料
 			useUserStore().fetchProfile();
-			
-			return { 
-				success: true, 
-				message: '註冊成功！' 
+
+			return {
+				success: true,
+				message: '註冊成功！'
 			};
 		} else {
-			return { 
-				success: false, 
-				message: '註冊失敗，請稍後再試' 
+			return {
+				success: false,
+				message: '註冊失敗，請稍後再試'
 			};
 		}
 	}
 
 	async function logout() {
-		// await api.logout()        // 如果後端需要
+		// TODO: 實際應用：await api.logout()
 		token.value = null
 		role.value = null
 	}
 
-	return { token, role, isAdmin, isLoggedIn, login, logout, register }
+	return { token, role, isAdmin, isMerchant, isLoggedIn, login, logout, register }
 }, {
 	persist: {
 		key: 'auth',                 // localStorage key => auth

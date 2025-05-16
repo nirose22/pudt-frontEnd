@@ -103,7 +103,7 @@ import { inRange, byDate, formatDateString } from '@/utils/date';
 import { BookingStatus } from '@/enums/BookingStatus';
 import DataView from 'primevue/dataview';
 import { useToast } from 'primevue/usetoast';
-import type { CourseBooking } from '@/types';
+import type { CourseRecord } from '@/types';
 import { useConfirm } from 'primevue/useconfirm';
 
 const bookingStore = useBookingStore();
@@ -112,7 +112,7 @@ const confirm = useConfirm();
 const layout = ref('list');
 
 const showDetailDialog = ref(false);
-const selectedBooking = ref<CourseBooking | null>(null);
+const selectedBooking = ref<CourseRecord | null>(null);
 
 // 日期範圍
 const startDate = ref(new Date());
@@ -138,13 +138,13 @@ const bookingsByDate = computed(() => {
 });
 
 // 显示课程详情
-const showBookingDetail = (booking: CourseBooking) => {
+const showBookingDetail = (booking: CourseRecord) => {
     selectedBooking.value = booking;
     showDetailDialog.value = true;
 };
 
 // 取消课程预约
-const cancelBooking = async (booking: CourseBooking) => {
+const cancelBooking = async (booking: CourseRecord) => {
     if (!booking) return;
     confirm.require({
         message: '確認取消預約？',

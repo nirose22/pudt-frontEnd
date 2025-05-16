@@ -400,7 +400,7 @@ const goToHomePage = () => {
     width: 100%;
 }
 
-:deep(.p-inputtext:is(.p-invalid)) {
+:deep(.p-inputtext.p-invalid) {
     border-color: var(--red-500);
 }
 </style> 

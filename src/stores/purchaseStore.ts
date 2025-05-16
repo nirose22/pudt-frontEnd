@@ -4,7 +4,7 @@ import { ref, computed } from 'vue'
 import { usePointsStore } from './pointsStore'
 import type { Result } from "@/types"
 import type { PurchaseItem, UnpaidItem } from '@/types/purchaseItem'
-import { PurchaseStatus, PurchasePaymentMethod } from '@/enums/Purchase'
+import { OrderStatus, PaymentMethod } from '@/enums/PurchaseStatus'
 import { PointType } from '@/enums/Point'
 import { useUserStore } from './userStore'
 import { CardType } from '@/enums/Cards'
@@ -35,14 +35,14 @@ export const usePurchaseStore = defineStore('purchase', () => {
   /** 總消費金額 */
   const totalSpent = computed(() =>
     purchaseHistory.value
-      .filter(item => item.status === PurchaseStatus.Paid)
+      .filter(item => item.status === OrderStatus.Paid)
       .reduce((sum, item) => sum + item.amount, 0)
   )
 
   /** 購買點數總數 */
   const totalPointsPurchased = computed(() =>
     purchaseHistory.value
-      .filter(item => item.status === PurchaseStatus.Paid && item.points > 0)
+      .filter(item => item.status === OrderStatus.Paid && item.points > 0)
       .reduce((sum, item) => sum + item.points, 0)
   )
 
@@ -66,8 +66,8 @@ export const usePurchaseStore = defineStore('purchase', () => {
           cardType: CardType.Advanced,
           amount: 1000,
           points: 10,
-          status: PurchaseStatus.Paid,
-          paymentMethod: PurchasePaymentMethod.CreditCard,
+          status: OrderStatus.Paid,
+          paymentMethod: PaymentMethod.CreditCard,
           invoiceNo: 'INV-001'
         },
         {
@@ -76,8 +76,8 @@ export const usePurchaseStore = defineStore('purchase', () => {
           cardType: CardType.Advanced,
           amount: 1800,
           points: 20,
-          status: PurchaseStatus.Unpaid,
-          paymentMethod: PurchasePaymentMethod.CreditCard,
+          status: OrderStatus.Pending,
+          paymentMethod: PaymentMethod.CreditCard,
           invoiceNo: 'INV-002'
         },
         {
@@ -86,8 +86,8 @@ export const usePurchaseStore = defineStore('purchase', () => {
           cardType: CardType.VIP,
           amount: 5000,
           points: 100,
-          status: PurchaseStatus.Paid,
-          paymentMethod: PurchasePaymentMethod.CreditCard,
+          status: OrderStatus.Paid,
+          paymentMethod: PaymentMethod.CreditCard,
           invoiceNo: 'INV-003'
         },
         {
@@ -96,8 +96,8 @@ export const usePurchaseStore = defineStore('purchase', () => {
           cardType: CardType.VIP,
           amount: 2000,
           points: 50,
-          status: PurchaseStatus.Unpaid,
-          paymentMethod: PurchasePaymentMethod.CreditCard,
+          status: OrderStatus.Pending,
+          paymentMethod: PaymentMethod.CreditCard,
           invoiceNo: 'INV-004'
         },
         {
@@ -106,8 +106,8 @@ export const usePurchaseStore = defineStore('purchase', () => {
           cardType: CardType.VIP,
           amount: 1000,
           points: 10,
-          status: PurchaseStatus.Paid,
-          paymentMethod: PurchasePaymentMethod.CreditCard,
+          status: OrderStatus.Paid,
+          paymentMethod: PaymentMethod.CreditCard,
           invoiceNo: 'INV-005'
         },
         {
@@ -116,8 +116,8 @@ export const usePurchaseStore = defineStore('purchase', () => {
           cardType: CardType.VIP,
           amount: 1000,
           points: 10,
-          status: PurchaseStatus.Cancelled,
-          paymentMethod: PurchasePaymentMethod.CreditCard,
+          status: OrderStatus.Cancelled,
+          paymentMethod: PaymentMethod.CreditCard,
           invoiceNo: 'INV-006'
         }
       ]
@@ -135,7 +135,7 @@ export const usePurchaseStore = defineStore('purchase', () => {
    * 獲取狀態
    * @param s 狀態
    */
-  const byStatus = (s: PurchaseStatus) => purchaseHistory.value.filter(b => b.status === s);
+  const byStatus = (s: OrderStatus) => purchaseHistory.value.filter(b => b.status === s);
 
   /**
    * 獲取未付清項目
@@ -207,7 +207,7 @@ export const usePurchaseStore = defineStore('purchase', () => {
           // 更新購買歷史狀態
           const historyItem = purchaseHistory.value.find(h => h.id === itemId)
           if (historyItem) {
-            historyItem.status = PurchaseStatus.Paid
+            historyItem.status = OrderStatus.Paid
           }
         }
       }
@@ -264,8 +264,8 @@ export const usePurchaseStore = defineStore('purchase', () => {
         cardType: selectedCard.type,
         amount: selectedCard.price,
         points: selectedCard.points,
-        status: PurchaseStatus.Paid,
-        paymentMethod: PurchasePaymentMethod.CreditCard,
+        status: OrderStatus.Paid,
+        paymentMethod: PaymentMethod.CreditCard,
         invoiceNo: `INV-${Date.now().toString().slice(-6)}` // 臨時發票號，實際應由後端生成
       }
       

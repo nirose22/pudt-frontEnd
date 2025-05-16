@@ -1,7 +1,7 @@
 // stores/userStore.ts – Pinia + pinia-plugin-persistedstate version
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { User, Course, CourseBooking, Result } from '@/types'
+import type { User, Course, CourseRecord, Result } from '@/types'
 import { UserGender, UserRole } from '@/enums/User';
 import { BookingStatus } from '@/enums/BookingStatus';
 // import * as userApi from '@/services/userApi'

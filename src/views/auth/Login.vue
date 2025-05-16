@@ -89,9 +89,13 @@ const resolver = zodResolver(
 
 const onFormSubmit = async (e) => {
     if (e.valid) {
-        const res = await authStore.login(e.values)
-        if (res.success) {
-            router.push('/')
+        const authRes = await authStore.login(e.values);
+        if (authRes.success) {
+            if (authRes.data === UserRole.Merchant) {
+                router.push('/merchant')
+            } else {
+                router.push('/')
+            }
         } else {
             toast.add({ severity: 'error', summary: res.message, life: 3000 });
         }
@@ -108,7 +112,7 @@ const onFormSubmit = async (e) => {
     background-size: 40%;
 }
 
-::v-deep input {
+input {
     width: 100% !important;
 }
 </style>@/enums/User

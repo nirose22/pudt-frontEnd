@@ -8,14 +8,23 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    ActivityCard: typeof import('./src/components/activity/ActivityCard.vue')['default']
     AsyncCarousel: typeof import('./src/components/common/AsyncCarousel.vue')['default']
     AsyncState: typeof import('./src/components/common/AsyncState.vue')['default']
+    BackToTop: typeof import('./src/components/common/BackToTop.vue')['default']
     BaseLogo: typeof import('./src/components/layout/BaseLogo.vue')['default']
+    copy: typeof import('./src/components/layout/Header copy.vue')['default']
+    CourseBookingDlg: typeof import('./src/components/course/courseBookingDlg.vue')['default']
     CourseCard: typeof import('./src/components/modal/CourseCard.vue')['default']
     CourseCarousel: typeof import('./src/components/modal/CourseCarousel.vue')['default']
+    D: typeof import('./src/components/layout/d.vue')['default']
     DateRangeFilter: typeof import('./src/components/common/DateRangeFilter.vue')['default']
     Footer: typeof import('./src/components/layout/Footer.vue')['default']
     Header: typeof import('./src/components/layout/Header.vue')['default']
+    MerchantHeader: typeof import('./src/components/layout/MerchantHeader.vue')['default']
+    OrderDetailModal: typeof import('./src/components/activity/OrderDetailModal.vue')['default']
+    OrderList: typeof import('./src/components/activity/OrderList.vue')['default']
+    OrderSummaryCard: typeof import('./src/components/activity/OrderSummaryCard.vue')['default']
     PaymentDialog: typeof import('./src/components/payment/PaymentDialog.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

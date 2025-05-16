@@ -34,12 +34,15 @@ import SearchBar from '@/components/layout/SearchBar.vue';
 import ScheduleManagement from '@/views/user/userManagement/ScheduleManagement.vue';
 import OverlayBadge from 'primevue/overlaybadge';
 import Drawer from 'primevue/drawer';
+import { useAuthStore } from '@/stores/authStore';
 
 const visibleMenu = ref(false);
 const visibleScheduleBar = ref(false);
 const router = useRouter();
 const route = useRoute();
 const hasNewSchedule = ref(false);
+const authStore = useAuthStore();
+const role = authStore.role;
 
 const keyword = ref('');
 const menuPt = ref({
@@ -66,7 +69,7 @@ const searchAgain = (value: string) => {
         });
     } else {
         console.log('searchAgain', value);
-        
+
         router.replace({
             query: { ...route.query, keyword: value }
         });

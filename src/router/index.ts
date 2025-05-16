@@ -1,7 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router';
-
-
-const routes = [
+import type { RouteRecordRaw } from 'vue-router';
+import merchantRoutes from './merchantRoutes';
+import { useAuthStore } from '@/stores/authStore';
+const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'Home',
@@ -11,7 +12,39 @@ const routes = [
     path: '/profile',
     name: 'UserProfile',
     component: () => import('@/views/user/userManagement/UserProfileView.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'ProfileManagement',
+        component: () => import('@/views/user/userManagement/ProfileManagement.vue'),
+        meta: { title: '會員資料管理' }
+      },
+      {
+        path: 'points',
+        name: 'UserPointsManagement',
+        component: () => import('@/views/user/userManagement/PointsManagement.vue'),
+        meta: { title: '點數管理' }
+      },
+      {
+        path: 'bookings',
+        name: 'BookingsManagement',
+        component: () => import('@/views/user/userManagement/BookingsManagement.vue'),
+        meta: { title: '預約行程管理' }
+      },
+      {
+        path: 'history',
+        name: 'ActivityHistory',
+        component: () => import('@/views/user/userManagement/ActivityHistory.vue'),
+        meta: { title: '活動紀錄' }
+      },
+      { 
+        path: 'purchase',
+        name: 'PurchaseHistory',
+        component: () => import('@/views/user/userManagement/PurchaseHistory.vue'),
+        meta: { title: '購買紀錄' }
+      },
+    ]
   },
   {
     path: '/favorite',
@@ -43,9 +76,29 @@ const routes = [
   }
 ];
 
+// 添加商家路由
+const allRoutes = [...routes, ...merchantRoutes];
+
 const router = createRouter({
   history: createWebHistory(),
-  routes,
+  routes: allRoutes,
+});
+
+// 添加路由守衛，處理商家認證
+router.beforeEach((to, from, next) => {
+  // 檢查是否需要商家認證
+  if (to.meta.requiresMerchantAuth) {
+    // 這裡可以添加檢查商家是否已登入的邏輯
+    const isLoggedIn = useAuthStore().isLoggedIn;
+    if (!isLoggedIn) {
+      next({ name: 'Login', query: { redirect: to.fullPath } });
+      return;
+    } else {
+      to.name = 'MerchantLayout';
+    }
+  }
+  
+  next();
 });
 
 export default router

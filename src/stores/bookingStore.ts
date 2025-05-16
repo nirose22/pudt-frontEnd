@@ -2,7 +2,8 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { isEqual } from 'date-fns'
-import type { CourseBooking, Result } from '@/types'
+import type { Result } from '@/types'
+import type { Booking, Course, CourseSession } from '@/types/course'
 import { BookingStatus } from '@/enums/BookingStatus'
 import { useCourseStore } from './courseStore'
 import { useUserStore } from './userStore'
@@ -12,7 +13,7 @@ export const useBookingStore = defineStore('booking', () => {
     /* ---------- state ---------- */
     const courseStore = useCourseStore()
     const userStore = useUserStore()
-    const bookings = ref<CourseBooking[]>([])
+    const bookings = ref<Booking[]>([])
     const loading = ref(false)
     const error = ref<string | null>(null)
     const conflictSlots = ref<number[]>([])
@@ -22,16 +23,15 @@ export const useBookingStore = defineStore('booking', () => {
     const byStatus = (s: BookingStatus) => bookings.value.filter(b => b.status === s);
 
     /* ---------- helpers ---------- */
-    function hasTimeConflict(date: Date, time: string) {
+    function hasTimeConflict(date: Date, sessionId: number) {
         return bookings.value.some(
             b =>
-                isEqual(new Date(b.date), date) &&
-                b.time === time &&
+                b.sessionId === sessionId &&
                 b.status !== BookingStatus.Canceled
         )
     }
 
-    /* ---------- can‑book logic ---------- */
+    /* ---------- can-book logic ---------- */
     function canBook(courseId: number, slotId: number): boolean {
         const course = courseStore.currentCourse
         const slot = courseStore.getTimeSlotById(slotId)
@@ -41,12 +41,12 @@ export const useBookingStore = defineStore('booking', () => {
         }
         
         // 检查座位数
-        if (slot.availableSeats <= 0) {
+        if (slot.seatsLeft <= 0) {
             return false
         }
         
         // 检查时间冲突
-        if (hasTimeConflict(slot.date, slot.time)) {
+        if (hasTimeConflict(slot.date, slotId)) {
             return false
         }
         
@@ -152,21 +152,17 @@ export const useBookingStore = defineStore('booking', () => {
             
             if (result.success) {
                 // 1. 扣点
-                userStore.adjustPoints(-course.pointsRequired)
+                userStore.adjustPoints(-course.points)
                 // 2. 减座位
                 courseStore.updateAvailableSeats(slotId, -1)
                 // 3. 添加到本地预约记录
-                const newBook: CourseBooking = {
+                const newBook: Booking = {
                     id: result.data?.bookingId || Date.now(),
                     userId: userStore.profile.id,
-                    courseId,
-                    courseTitle: course.title,
-                    date: new Date(slot.date.toISOString().slice(0, 10)),
-                    time: slot.time,
-                    points: course.pointsRequired,
-                    merchantName: course.merchant.name,
-                    instructor: { name: '教练', avatar: '' },
-                    status: BookingStatus.Confirmed
+                    sessionId: slotId,
+                    points: course.points,
+                    status: BookingStatus.Confirmed,
+                    createdAt: new Date()
                 }
                 bookings.value.push(newBook)
             }
@@ -210,8 +206,8 @@ export const useBookingStore = defineStore('booking', () => {
                 
                 // 还原点数
                 const course = courseStore.currentCourse
-                if (course && course.courseId === bk.courseId) {
-                    userStore.adjustPoints(course.pointsRequired)
+                if (course && course.courseId === bk.sessionId) {
+                    userStore.adjustPoints(bk.points)
                 }
             }
             

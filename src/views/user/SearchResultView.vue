@@ -544,24 +544,24 @@ function handleApplyFilters(): void {
 <style scoped>
 @reference "tailwindcss";
 
-::v-deep(.p-inputnumber > input) {
+:deep(.p-inputnumber > input) {
 	width: 100%;
 	max-width: 100px !important;
 }
 
 .chip {
-	@apply cursor-pointer hover:bg-blue-200 ! transition-colors
+	@apply cursor-pointer hover:bg-blue-200! transition-colors
 }
 
 .chip:hover:not(.chip-selected) {
-	@apply bg-blue-100 !
+	@apply bg-blue-100!
 }
 
 .chip-selected {
-	@apply bg-blue-400 ! text-white !
+	@apply bg-blue-400! text-white!
 }
 
 .chip.chip-selected:hover {
-	@apply bg-blue-500 !
+	@apply bg-blue-500!
 }
 </style>

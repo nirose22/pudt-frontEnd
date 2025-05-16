@@ -1,55 +1,33 @@
+/* ────────────────────────────  商  家  ──────────────────────────── */
 export interface Merchant {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  description: string;
-  businessHours: string;
-  type: string;
-  rating: number;
-  reviewCount: number;
-  website: string;
-  isVerified: boolean;
-  createdAt: Date;
-  logo?: string;
-  coverImage?: string;
+  id: number                    /** PK */
+  name: string
+  email: string
+  phone: string
+  address: string
+  description?: string
+  bizHours?: string             /** 營業時間 */
+  category?: string             /** 業態，如 yoga / gym */
+  website?: string
+  logoUrl?: string
+  coverUrl?: string
+  rating?: number               /** 平均評分 */
+  reviewCount?: number
+  isVerified: boolean
+  createdAt: Date
 }
 
-export interface MerchantCourse {
-  id: number;
-  merchantId: number;
-  title: string;
-  description: string;
-  price: number;
-  pointsRequired: number;
-  availableSlots: number;
-  totalSlots: number;
-  schedule: MerchantCourseSchedule[];
-  status: 'active' | 'inactive' | 'draft';
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface MerchantCourseSchedule {
-  id: number;
-  courseId: number;
-  date: Date;
-  startTime: string;
-  endTime: string;
-  availableSeats: number;
-  totalSeats: number;
-}
-
+/* ────────────────────────────  商  家  統  計  ──────────────────────────── */
 export interface MerchantStats {
-  totalBookings: number;
-  totalRevenue: number;
-  totalCustomers: number;
-  courseStats: {
-    courseId: number;
-    title: string;
-    bookingsCount: number;
-    revenue: number;
-    rating: number;
-  }[];
-} 
+  merchantId: number /** PK */
+  totalBookings: number /** 總預約數 */
+  totalRevenue: number /** 總營收 */
+  totalCustomers: number /** 總顧客數 */
+  topCourses: {
+    courseId: number /** FK */
+    title: string
+    bookings: number /** 預約數 */
+    revenue: number /** 營收 */
+    rating: number /** 平均評分 */
+  }[]
+}

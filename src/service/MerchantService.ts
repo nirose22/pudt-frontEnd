@@ -1,4 +1,4 @@
-import type { MerchantInfo } from "@/types/course";
+import type { Merchant } from "@/types/course";
 
 export const MerchantService = {
     /**
@@ -6,7 +6,7 @@ export const MerchantService = {
      * @param merchantId 商家ID
      * @returns 商家詳細信息
      */
-    getMerchantInfo(merchantId: number): Promise<MerchantInfo> {
+    getMerchant(merchantId: number): Promise<Merchant> {
         // TODO: 從後端獲取商家詳細信息
         // API: /api/merchants/{merchantId}
         // 模擬 API 響應

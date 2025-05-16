@@ -1,6 +1,7 @@
 <template>
   <div class="min-h-screen h-full overflow-y-auto flex flex-col max-h-screen items-center bg-gray-50">
-    <Header />
+    <Header v-if="route.name !== 'MerchantLayout'" />
+    <MerchantHeader v-if="route.name === 'MerchantLayout'" />
     <div class="w-full max-w-11/12 grow mx-auto flex flex-col">
       <router-view></router-view>
     </div>
@@ -9,19 +10,12 @@
 </template>
 <script setup lang="ts">
 import Header from '@/components/layout/Header.vue'
+import MerchantHeader from '@/components/layout/MerchantHeader.vue'
 import Footer from '@/components/layout/Footer.vue'
-import { useAuthStore } from '@/stores/authStore'
-import { useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 
-const router = useRouter()
+const route = useRoute()
 
-router.beforeEach((to) => {
-  const authStore = useAuthStore()
-  if (to.meta.requiresAuth && !authStore.isLoggedIn) return '/login'
-  if (authStore.isAdmin) {
-    return '/'
-  }
-})
 </script>
 <style>
 @reference "tailwindcss";

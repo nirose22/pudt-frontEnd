@@ -5,11 +5,12 @@ export * from './course'
 export * from './user'
 export * from './booking'
 export * from './result'
-export * from './platform'
 export * from './order'
 export * from './merchant'
 export * from './admin'
 export * from './pointItems'
+export * from './message'
+export * from './purchase'
 
 /**
  * API 响应通用接口

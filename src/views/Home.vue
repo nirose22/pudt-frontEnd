@@ -146,8 +146,6 @@ const recommendedCourses = computed(() => {
 
 // 判断课程是否正在加载
 function isLoading(courseId: number): boolean {
-    console.log(loadingMap.value);
-    
     return loadingMap.value.get(courseId) === true;
 }
 

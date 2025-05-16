@@ -48,23 +48,28 @@
                         <ProfileManagement :profile="userStore.profile" @update-profile="updateProfile" />
                     </template>
 
-                    <!-- 2. 點數管理與課卡購買 -->
+                    <!-- 2. 站內收件夾 -->
+                    <template v-if="activeTab === 'inbox'">
+                        <InboxMessages />
+                    </template>
+
+                    <!-- 3. 點數管理與課卡購買 -->
                     <template v-if="activeTab === 'points'">
                         <PointsManagement :points="userStore.points" :pointsHistory="pointsHistory"
                             :pointsCards="pointsCards" @purchase="handlePurchase" />
                     </template>
 
-                    <!-- 3. 預約行程管理 -->
+                    <!-- 4. 預約行程管理 -->
                     <template v-if="activeTab === 'bookings'">
                         <BookingsManagement :bookings="userActiveBookings" @cancel-booking="cancelBooking" />
                     </template>
 
-                    <!-- 4. 活動紀錄 -->
+                    <!-- 5. 活動紀錄 -->
                     <template v-if="activeTab === 'history'">
                         <ActivityHistory :courseHistory="userBookings" :absenceRecords="absenceRecords"/>
                     </template>
 
-                    <!-- 5. 購買紀錄 -->
+                    <!-- 6. 購買紀錄 -->
                     <template v-if="activeTab === 'purchase'">
                         <PurchaseHistory :purchaseHistory="purchaseHistory" :unpaidRecords="unpaidRecords" />
                     </template>
@@ -81,7 +86,7 @@
                 <i class="pi pi-cloud-upload text-4xl text-gray-400 mb-2"></i>
                 <p>拖拽照片到此處或點擊上傳</p>
                 <input type="file" accept="image/*" class="hidden" ref="fileInput" @change="onPhotoSelected">
-                <Button label="選擇照片" class="mt-3" @click="$refs.fileInput.click()" />
+                <Button label="選擇照片" class="mt-3" @click="triggerFileInput()" />
             </div>
             <div class="flex justify-end w-full mt-4">
                 <Button label="取消" class="p-button-text" @click="showPhotoDialog = false" />
@@ -101,6 +106,7 @@ import ConfirmDialog from 'primevue/confirmdialog';
 import { useUserStore } from '@/stores/userStore';
 
 import ProfileManagement from '@/views/user/userManagement/ProfileManagement.vue';
+import InboxMessages from '@/views/user/userManagement/InboxMessages.vue';
 import PointsManagement from '@/views/user/userManagement/PointsManagement.vue';
 import BookingsManagement from '@/views/user/userManagement/BookingsManagement.vue';
 import ActivityHistory from '@/views/user/userManagement/ActivityHistory.vue';
@@ -113,7 +119,7 @@ import { usePointsStore } from '@/stores/pointsStore';
 import { usePurchaseStore } from '@/stores/purchaseStore';
 import { useConfirm } from 'primevue/useconfirm';
 import { useAuthStore } from '@/stores/authStore';
-import { PurchaseStatus } from '@/enums/Purchase';
+import { OrderStatus } from '@/enums/PurchaseStatus';
 import { useRouter } from 'vue-router';
 
 const toast = useToast();
@@ -145,6 +151,7 @@ const pointsHistory = computed(() => pointsStore.pointsHistory);
 // 菜單項目
 const menuItems = [
     { id: 'profile', label: '會員資料管理', icon: 'pi-user' },
+    { id: 'inbox', label: '站內收件夾', icon: 'pi-envelope' },
     { id: 'points', label: '點數與課卡', icon: 'pi-wallet' },
     { id: 'bookings', label: '預約行程管理', icon: 'pi-calendar' },
     { id: 'history', label: '活動紀錄', icon: 'pi-history' },
@@ -162,7 +169,7 @@ const absenceRecords = computed(() => {
 
 // 未付費記錄
 const unpaidRecords = computed(() => {
-    return purchaseStore.byStatus(PurchaseStatus.Unpaid)
+    return purchaseStore.byStatus(OrderStatus.Pending)
 });
 
 const handlePhotoUpload = () => {
@@ -171,6 +178,12 @@ const handlePhotoUpload = () => {
 
 const onPhotoSelected = (event: Event) => {
     selectedPhoto.value = (event.target as HTMLInputElement).files?.[0] ?? null;
+};
+
+// 觸發文件輸入點擊
+const triggerFileInput = () => {
+    const input = fileInput.value as HTMLInputElement;
+    input?.click();
 };
 
 // 確認上傳頭像

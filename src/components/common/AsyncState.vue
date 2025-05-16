@@ -30,7 +30,6 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from 'vue';
 import ProgressSpinner from 'primevue/progressspinner';
 import Button from 'primevue/button';
 

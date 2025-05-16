@@ -43,19 +43,19 @@ defineProps<{
 </script>
 <style scoped>
 
-.course-card ::v-deep.p-card {
+.course-card :deep(.p-card) {
    background-color: #fdfdfd;
 }
 
-.course-card:hover ::v-deep.p-card img {
+.course-card:hover :deep(.p-card img) {
     transform: scale(1.05);
 }
 
-::v-deep.p-card img {
+:deep(.p-card img) {
     transition: transform 0.25s ease-in-out;
 }
 
-::v-deep .p-card-header {
+:deep(.p-card-header) {
     overflow: hidden;
 }
 </style>

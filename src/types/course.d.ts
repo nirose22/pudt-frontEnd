@@ -1,68 +1,86 @@
-import type { BookingStatus } from '@/enums/BookingStatus';
-import type { Photo, PhotoItem } from './photo'
+/* ---------- 講師 ---------- */
+export interface Instructor {
+  id: number                  // PK
+  merchantId: number          // FK -> Merchant.id
+  name: string
+  avatar?: string             // 頭像 URL
+  bio?: string                // 個人介紹
+}
 
+
+/* ---------- 課程核心 ---------- */
 export interface Course {
-  courseId: number;
-  merchantId: number;
-  title: string;
-  description: string;
-  price: number;
-  pointsRequired: number;
-  joinCount: number;
-  images: PhotoItem[];       // 課程圖片
-  merchant: MerchantInfo;
+  id: number                  // PK
+  merchantId: number          // FK -> Merchant.id
+  title: string
+  description?: string
+  points: number              // 預約所需點數
+  price?: number              // 若有現金價格
+  coverUrl?: string           // 封面圖片 URL
+  region?: string             // 區域代碼 (TPE/KHH…)
+  createdAt: Date
 }
 
-export interface CourseDTO {
-  merchantId: number;
-  courseId: number;
-  title: string;
-  pointsRequired: number;
-  image: Photo;       // 課程圖片
-  merchantName: string;
-  description?: string;
-  createdAt?: Date;   // 課程創建日期，用於判斷新上架
-  region?: string;    // 課程所在地區
-  categories?: string[]; // 課程分類
-  joinCount?: number; // 課程參與人數
-  recommended?: boolean; // 是否為推薦課程
+/* 每張課程附圖（多對一）*/
+export interface CourseImage {
+  id: number                  // PK
+  courseId: number            // FK -> Course.id
+  url: string                 // 圖片 URL
+  alt?: string                // 圖片替代文字
 }
 
-export interface MerchantInfo {
-  id: number;
-  name: string;
-  address: string;
-  phone: string;
-  description: string;
-  rating: number;
-  reviewCount: number;
-  businessHours: string;
-  type: string;
-  website: string;
-  googleMapUrl: string;
+/* 課程與分類連結 (多選 tag) */
+export interface CourseCategoryLink {
+  courseId: number
+  category: string            // ENUM 代碼，如 SPF_YOG
 }
 
-export interface CourseTime {
-  id: number;
-  date: Date;
-  time: string;
-  availableSeats: number;
-  totalSeats: number;
+
+/* 單一課程場次 (可多天多時段) */
+export interface CourseSession {
+  id: number
+  courseId: number
+  date: Date                  // 上課日期
+  start: string               // HH:mm
+  end: string
+  seats: number               // 總席位
+  seatsLeft: number           // 剩餘席位
 }
 
-// 預約課程
-export interface CourseBooking {
-  id: number;
-  userId: number;
-  courseId: number;
-  courseTitle: string;
-  date: Date;
-  time: string;
-  merchantName: string;
-  instructor?: {
-    name: string;
-    avatar: string;
-  };
-  status: BookingStatus;
-  points: number;
+/* ---------- 預約 ---------- */
+export interface Booking {
+  id: number
+  userId: number
+  sessionId: number           // FK -> CourseSession.id
+  points: number
+  status: BookingStatus
+  rating?: number
+  comment?: string
+  createdAt: Date
+}
+
+
+/* ---------- 點數流水 ---------- */
+export interface PointTxn {
+  id: number
+  userId: number
+  type: 'deposit' | 'consume' | 'reward' | 'expire'
+  amount: number              // 正或負值
+  balance: number             // 當下餘額
+  relatedId?: number          // 關聯 Order.id / Booking.id
+  note?: string
+  createdAt: Date
+  expireAt?: Date
+}
+
+/* ---------- 會員活動 ---------- */
+export interface Activity {
+  id: number
+  userId: number
+  occurredAt: Date
+  kind: 'login' | 'booking' | 'purchase' | 'account' | 'participation'
+  refId?: number              // 依 kind 對應 bookingId / orderId…
+  ip?: string
+  device?: string
+  memo?: string
 }

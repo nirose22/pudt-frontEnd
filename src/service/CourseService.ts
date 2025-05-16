@@ -33,7 +33,7 @@ export const CourseService = {
             }
             
             // 獲取商家信息
-            const merchantInfo = await MerchantService.getMerchantInfo(courseDto.merchantId);
+            const merchantInfo = await MerchantService.getMerchant(courseDto.merchantId);
             
             // 構建完整課程信息
             const course: Course = {
@@ -88,16 +88,20 @@ export const CourseService = {
             
             timeSlots.push({
                 id: timeSlots.length + 1,
+                courseId: courseId,
                 date: new Date(date),
-                time: '10:00-12:00',
+                startTime: '10:00',
+                endTime: '12:00',
                 availableSeats: Math.floor(Math.random() * 15),
                 totalSeats: 15
             });
             
             timeSlots.push({
                 id: timeSlots.length + 1,
+                courseId: courseId,
                 date: new Date(date),
-                time: '14:00-16:00',
+                startTime: '14:00',
+                endTime: '16:00',
                 availableSeats: Math.floor(Math.random() * 15),
                 totalSeats: 15
             });
