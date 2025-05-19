@@ -116,7 +116,7 @@ import type { User } from '@/types';
 import { useBookingStore } from '@/stores/bookingStore';
 import { BookingStatus } from '@/enums/BookingStatus';
 import { usePointsStore } from '@/stores/pointsStore';
-import { usePurchaseStore } from '@/stores/purchaseStore';
+import { usePurchaseStore } from '@/stores/orderStore';
 import { useConfirm } from 'primevue/useconfirm';
 import { useAuthStore } from '@/stores/authStore';
 import { OrderStatus } from '@/enums/PurchaseStatus';
@@ -194,7 +194,7 @@ const confirmPhotoUpload = () => {
         const reader = new FileReader();
         reader.onload = (e) => {
             if (userStore.profile) {
-                userStore.profile.avatar = e.target?.result as string;
+                userStore.profile.avatarUrl = e.target?.result as string;
                 showPhotoDialog.value = false;
                 toast.add({ severity: 'success', summary: '成功', detail: '頭像已更新', life: 3000 });
             }

@@ -48,7 +48,7 @@
             </div>
 
             <!-- 信用卡表单 -->
-            <div v-if="selectedMethod === PurchasePaymentMethod.CreditCard" class="space-y-3">
+            <div v-if="selectedMethod === PaymentMethod.CreditCard" class="space-y-3">
                 <InputText v-model="cardNumber" placeholder="卡號" class="w-full" />
                 <div class="flex gap-2">
                     <InputText v-model="cardExpiry" placeholder="有效期限 (MM/YY)" class="w-1/2" />
@@ -58,7 +58,7 @@
             </div>
 
             <!-- 银行转账信息 -->
-            <div v-if="selectedMethod === PurchasePaymentMethod.BankTransfer" class="p-3 border rounded-lg bg-blue-50">
+            <div v-if="selectedMethod === PaymentMethod.BankTransfer" class="p-3 border rounded-lg bg-blue-50">
                 <p class="font-medium text-blue-700 mb-2">銀行轉帳資訊</p>
                 <p class="mb-1">戶名：PUDT課程平台</p>
                 <p class="mb-1">銀行：國泰世華銀行</p>
@@ -76,7 +76,7 @@
             </div>
 
             <!-- 行动支付选项 -->
-            <div v-if="selectedMethod === PurchasePaymentMethod.MobilePayment" class="p-3 border rounded-lg bg-green-50">
+            <div v-if="selectedMethod === PaymentMethod.MobilePayment" class="p-3 border rounded-lg bg-green-50">
                 <div class="flex justify-center mb-3">
                     <div class="h-32 w-32 bg-gray-200 flex items-center justify-center">
                         <i class="pi pi-qrcode text-5xl text-gray-500"></i>
@@ -97,7 +97,7 @@
             </div>
 
             <!-- 现金付款提示 -->
-            <div v-if="selectedMethod === PurchasePaymentMethod.Cash" class="p-3 border rounded-lg bg-yellow-50">
+            <div v-if="selectedMethod === PaymentMethod.Cash" class="p-3 border rounded-lg bg-yellow-50">
                 <p class="font-medium text-yellow-700 mb-2">現金付款說明</p>
                 <p class="mb-1">請於課程開始前30分鐘至現場櫃檯繳交現金。</p>
                 <p class="mb-1">地址：台北市信義區松高路123號5樓</p>
@@ -133,7 +133,7 @@ import InputText from 'primevue/inputtext';
 import FileUpload from 'primevue/fileupload';
 import { useToast } from 'primevue/usetoast';
 import { formatDateString } from '@/utils/date';
-import { PurchasePaymentMethod, PurchasePaymentMethodLabel } from '@/enums/Purchase';
+import { PaymentMethod, PaymentMethodLabel } from '@/enums/PurchaseStatus';
 
 const visible = defineModel<boolean>('visible', { required: true })
 
@@ -149,11 +149,11 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     (e: 'update:visible', value: boolean): void;
-    (e: 'payment-completed', data: { itemId: number, method: PurchasePaymentMethod }): void;
+    (e: 'payment-completed', data: { itemId: number, method: PaymentMethod }): void;
 }>();
 
 const toast = useToast();
-const selectedMethod = ref<PurchasePaymentMethod | null>(null);
+const selectedMethod = ref<PaymentMethod | null>(null);
 
 // 信用卡表单数据
 const cardNumber = ref('');
@@ -164,23 +164,23 @@ const cardHolder = ref('');
 // 付款方式列表
 const paymentMethods = [
     { 
-        name: PurchasePaymentMethodLabel[PurchasePaymentMethod.CreditCard], 
-        code: PurchasePaymentMethod.CreditCard,
+        name: PaymentMethodLabel[PaymentMethod.CreditCard], 
+        code: PaymentMethod.CreditCard,
         icon: 'pi pi-credit-card'
     },
     { 
-        name: PurchasePaymentMethodLabel[PurchasePaymentMethod.BankTransfer], 
-        code: PurchasePaymentMethod.BankTransfer,
+        name: PaymentMethodLabel[PaymentMethod.BankTransfer], 
+        code: PaymentMethod.BankTransfer,
         icon: 'pi pi-wallet'
     },
     { 
-        name: PurchasePaymentMethodLabel[PurchasePaymentMethod.MobilePayment], 
-        code: PurchasePaymentMethod.MobilePayment,
+        name: PaymentMethodLabel[PaymentMethod.MobilePayment], 
+        code: PaymentMethod.MobilePayment,
         icon: 'pi pi-mobile'
     },
     { 
-        name: PurchasePaymentMethodLabel[PurchasePaymentMethod.Cash], 
-        code: PurchasePaymentMethod.Cash,
+        name: PaymentMethodLabel[PaymentMethod.Cash], 
+        code: PaymentMethod.Cash,
         icon: 'pi pi-money-bill'
     }
 ];
@@ -200,7 +200,7 @@ const closeDialog = () => {
 const canProceed = () => {
     if (!selectedMethod.value) return false;
     
-    if (selectedMethod.value === PurchasePaymentMethod.CreditCard) {
+    if (selectedMethod.value === PaymentMethod.CreditCard) {
         return cardNumber.value && cardExpiry.value && cardCVC.value && cardHolder.value;
     }
     
@@ -212,13 +212,13 @@ const getPayButtonLabel = () => {
     if (!selectedMethod.value) return '確認付款';
     
     switch (selectedMethod.value) {
-        case PurchasePaymentMethod.CreditCard:
+        case PaymentMethod.CreditCard:
             return '確認付款';
-        case PurchasePaymentMethod.BankTransfer:
+        case PaymentMethod.BankTransfer:
             return '已完成轉帳';
-        case PurchasePaymentMethod.MobilePayment:
+        case PaymentMethod.MobilePayment:
             return '已掃碼支付';
-        case PurchasePaymentMethod.Cash:
+        case PaymentMethod.Cash:
             return '我了解了';
         default:
             return '確認付款';
@@ -235,7 +235,7 @@ const handlePayment = () => {
         toast.add({ 
             severity: 'success', 
             summary: '付款成功', 
-            detail: `已使用${PurchasePaymentMethodLabel[selectedMethod.value!]}完成付款`, 
+            detail: `已使用${PaymentMethodLabel[selectedMethod.value!]}完成付款`, 
             life: 3000 
         });
         

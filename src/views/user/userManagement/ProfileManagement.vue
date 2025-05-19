@@ -9,13 +9,13 @@
                 <div class="card p-4 shadow-sm rounded-lg">
                     <h3 class="text-lg font-semibold mb-4 pb-2 border-b">個人基本資料</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField name="name" class="col-span-1">
-                            <div class="form-label">姓名</div>
-                            <InputText class="w-full" />
-                            <Message v-if="$form.name?.invalid" severity="secondary" size="small" variant="simple">
-                                {{ $form.name?.error?.message }}
-                            </Message>
-                        </FormField>
+                <FormField name="name" class="col-span-1">
+                    <div class="form-label">姓名</div>
+                    <InputText class="w-full" />
+                    <Message v-if="$form.name?.invalid" severity="secondary" size="small" variant="simple">
+                        {{ $form.name?.error?.message }}
+                    </Message>
+                </FormField>
 
                         <FormField name="gender" class="col-span-1">
                             <div class="form-label">性別</div>
@@ -37,27 +37,27 @@
                 <div class="card p-4 shadow-sm rounded-lg">
                     <h3 class="text-lg font-semibold mb-4 pb-2 border-b">聯絡資訊</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField name="email" class="col-span-1">
-                            <div class="form-label">電子郵件</div>
-                            <InputText class="w-full" disabled />
-                            <small class="text-gray-500">郵件地址無法修改</small>
-                        </FormField>
+                <FormField name="email" class="col-span-1">
+                    <div class="form-label">電子郵件</div>
+                    <InputText class="w-full" disabled />
+                    <small class="text-gray-500">郵件地址無法修改</small>
+                </FormField>
 
-                        <FormField name="phone" class="col-span-1">
-                            <div class="form-label">手機號碼</div>
-                            <InputText class="w-full" />
-                            <Message v-if="$form.phone?.invalid" severity="secondary" size="small" variant="simple">
-                                {{ $form.phone?.error?.message }}
-                            </Message>
-                        </FormField>
+                <FormField name="phone" class="col-span-1">
+                    <div class="form-label">手機號碼</div>
+                    <InputText class="w-full" />
+                    <Message v-if="$form.phone?.invalid" severity="secondary" size="small" variant="simple">
+                        {{ $form.phone?.error?.message }}
+                    </Message>
+                </FormField>
 
-                        <FormField name="address" class="col-span-2">
-                            <div class="form-label">地址</div>
-                            <InputText class="w-full" />
-                            <Message v-if="$form.address?.invalid" severity="secondary" size="small" variant="simple">
-                                {{ $form.address?.error?.message }}
-                            </Message>
-                        </FormField>
+                <FormField name="address" class="col-span-2">
+                    <div class="form-label">地址</div>
+                    <InputText class="w-full" />
+                    <Message v-if="$form.address?.invalid" severity="secondary" size="small" variant="simple">
+                        {{ $form.address?.error?.message }}
+                    </Message>
+                </FormField>
                     </div>
                 </div>
 
@@ -167,36 +167,36 @@
         <!-- 密碼修改對話框 -->
         <Dialog v-model:visible="showPasswordModal" header="修改密碼" :modal="true" :draggable="false"
             class="w-xl" :resizable="false">
-            <div class="space-y-4 p-4">
-                <Form v-slot="$form" :initialValues="passwordForm" @submit="submitPasswordChange"
-                    :resolver="passwordResolver">
-                    <div class="flex flex-col gap-4">
-                        <FormField name="password">
-                            <div class="form-label">新密碼</div>
-                            <InputText type="password" placeholder="新密碼" class="w-full" />
-                            <Message v-if="$form.password?.invalid" severity="secondary" size="small"
-                                variant="simple">
-                                {{ $form.password?.error?.message }}
-                            </Message>
-                        </FormField>
+                            <div class="space-y-4 p-4">
+                                <Form v-slot="$form" :initialValues="passwordForm" @submit="submitPasswordChange"
+                                    :resolver="passwordResolver">
+                                    <div class="flex flex-col gap-4">
+                                        <FormField name="password">
+                                            <div class="form-label">新密碼</div>
+                                            <InputText type="password" placeholder="新密碼" class="w-full" />
+                                            <Message v-if="$form.password?.invalid" severity="secondary" size="small"
+                                                variant="simple">
+                                                {{ $form.password?.error?.message }}
+                                            </Message>
+                                        </FormField>
 
-                        <FormField name="confirmPassword">
-                            <div class="form-label">確認新密碼</div>
-                            <InputText type="password" placeholder="確認新密碼" class="w-full" />
-                            <Message v-if="$form.confirmPassword?.invalid" severity="secondary"
-                                size="small" variant="simple">
-                                {{ $form.confirmPassword?.error?.message }}
-                            </Message>
-                        </FormField>
-                    </div>
-                    <div class="mt-10 flex justify-end">
+                                        <FormField name="confirmPassword">
+                                            <div class="form-label">確認新密碼</div>
+                                            <InputText type="password" placeholder="確認新密碼" class="w-full" />
+                                            <Message v-if="$form.confirmPassword?.invalid" severity="secondary"
+                                                size="small" variant="simple">
+                                                {{ $form.confirmPassword?.error?.message }}
+                                            </Message>
+                                        </FormField>
+                                    </div>
+                                    <div class="mt-10 flex justify-end">
                         <Button label="取消" icon="pi pi-times" class="p-button-text mr-2"
-                            @click="showPasswordModal = false" />
+                                            @click="showPasswordModal = false" />
                         <Button label="儲存修改" icon="pi pi-check" type="submit" />
-                    </div>
-                </Form>
-            </div>
-        </Dialog>
+                                    </div>
+                                </Form>
+                            </div>
+                        </Dialog>
     </div>
 </template>
 

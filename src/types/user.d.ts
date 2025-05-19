@@ -6,7 +6,7 @@ export interface User {
   email: string;
   phone: string;
   points: number;
-  avatar?: string;
+  avatarUrl?: string;
   createdAt: Date;
   lastLogin?: Date;
   address?: string;
@@ -14,32 +14,11 @@ export interface User {
   gender?: UserGender;
 }
 
-export interface UserProfile extends Omit<User, 'role'> {
-  bookingHistory?: {
-    total: number;
-    completed: number;
-    upcoming: number;
-  };
-  favoriteCategories?: string[];
-  pointsHistory?: {
-    earned: number;
-    spent: number;
-    expiring?: number;
-    expiryDate?: Date;
-  };
-}
-
-export interface UserSettings {
-  userId: number;
-  notifications: {
-    email: boolean;
-    sms: boolean;
-    pushNotifications: boolean;
-  };
-  privacy: {
-    publicProfile: boolean;
-    showActivityHistory: boolean;
-  };
-  language: 'zh-TW' | 'en-US';
-  theme: 'light' | 'dark' | 'system';
+export interface UserSetting {
+  userId: number           // pk, fk_user
+  lang: 'zh-TW' | 'en-US'
+  theme: 'light' | 'dark' | 'system'
+  emailNotify: boolean
+  smsNotify: boolean
+  pushNotify: boolean
 }

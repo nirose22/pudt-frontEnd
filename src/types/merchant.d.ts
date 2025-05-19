@@ -31,3 +31,12 @@ export interface MerchantStats {
     rating: number /** 平均評分 */
   }[]
 }
+
+/* ---------- 講師 ---------- */
+export interface Instructor {
+  id: number                  // PK
+  merchantId: number          // FK -> Merchant.id
+  name: string
+  avatarUrl?: string             // 頭像 URL
+  bio?: string                // 個人介紹
+}

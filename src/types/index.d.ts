@@ -8,7 +8,7 @@ export * from './result'
 export * from './order'
 export * from './merchant'
 export * from './admin'
-export * from './pointItems'
+export * from './point'
 export * from './message'
 export * from './purchase'
 

@@ -89,7 +89,7 @@ import { useBookingStore } from '@/stores/bookingStore';
 import { MainCategory } from '@/enums/CourseCategory';
 
 // 一次性解構 userStore
-const { isLoggedIn, adjustPoints } = useUserStore();
+const { isLoggedIn } = useUserStore();
 
 const visible = ref(false);
 const router = useRouter();
@@ -127,12 +127,13 @@ const latestCourses = computed(() => {
             if (aDate && bDate) {
                 return bDate.getTime() - aDate.getTime();
             }
-            return b.courseId - a.courseId;
+            return b.id - a.id;
         })
         .slice(0, 6);
 });
 
-// 推薦課程 - 使用 API 獲取推薦課程
+// TODO: 推薦課程 - 使用 API 獲取推薦課程
+// const res = await api.get(`/api/courses/recommendations?age=${age}&tags=${interests.join(',')}`)
 const recommendedCourses = computed(() => {
     // 如果沒有推薦課程，顯示熱門課程
     if (!allCourses.value.filter(c => c.recommended).length) {
@@ -154,7 +155,7 @@ async function fetchCourses() {
     isCoursesLoading.value = true;
     try {
         // 获取课程数据
-        const courses = CourseService.getCourseData();
+        const courses = await CourseService.getCourse();
         
         // 添加推薦標記（實際應用中應由後端返回）
         const userAge = localStorage.getItem('userAge');
@@ -173,9 +174,6 @@ async function fetchCourses() {
             console.error('解析用戶偏好錯誤', e);
         }
         
-        // 實際應用中這部分應該由 API 處理
-        // GET /api/courses/recommendations?age=25&tags=SportsFitness,ArtDesign
-        // 這裡僅模擬 API 的行為
         if (interests.length > 0 || age) {
             fetchRecommendations(age, interests);
         } else {
@@ -196,12 +194,12 @@ async function fetchCourses() {
 
 // 模擬 API 請求推薦課程
 async function fetchRecommendations(age: number | null, interests: string[]) {
-    // 模擬 API 請求
-    // TODO: 實際應用：const res = await api.get(`/api/courses/recommendations?age=${age}&tags=${interests.join(',')}`)
+    // TODO: 推薦課程 
+    //  實際應用：const res = await api.get(`/api/courses/recommendations?age=${age}&tags=${interests.join(',')}`)
     console.log(`請求推薦課程: age=${age}, interests=${interests.join(',')}`);
     
     // 模擬後端處理邏輯
-    const courses = CourseService.getCourseData();
+    const courses = await CourseService.getCourse();
     courses.forEach(course => {
         // 標記推薦課程，這部分邏輯在實際應用中應在後端處理
         course.recommended = false;
@@ -230,7 +228,9 @@ function loadMoreCourses() {
 }
 
 async function selectCourse(course: CourseDTO) {
-    const courseId = course.courseId;
+    const courseId = course.id;
+    console.log(course);
+    
     selectedCourseId.value = courseId;
 
     // 标记为加载中

@@ -132,7 +132,7 @@
                 <template #center>
                     <div class="!text-lg font-bold !text-gray-800">
                         <p v-if="selectedSlot">
-                            已選擇: {{ selectedSlot.date.toLocaleDateString() }} {{ selectedSlot.time }}
+                            已選擇: {{ selectedSlot.date.toLocaleDateString() }} {{ formatTimeSlot(selectedSlot) }}
                         </p>
                         <p v-else class="">
                             請選擇預約時段
@@ -173,7 +173,7 @@ import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import { useUserStore } from '@/stores/userStore';
 import { useBookingStore } from '@/stores/bookingStore';
-import type { CourseTime } from '@/types';
+import type { CourseSession } from '@/types';
 import { useRouter } from 'vue-router';
 import { UserRole } from '@/enums/User';
 
@@ -195,7 +195,7 @@ const confirm = useConfirm();
 // 使用 computed 确保 currentCourse 有值
 const currentCourse = computed(() => courseStore.currentCourse);
 const selectedSlot = computed(() => courseStore.selectedSlot);
-const courseTime = computed(() => courseStore.courseTime);
+const courseSession = computed(() => courseStore.courseSession);
 const userPoints = userStore.points;
 const userProfile = userStore.profile;
 
@@ -250,40 +250,42 @@ const responsiveOptions = ref([
 // 日期時間選擇
 const selectedDate = ref(new Date());
 
-// 监听 courseTime 变化，设置初始日期
-watch(() => courseStore.courseTime, (newVal) => {
+// 监听 courseSession 变化，设置初始日期
+watch(() => courseStore.courseSession, (newVal) => {
     if (newVal && newVal.length > 0) {
         selectedDate.value = newVal[0].date || new Date();
     }
 }, { immediate: true });
 
 const filteredTimeSlots = computed(() => {
-    if (!courseTime.value || courseTime.value.length === 0) return [];
-    return courseTime.value.filter(slot => isSameDate(slot.date, selectedDate.value));
+    if (!courseSession.value || courseSession.value.length === 0) return [];
+    return courseSession.value.filter(slot => isSameDate(slot.date, selectedDate.value));
 });
 
 // 選擇時段
-const selectTimeSlot = (slot: CourseTime) => {
-    if (slot.availableSeats === 0) return;
+const selectTimeSlot = (slot: CourseSession) => {
+    if (slot.seatsLeft === 0) return;
     console.log(slot);
     
-    courseStore.selectTimeSlot(slot.id);
+    courseStore.selectSession(slot.id);
 };
 
 // 新增計算屬性，檢查是否可以預約
 const canBook = computed(() => {
     if (!selectedSlot.value || !currentCourse.value) return false;
-    const bookCheck = bookingStore.canBook(
-        currentCourse.value.courseId,
-        selectedSlot.value.id
-    );
-    return bookCheck;
+    
+    if (selectedSlot.value.seatsLeft <= 0) return false;
+    
+    if (userPoints < currentCourse.value.points) return false;
+    
+    return true;
 });
 
 // 處理預約
 const handleBooking = async () => {
     if (!canBook.value || !selectedSlot.value || !selectedDate.value || !currentCourse.value) return;
-    if (userPoints < currentCourse.value.pointsRequired) {
+    
+    if (userPoints < currentCourse.value.points) {
         toast.add({ severity: 'error', summary: '點數不足', detail: '請先購買點數', life: 3000 });
         return;
     }
@@ -310,17 +312,16 @@ const handleBooking = async () => {
             rejectLabel: '取消',
             rejectClass: 'p-button-secondary',
             accept: async () => {
-                if (!currentCourse.value) return;
+                if (!currentCourse.value || !selectedSlot.value) return;
                 
                 const result = await bookingStore.book(
-                    currentCourse.value.courseId,
-                    selectedSlot.value!.id
+                    currentCourse.value.id,
+                    selectedSlot.value.id
                 );
 
-                // 根據 bookCourse 方法的返回類型正確判斷
                 if (result && 'success' in result && result.success) {
                     toast.add({ severity: 'success', summary: '預約成功！', detail: '已成功預約一門課程', life: 3000 });
-                    courseStore.selectedSlot = null;
+                    courseStore.selectSession(0);
                 } else {
                     toast.add({
                         severity: 'error',
@@ -437,6 +438,11 @@ onMounted(async () => {
 const shareCourse = () => {
     // navigator.clipboard.writeText(window.location.href);
     toast.add({ severity: 'success', summary: '分享成功！', detail: '已成功分享課程', life: 3000 });
+};
+
+// 格式化时间槽显示
+const formatTimeSlot = (slot: CourseSession) => {
+  return `${slot.start} - ${slot.end}`;
 };
 </script>
 <style>

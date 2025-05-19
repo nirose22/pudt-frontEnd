@@ -1,9 +1,8 @@
-// stores/userStore.ts – Pinia + pinia-plugin-persistedstate version
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { User, Course, CourseRecord, Result } from '@/types'
+import type { User, Course, Result } from '@/types'
 import { UserGender, UserRole } from '@/enums/User';
-import { BookingStatus } from '@/enums/BookingStatus';
+import { RegionCode } from '@/enums/RegionCode';
 // import * as userApi from '@/services/userApi'
 
 export const useUserStore = defineStore('user', () => {
@@ -15,15 +14,19 @@ export const useUserStore = defineStore('user', () => {
     /* ---------- getters ---------- */
     const isLoggedIn = computed(() => !!profile.value)
     const displayName = computed(() => profile.value?.name ?? UserRole.Guest)
-    const isFavorite = (id: number) => favs.value.some(c => c.courseId === id)
+    const isFavorite = (id: number) => favs.value.some(c => c.id === id)
 
     /* ---------- actions ---------- */
     async function fetchProfile(id?: number) {
+        //TODO: 從 API 取得用戶資料
         // const { success, data } = await userApi.fetchProfile(id)
         const data: User = {
-            id: 1, name: 'John', points: 100,
-            email: 'john@example.com', phone: '1234567890',
-            avatar: 'https://example.com/avatar.jpg',
+            id: 1,
+            name: 'John',
+            points: 100,
+            email: 'john@example.com',
+            phone: '1234567890',
+            avatarUrl: 'https://example.com/avatar.jpg',
             createdAt: new Date(),
             lastLogin: new Date(),
             address: '台北市信義區',
@@ -35,6 +38,21 @@ export const useUserStore = defineStore('user', () => {
             profile.value = data
             points.value = data.points ?? 0
         }
+
+        //TODO: 從 API 取得收藏
+        // const { success, data } = await userApi.fetchFavorites(id)
+        const favsData: Course[] = [
+            {
+                id: 1,
+                merchantId: 1,
+                title: '課程1',
+                points: 100,
+                coverUrl: 'https://example.com/cover.jpg',
+                region: RegionCode.TPE,
+                createdAt: new Date(),
+            }
+        ]
+        favs.value = favsData
         return data
     }
 
@@ -71,7 +89,7 @@ export const useUserStore = defineStore('user', () => {
         if (payload.points !== undefined) {
             points.value = payload.points
         }
-        // 呼叫 API
+        // TODO: update user
         // await api.put(`/users/${profile.value.id}`, payload)
 
         return { success: true, data: profile.value }
@@ -79,12 +97,12 @@ export const useUserStore = defineStore('user', () => {
 
     /* 收藏 */
     function addFavorite(course: Course) {
-        if (!isFavorite(course.courseId)) favs.value.push(course)
+        if (!isFavorite(course.id)) favs.value.push(course)
         // api
         return { success: true, message: '已加入收藏' }
     }
     function removeFavorite(id: number) {
-        favs.value = favs.value.filter(c => c.courseId !== id)
+        favs.value = favs.value.filter(c => c.id !== id)
         // api
         return { success: true, message: '已從收藏中移除' }
     }

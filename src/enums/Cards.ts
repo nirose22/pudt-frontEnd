@@ -6,11 +6,6 @@ export enum CardType {
     VIP = 'V'
 }
 
-export enum CardStatus {
-    Active = 'A',
-    Inactive = 'I'
-}
-
 export const CardTypeLabel: Record<CardType, string> = {
     [CardType.Basic]: '基本課卡',
     [CardType.Advanced]: '進階課卡',

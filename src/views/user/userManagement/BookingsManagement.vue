@@ -243,12 +243,14 @@ import { formatDateString } from '@/utils/date';
 import type { CalendarOptions, EventClickArg  } from '@fullcalendar/core';
 import { BookingStatus, BookingStatusLabel } from '@/enums/BookingStatus';
 import { useToast } from 'primevue/usetoast';
-import type { Booking, CourseSession } from '@/types/course';
+import type { Booking } from '@/types';
 
-// u9810u7ea6u8bb0u5f55u5c55u5f00u7c7bu578b
-interface ExtendedBooking extends Booking {
-    // u9700u8981u5c55u793au7684u9644u52a0u4fe1u606f
-    courseTitle?: string;
+/**
+ * 扩展预约接口，用于显示需要的附加信息
+ */
+ interface ExtendedBooking extends Booking {
+    // 显示需要的附加信息
+    courseTitle: string;
     merchantName?: string;
     location?: string;
     time?: string;
@@ -268,7 +270,7 @@ const props = defineProps({
 const emit = defineEmits(['cancel-booking']);
 const toast = useToast();
 
-// u8996u5716u72b6u614b
+// 列表視圖
 const viewMode = ref('list');
 const showDetailDialog = ref(false);
 const showCancelDialog = ref(false);
@@ -277,24 +279,24 @@ const showMapDialog = ref(false);
 const selectedBookingId = ref<number | null>(null);
 const selectedBooking = ref<ExtendedBooking | null>(null);
 
-// u7be9u9078u689du4ef6
+// 過濾條件
 const filter = ref({
     status: ''
 });
 
-// u72b6u614bu9078u9805
+// 狀態選項
 const statusOptions = [
-    { label: 'u5168u90e8u72b6u614b', value: '' },
-    { label: 'u5df2u78bau8a8d', value: BookingStatus.Confirmed },
-    { label: 'u5df2u53d6u6d88', value: BookingStatus.Canceled },
-    { label: 'u5f85u8655u7406', value: BookingStatus.Pending }
+    { label: '全部', value: '' },
+    { label: '已確認', value: BookingStatus.Confirmed },
+    { label: '已取消', value: BookingStatus.Canceled },
+    { label: '待處理', value: BookingStatus.Pending }
 ];
 
-// u7be9u9078u5f8cu7684u9810u7d04
+// 過濾後的預約
 const filteredBookings = computed(() => {
     let result = [...props.bookings];
     
-    // u72b6u614bu7be9u9078
+    // 狀態過濾
     if (filter.value.status) {
         result = result.filter(booking => booking.status === filter.value.status);
     }
@@ -302,7 +304,7 @@ const filteredBookings = computed(() => {
     return result;
 });
 
-// u5373u5c07u5230u4f86u7684u9810u7d04uff08u672au4f86 7 u5929u5167uff09
+// 即將到來的預約（最近7天）
 const upcomingBookings = computed(() => {
     const now = new Date();
     const sevenDaysLater = new Date();
@@ -311,12 +313,12 @@ const upcomingBookings = computed(() => {
     return props.bookings.filter(booking => {
         if (booking.status !== BookingStatus.Confirmed) return false;
         
-        // createdAtu5df2u7ecfu662fDateu7c7bu578b
+        // createdAt 先前是 Date 類型
         return booking.createdAt >= now && booking.createdAt <= sevenDaysLater;
     }).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
 });
 
-// u65e5u66c6u4e8bu4ef6 - u9700u8981u6839u636eu65b0u7684u63a5u53e3u8c03u6574
+// 日曆事件 - 需要根據新的接口調整
 const events = computed(() =>
     filteredBookings.value.map((booking: ExtendedBooking) => ({
         id: booking.id.toString(),
@@ -330,7 +332,7 @@ const events = computed(() =>
     }))
 );
 
-// u65e5u66c6u914du7f6e
+// 日曆配置
 const calendarOptions: CalendarOptions = {
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
     initialView: 'dayGridMonth',
@@ -388,7 +390,7 @@ function getStatusSeverity(status: BookingStatus): string {
     }
 }
 
-// u7372u53d6u5373u5c07u5230u4f86u9810u7d04u7684u908au6846u984fu8272
+// 獲取即將到來的預約邊框顏色
 function getUpcomingBorderClass(booking: ExtendedBooking): string {
     const daysLeft = getDaysLeft(booking.createdAt); // createdAtu5df2u7ecfu662fDateu7c7bu578b
     
@@ -427,30 +429,30 @@ function getDaysLeft(date: Date): number {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
 
-// u78bau8a8du662fu5426u53efu4ee5u53d6u6d88u9810u7d04
+// 是否可以取消預約
 function canCancel(booking: ExtendedBooking): boolean {
     return booking.status === BookingStatus.Confirmed;
 }
 
-// u67e5u770bu9810u7d04u8a73u60c5
+// 查看預約詳情
 function viewBookingDetail(booking: ExtendedBooking): void {
     selectedBooking.value = booking;
     showDetailDialog.value = true;
 }
 
-// u67e5u770bu5730u9edeu5730u5716
+// 查看地點地圖
 function showLocationMap(booking: ExtendedBooking): void {
     selectedBooking.value = booking;
     showMapDialog.value = true;
 }
 
-// u78bau8a8du662fu5426u53efu4ee5u53d6u6d88u9810u7d04
+// 確認取消預約
 function confirmCancelBooking(bookingId: number): void {
     selectedBookingId.value = bookingId;
     showCancelDialog.value = true;
 }
 
-// u78bau8a8du662fu5426u53efu4ee5u53d6u6d88u5f8cu7684u9810u7d04
+// 確認取消選中的預約
 function confirmCancelSelectedBooking(): void {
     if (selectedBooking.value) {
         selectedBookingId.value = selectedBooking.value.id;
@@ -459,58 +461,58 @@ function confirmCancelSelectedBooking(): void {
     }
 }
 
-// u78bau8a8du662fu5426u53d6u6d88u9810u7d04
+// 取消預約
 function cancelBooking(): void {
     if (selectedBookingId.value) {
         emit('cancel-booking', selectedBookingId.value);
         showCancelDialog.value = false;
         
-        // u65e5u793au52a0u5f8cu6536u7d04
+        // 顯示取消成功提示
         toast.add({
             severity: 'success',
-            summary: 'u6536u7d04',
-            detail: 'u9810u7d04u5df2u53d6u6d88',
+            summary: '取消成功',
+            detail: '預約已取消',
             life: 3000
         });
-    }
+    }   
 }
 
-// u78bau8a8du662fu5426u53d6u6d88u9810u7d04
+// 同步至行事曆
 function syncToCalendar(platform: string): void {
-    // u6a2au6307u5b9a
+    // 顯示同步中提示
     toast.add({
         severity: 'info',
-        summary: 'u6307u5b9a',
-        detail: `u6307u5b9a u5230 ${platform} u65e5u66c6...`,
+        summary: '指定',
+        detail: `指定到 ${platform} 行事曆...`,
         life: 2000
     });
     
     setTimeout(() => {
         toast.add({
             severity: 'success',
-            summary: 'u6536u7d04',
-            detail: `u5df2u78bau6536u7d04 u5230 ${platform} u65e5u66c6`,
+            summary: '已同步',
+            detail: `已同步到 ${platform} 行事曆`,
             life: 3000
         });
         showCalendarSyncDialog.value = false;
     }, 1500);
 }
 
-// u78bau8a8du662fu5426u53d6u6d88u9810u7d04
+// 下載 .ics 檔案
 function downloadIcsFile(): void {
-    // u6a21u6253u4e0bu5b50
+    // 顯示處理中提示
     toast.add({
         severity: 'info',
-        summary: 'u5904u7406u4e2d',
-        detail: 'u6b63u5728u751fu6210u884cu4e8bu5fdeu6587u4ef6...',
+        summary: '處理中',
+        detail: '正在生成行事曆文件...',
         life: 2000
     });
     
     setTimeout(() => {
         toast.add({
             severity: 'success',
-            summary: 'u6210u529f',
-            detail: 'u884cu4e8bu5fdeu6587u4ef6u5df2u751fu6210uff0cu6b63u5728u4e0bu8f7d',
+            summary: '成功',
+            detail: '行事曆文件已生成，正在下載...',
             life: 3000
         });
         showCalendarSyncDialog.value = false;

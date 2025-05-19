@@ -1,28 +1,19 @@
-/* ---------- 講師 ---------- */
-export interface Instructor {
-  id: number                  // PK
-  merchantId: number          // FK -> Merchant.id
-  name: string
-  avatar?: string             // 頭像 URL
-  bio?: string                // 個人介紹
-}
-
-
+ import { RegionCode } from '@/enums/RegionCode'
+import { Merchant } from './merchant'
 /* ---------- 課程核心 ---------- */
 export interface Course {
   id: number                  // PK
   merchantId: number          // FK -> Merchant.id
   title: string
   description?: string
-  points: number              // 預約所需點數
-  price?: number              // 若有現金價格
-  coverUrl?: string           // 封面圖片 URL
-  region?: string             // 區域代碼 (TPE/KHH…)
+  points: number
+  coverUrl?: string
+  region?: RegionCode
   createdAt: Date
 }
 
 /* 每張課程附圖（多對一）*/
-export interface CourseImage {
+export interface CourseImage  {
   id: number                  // PK
   courseId: number            // FK -> Course.id
   url: string                 // 圖片 URL
@@ -47,40 +38,15 @@ export interface CourseSession {
   seatsLeft: number           // 剩餘席位
 }
 
-/* ---------- 預約 ---------- */
-export interface Booking {
-  id: number
-  userId: number
-  sessionId: number           // FK -> CourseSession.id
-  points: number
-  status: BookingStatus
-  rating?: number
-  comment?: string
-  createdAt: Date
+export interface CourseDTO extends Course {
+  joinCount: number // 參與人數
+  recommended: boolean // 是否推薦
+  image: CourseImage
 }
 
-
-/* ---------- 點數流水 ---------- */
-export interface PointTxn {
-  id: number
-  userId: number
-  type: 'deposit' | 'consume' | 'reward' | 'expire'
-  amount: number              // 正或負值
-  balance: number             // 當下餘額
-  relatedId?: number          // 關聯 Order.id / Booking.id
-  note?: string
-  createdAt: Date
-  expireAt?: Date
+export interface CourseDetailDTO extends CourseDTO {
+  merchant: Merchant;
+  sessions: CourseSession[]
+  images: CourseImage[]
 }
 
-/* ---------- 會員活動 ---------- */
-export interface Activity {
-  id: number
-  userId: number
-  occurredAt: Date
-  kind: 'login' | 'booking' | 'purchase' | 'account' | 'participation'
-  refId?: number              // 依 kind 對應 bookingId / orderId…
-  ip?: string
-  device?: string
-  memo?: string
-}

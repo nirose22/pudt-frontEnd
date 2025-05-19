@@ -93,21 +93,21 @@
                     class="!flex-1 flex flex-col p-datatable-sm">
                     <Column field="id" header="訂單編號" sortable />
                     <Column field="cardType" header="課卡名稱" sortable>
-                        <template #body="{ data }">
-                            {{ getCardType(data.cardType) }}
-                        </template>
-                    </Column>
+                            <template #body="{ data }">
+                                {{ getCardType(data.cardType) }}
+                            </template>
+                        </Column>
                     <Column field="points" header="點數" sortable />
                     <Column field="amount" header="金額" sortable>
-                        <template #body="{ data }">
-                            NT$ {{ data.amount }}
-                        </template>
-                    </Column>
+                            <template #body="{ data }">
+                                NT$ {{ data.amount }}
+                            </template>
+                        </Column>
                     <Column field="date" header="購買日期" sortable>
-                        <template #body="{ data }">
-                            {{ formatDateString(data.date) }}
-                        </template>
-                    </Column>
+                            <template #body="{ data }">
+                                {{ formatDateString(data.date) }}
+                            </template>
+                        </Column>
                     <Column field="paymentMethod" header="付款方式" sortable>
                         <template #body="{ data }">
                             <Tag :severity="getPaymentSeverity(data.paymentMethod)"
@@ -120,14 +120,14 @@
                         </template>
                     </Column>
                     <Column field="action" header="操作">
-                        <template #body="{ data }">
+                            <template #body="{ data }">
                             <div class="flex gap-1">
                                 <Button icon="pi pi-eye" text rounded aria-label="查看詳情" @click="viewPurchaseDetail(data)" />
                                 <Button icon="pi pi-file-pdf" text rounded aria-label="下載發票" 
                                     :disabled="!data.invoiceAvailable" @click="downloadInvoice(data)" />
                             </div>
-                        </template>
-                    </Column>
+                            </template>
+                        </Column>
 
                     <template #empty>
                         <div class="text-center p-6 bg-gray-50 rounded-lg">
@@ -135,7 +135,7 @@
                             <p class="text-gray-500">尚無購買紀錄</p>
                         </div>
                     </template>
-                </DataTable>
+                    </DataTable>
             </div>
 
             <!-- 详情对话框 -->
@@ -247,7 +247,7 @@
                         @click="repayPurchase" />
                     <Button v-if="selectedPurchase?.status === OrderStatus.Paid && selectedPurchase?.invoiceAvailable" 
                         label="下載發票" icon="pi pi-file-pdf" @click="downloadInvoice(selectedPurchase)" />
-                </template>
+                            </template>
             </Dialog>
 
             <!-- 發票預覽對話框 -->
@@ -328,7 +328,8 @@ import DateRangeFilter from '@/components/common/DateRangeFilter.vue';
 import { formatDateString, inRange } from '@/utils/date';
 import { OrderStatus, PaymentMethod, OrderStatusLabel, PaymentMethodLabel } from '@/enums/PurchaseStatus';
 import { CardType, CardTypeLabel } from '@/enums/Cards';
-import type { PurchaseItem } from '@/types/purchaseItem';
+import type { ExtendedPurchaseItem } from '@/types/purchaseItem';
+import { PurchaseService } from '@/service/PurchaseService';
 import InputText from 'primevue/inputtext';
 import Dropdown from 'primevue/dropdown';
 
@@ -336,15 +337,6 @@ import Dropdown from 'primevue/dropdown';
 interface FilterOption {
     label: string;
     value: string | number | null;
-}
-
-// 扩展 PurchaseItem 类型
-interface ExtendedPurchaseItem extends PurchaseItem {
-    invoiceAvailable?: boolean;
-    invoiceNumber?: string;
-    invoiceDate?: string;
-    paymentDate?: string;
-    expiry?: string;
 }
 
 const props = defineProps<{
@@ -506,8 +498,8 @@ const downloadInvoicePDF = () => {
     });
     
     setTimeout(() => {
-        toast.add({
-            severity: 'success',
+    toast.add({
+        severity: 'success',
             summary: '成功',
             detail: '發票 PDF 已下載',
             life: 3000
@@ -592,7 +584,7 @@ const getStatusSeverity = (status: OrderStatus) => {
 </script>
 
 <style scoped>
-@reference "tailwindcss";
+ @reference "tailwindcss";
 
 .card {
     @apply bg-white border border-gray-100 rounded-lg p-4;

@@ -1,284 +1,240 @@
-import type { Course, CourseDTO, CourseTime } from "@/types/course";
+import type { Course, CourseDTO, CourseDetailDTO, CourseSession } from "@/types/course";
+import type { Booking } from "@/types/booking";
+import type { Result } from "@/types";
 import { MerchantService } from "./MerchantService";
+import { BookingStatus } from "@/enums/BookingStatus";
+import { RegionCode } from "@/enums/RegionCode";
+import { generateMockCourses } from "./MockService";
 
+/**
+ * 课程服务 - 负责所有与课程相关的API调用
+ */
 export const CourseService = {
     /**
-     * 獲取課程列表
-     * @returns 課程列表 Promise
+     * 获取课程列表
+     * @param keyword 搜索关键词
+     * @param regions 区域筛选
+     * @param categories 分类筛选
+     * @returns 课程列表
      */
-    getCourse() {
-        // TODO: 從後端獲取課程列表
-        // API: /api/courses
-        return Promise.resolve(this.getCourseData());
+    getCourse(keyword?: string, regions?: string[], categories?: string[]): Promise<CourseDTO[]> {
+        // TODO: 构建查询参数并调用后端API
+        // API: /api/courses?keyword=xxx&regions=xxx&categories=xxx
+        // 在实际应用中，这里应该将参数拼接到请求URL
+        
+        return Promise.resolve(generateMockCourses());
     },
 
     /**
-     * 整合獲取課程詳情、時間和商家信息
-     * @param courseId 課程ID
-     * @returns 包含課程詳情、時間和商家信息的Promise
+     * 获取课程详情
+     * @param courseId 课程ID
+     * @returns 课程详情和可用时间
      */
     async fetchCourseDetail(courseId: number): Promise<{
-        course: Course;
-        timeSlots: CourseTime[];
+        course: CourseDetailDTO;
+        timeSlots: CourseSession[];
     }> {
         try {
-            // TODO: 實際環境可以改為單一API調用，例如:
-            // GET /api/courses/{courseId}/detail
+            // TODO: 实际环境可以改为单一API调用
+            // API: GET /api/courses/{courseId}/detail
             
-            // 獲取課程詳情
-            const courseDto = this.getCourseData().find(c => c.courseId === courseId);
+            // 获取课程基本信息
+            const courseData = generateMockCourses().find(c => c.id === courseId);
             
-            if (!courseDto) {
-                throw new Error(`找不到ID為 ${courseId} 的課程`);
+            if (!courseData) {
+                throw new Error(`找不到ID为${courseId}的课程`);
             }
             
-            // 獲取商家信息
-            const merchantInfo = await MerchantService.getMerchant(courseDto.merchantId);
+            // 获取商家信息
+            const merchant = await MerchantService.getMerchant(courseData.merchantId);
             
-            // 構建完整課程信息
-            const course: Course = {
-                merchantId: courseDto.merchantId,
-                courseId: courseDto.courseId,
-                title: courseDto.title,
-                description: courseDto.description || '暫無描述',
-                price: courseDto.pointsRequired * 100,
-                pointsRequired: courseDto.pointsRequired,
+            // 获取课程时间
+            const timeSlots = this.getSessionsForCourse(courseId);
+            
+            // 构建课程详情
+            const courseDetail: CourseDetailDTO = {
+                ...courseData,
+                merchant,
+                sessions: timeSlots,
+                images: [courseData.image],
                 joinCount: Math.floor(Math.random() * 20) + 5,
-                images: [
-                    {
-                        itemImageSrc: `https://picsum.photos/id/${courseDto.courseId}/300/200`,
-                        thumbnailImageSrc: `https://picsum.photos/id/${courseDto.courseId}/175/100`,
-                        alt: courseDto.image.alt
-                    },
-                    {
-                        itemImageSrc: `https://picsum.photos/id/${courseDto.courseId + 1}/300/200`,
-                        thumbnailImageSrc: `https://picsum.photos/id/${courseDto.courseId + 1}/175/100`,
-                        alt: '課程圖片2'
-                    },
-                    {
-                        itemImageSrc: `https://picsum.photos/id/${courseDto.courseId + 2}/300/200`,
-                        thumbnailImageSrc: `https://picsum.photos/id/${courseDto.courseId + 2}/175/100`,
-                        alt: '課程圖片3'
-                    }
-                ],
-                merchant: merchantInfo
+                recommended: courseData.id % 3 === 0 // 随机设置部分课程为推荐
             };
-    
-            // 獲取課程時間槽
-            const timeSlots = this.getTimeSlots(courseDto.courseId);
             
-            return { course, timeSlots };
+            return { course: courseDetail, timeSlots };
+            
         } catch (error) {
-            console.error("獲取課程詳情失敗:", error);
+            console.error("获取课程详情失败:", error);
             throw error;
         }
     },
     
-    getTimeSlots(courseId: number): CourseTime[] {
-        // TODO: API 調用
-        // API: /api/courses/{courseId}/time-slots
-
-        // 生成時間槽
-        const timeSlots: CourseTime[] = [];
+    /**
+     * 获取课程的所有时间段
+     * @param courseId 课程ID
+     * @returns 课程时间段列表
+     */
+    getSessionsForCourse(courseId: number): CourseSession[] {
+        // TODO: API调用
+        // API: /api/courses/{courseId}/sessions
+        
+        // 生成时间段
+        const sessions: CourseSession[] = [];
         const currentDate = new Date();
         
         for (let i = 1; i <= 7; i++) {
             const date = new Date();
             date.setDate(currentDate.getDate() + i);
             
-            timeSlots.push({
-                id: timeSlots.length + 1,
+            sessions.push({
+                id: sessions.length + 1,
                 courseId: courseId,
-                date: new Date(date),
-                startTime: '10:00',
-                endTime: '12:00',
-                availableSeats: Math.floor(Math.random() * 15),
-                totalSeats: 15
+                date: date,
+                start: "10:00",
+                end: "12:00",
+                seats: 15,
+                seatsLeft: Math.floor(Math.random() * 15)
             });
             
-            timeSlots.push({
-                id: timeSlots.length + 1,
+            sessions.push({
+                id: sessions.length + 1,
                 courseId: courseId,
-                date: new Date(date),
-                startTime: '14:00',
-                endTime: '16:00',
-                availableSeats: Math.floor(Math.random() * 15),
-                totalSeats: 15
+                date: date,
+                start: "14:00",
+                end: "16:00",
+                seats: 15,
+                seatsLeft: Math.floor(Math.random() * 15)
             });
         }
         
-        return timeSlots;
+        return sessions;
     },
     
-    // 課程數據（僅用於模擬）
-    getCourseData(): CourseDTO[] {
-        // TODO: 從後端獲取課程資料: 
-        // API: /api/courses
-        return [
-            {
-                merchantId: 1,
-                courseId: 1,
-                title: '初學者瑜珈課程',
-                pointsRequired: 10,
-                image: {
-                    imageSrc: `https://picsum.photos/id/237/300/200`,
-                    alt: '瑜珈課程圖片'
-                },
-                merchantName: '瑜珈教室',
-                description: '適合初學者的基礎瑜珈課程，教你正確的體位法和呼吸技巧。',
-                createdAt: new Date(),
-                joinCount: Math.floor(Math.random() * 50) + 5
-            },
-            {
-                merchantId: 2,
-                courseId: 2,
-                title: '進階攝影技巧',
-                pointsRequired: 15,
-                image: {
-                    imageSrc: `https://picsum.photos/id/2/300/200`,
-                    alt: '攝影課程圖片'
-                },
-                merchantName: '攝影工作室',
-                description: '學習構圖、光線運用及後期處理的進階技巧，提升你的攝影作品質量。',
-                createdAt: new Date(),
-                joinCount: Math.floor(Math.random() * 50) + 5
-            },
-            {
-                merchantId: 3,
-                courseId: 3,
-                title: '義式料理烹飪課',
-                pointsRequired: 20,
-                image: {
-                    imageSrc: `https://picsum.photos/id/3/300/200`,
-                    alt: '烹飪課程圖片'
-                },
-                merchantName: '廚藝教室',
-                description: '學習正宗義大利麵、披薩和提拉米蘇等經典義式料理的製作方法。',
-                createdAt: new Date(),
-                joinCount: Math.floor(Math.random() * 50) + 5
-            },
-            {
-                merchantId: 4,
-                courseId: 4,
-                title: '滑板初級班',
-                pointsRequired: 8,
-                image: {
-                    imageSrc: `https://picsum.photos/id/4/300/200`,
-                    alt: '滑板課程圖片'
-                },
-                merchantName: '極限運動中心',
-                description: '從零開始學習滑板基本技巧，包括站姿、平衡和簡單動作。',
-                createdAt: new Date(),
-                joinCount: Math.floor(Math.random() * 50) + 5
-            },
-            {
-                merchantId: 5,
-                courseId: 5,
-                title: '水彩畫入門',
-                pointsRequired: 12,
-                image: {
-                    imageSrc: `https://picsum.photos/id/5/300/200`,
-                    alt: '水彩畫課程圖片'
-                },
-                merchantName: '藝術工作室',
-                description: '學習水彩畫的基本技法，色彩調配和簡單風景畫創作。',
-                createdAt: new Date(),
-                joinCount: Math.floor(Math.random() * 50) + 5
-            },
-            {
-                merchantId: 6,
-                courseId: 6,
-                title: '爵士鼓基礎課程',
-                pointsRequired: 18,
-                image: {
-                    imageSrc: `https://picsum.photos/id/6/300/200`,
-                    alt: '爵士鼓課程圖片'
-                },
-                merchantName: '音樂教室',
-                description: '學習爵士鼓的基本節奏型態、技巧和簡單歌曲的演奏。',
-                createdAt: new Date(),
-                joinCount: Math.floor(Math.random() * 50) + 5
-            },
-            {
-                merchantId: 7,
-                courseId: 7,
-                title: '現代舞蹈班',
-                pointsRequired: 15,
-                image: {
-                    imageSrc: `https://picsum.photos/id/7/300/200`,
-                    alt: '舞蹈課程圖片'
-                },
-                merchantName: '舞蹈教室',
-                description: '學習現代舞的基本動作和表現技巧，適合零基礎學員。',
-                createdAt: new Date(),
-                joinCount: Math.floor(Math.random() * 50) + 5
-            },
-            {
-                merchantId: 8,
-                courseId: 8,
-                title: '皮革手作工坊',
-                pointsRequired: 25,
-                image: {
-                    imageSrc: `https://picsum.photos/id/8/300/200`,
-                    alt: '皮革手作課程圖片'
-                },
-                merchantName: '手作坊',
-                description: '製作個性化皮革小物，學習基本裁剪、縫製和打磨技巧。',
-                createdAt: new Date(),
-                joinCount: Math.floor(Math.random() * 50) + 5
-            },
-            {
-                merchantId: 9,
-                courseId: 9,
-                title: '手作皮革工藝',
-                pointsRequired: 7,
-                image: {
-                    imageSrc: `https://picsum.photos/id/9/300/200`,
-                    alt: '皮革工藝課程圖片'
-                },
-                merchantName: '創意手作坊',
-                createdAt: new Date(),
-                joinCount: Math.floor(Math.random() * 50) + 5
-            },
-            {
-                merchantId: 10,
-                courseId: 10,
-                title: '居家健身訓練',
-                pointsRequired: 4,
-                image: {
-                    imageSrc: `https://picsum.photos/id/10/300/200`,
-                    alt: '健身課程圖片'
-                },
-                merchantName: '活力健身中心',
-                createdAt: new Date(),
-                joinCount: Math.floor(Math.random() * 50) + 5
-            },
-            {
-                merchantId: 11,
-                courseId: 11,
-                title: '中階瑜珈課程',
-                pointsRequired: 15,
-                image: {
-                    imageSrc: `https://picsum.photos/id/11/300/200`,
-                    alt: '瑜珈課程圖片'
-                },
-                merchantName: '瑜珈教室',
-                createdAt: new Date(),
-                joinCount: Math.floor(Math.random() * 50) + 5
-            },
-            {
-                merchantId: 12,
-                courseId: 12,
-                title: '專業攝影工作坊',
-                pointsRequired: 18,
-                image: {
-                    imageSrc: `https://picsum.photos/id/12/300/200`,
-                    alt: '攝影課程圖片'
-                },
-                merchantName: '攝影教室',
-                createdAt: new Date(),
-                joinCount: Math.floor(Math.random() * 50) + 5
-            },
-        ];
+    /**
+     * 获取用户的课程预订
+     * @param userId 用户ID
+     * @returns 预订列表
+     */
+    async getUserBookings(userId: number): Promise<Result<Booking[]>> {
+        try {
+            // TODO: API调用
+            // API: /api/users/{userId}/bookings
+            
+            // 模拟数据
+            const bookings: Booking[] = [];
+            for (let i = 1; i <= 5; i++) {
+                bookings.push({
+                    id: i,
+                    userId: userId,
+                    sessionId: i * 10,
+                    points: i * 100,
+                    status: i % 3 === 0 ? BookingStatus.Canceled : BookingStatus.Confirmed,
+                    createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000)
+                });
+            }
+            
+            return { success: true, data: bookings };
+        } catch (error) {
+            console.error("获取用户预订失败:", error);
+            return { success: false, message: "获取用户预订失败" };
+        }
+    },
+    
+    /**
+     * 获取用户收藏的课程
+     * @param userId 用户ID
+     * @returns 收藏的课程列表
+     */
+    async getUserFavorites(userId: number): Promise<Result<CourseDTO[]>> {
+        try {
+            // TODO: API调用
+            // API: /api/users/{userId}/favorites
+            
+            // 模拟数据 - 从所有课程中随机选择几个作为收藏
+            const allCourses = generateMockCourses();
+            const favorites = allCourses
+                .filter((_, index) => index % 4 === 0) // 选择部分课程作为收藏
+                .slice(0, 5);
+            
+            return { success: true, data: favorites };
+        } catch (error) {
+            console.error("获取用户收藏失败:", error);
+            return { success: false, message: "获取用户收藏失败" };
+        }
+    },
+    
+    /**
+     * 添加课程到收藏
+     * @param userId 用户ID
+     * @param courseId 课程ID
+     * @returns 操作结果
+     */
+    async addFavorite(userId: number, courseId: number): Promise<Result> {
+        try {
+            // TODO: API调用
+            // API: POST /api/users/{userId}/favorites
+            
+            return { success: true, message: "成功添加到收藏" };
+        } catch (error) {
+            console.error("添加收藏失败:", error);
+            return { success: false, message: "添加收藏失败" };
+        }
+    },
+    
+    /**
+     * 从收藏中移除课程
+     * @param userId 用户ID
+     * @param courseId 课程ID
+     * @returns 操作结果
+     */
+    async removeFavorite(userId: number, courseId: number): Promise<Result> {
+        try {
+            // TODO: API调用
+            // API: DELETE /api/users/{userId}/favorites/{courseId}
+            
+            return { success: true, message: "成功从收藏中移除" };
+        } catch (error) {
+            console.error("移除收藏失败:", error);
+            return { success: false, message: "移除收藏失败" };
+        }
+    },
+    
+    /**
+     * 创建课程预订
+     * @param userId 用户ID
+     * @param sessionId 课程时段ID
+     * @returns 预订结果
+     */
+    async createBooking(userId: number, sessionId: number): Promise<Result> {
+        try {
+            // TODO: API调用
+            // API: POST /api/bookings
+            
+            return { 
+                success: true, 
+                message: "预订成功", 
+                data: { bookingId: Date.now() } 
+            };
+        } catch (error) {
+            console.error("创建预订失败:", error);
+            return { success: false, message: "创建预订失败" };
+        }
+    },
+    
+    /**
+     * 取消课程预订
+     * @param bookingId 预订ID
+     * @returns 取消结果
+     */
+    async cancelBooking(bookingId: number): Promise<Result> {
+        try {
+            // TODO: API调用
+            // API: DELETE /api/bookings/{bookingId}
+            
+            return { success: true, message: "预订已取消" };
+        } catch (error) {
+            console.error("取消预订失败:", error);
+            return { success: false, message: "取消预订失败" };
+        }
     }
 }

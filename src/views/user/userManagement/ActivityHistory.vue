@@ -91,25 +91,25 @@
                         <i :class="tab.icon + ' mr-2'"></i>
                         {{ tab.label }}
                         <Badge v-if="tab.count" :value="tab.count" class="ml-2" />
-                    </Tab>
-                </TabList>
-                <TabPanels>
+                </Tab>
+            </TabList>
+            <TabPanels>
                     <TabPanel :value="tabItems[0].label">
                         <!-- 預約紀錄面板 -->
                         <DataTable :value="filteredCourseHistory" stripedRows paginator :rows="10"
                             responsiveLayout="stack" :loading="loading" class="!flex-1 flex flex-col">
                             <Column field="courseTitle" header="課程名稱" sortable />
                             <Column field="date" header="日期" sortable>
-                                <template #body="{ data }">
-                                    {{ formatDateString(data.date) }}
-                                </template>
-                            </Column>
+                            <template #body="{ data }">
+                                {{ formatDateString(data.date) }}
+                            </template>
+                        </Column>
                             <Column field="time" header="時間" />
-                            <Column field="instructor.name" header="講師" />
+                        <Column field="instructor.name" header="講師" />
                             <Column field="courseType" header="課程類型" />
-                            <Column field="points" header="消費點數" />
-                            <Column field="status" header="狀態">
-                                <template #body="{ data }">
+                        <Column field="points" header="消費點數" />
+                        <Column field="status" header="狀態">
+                            <template #body="{ data }">
                                     <Tag :severity="getStatusSeverity(data.status)"
                                         :value="getCourseStatus(data.status)" />
                                 </template>
@@ -122,50 +122,50 @@
                                         <Button v-if="canRate(data)" icon="pi pi-star" text rounded aria-label="評價課程"
                                             @click="openRatingDialog(data)" />
                                     </div>
-                                </template>
-                            </Column>
-
+                            </template>
+                        </Column>
+    
                             <template #empty>
                                 <div class="text-center p-6 bg-gray-50 rounded-lg">
                                     <i class="pi pi-calendar-times text-4xl text-gray-400 mb-2"></i>
-                                    <p class="text-gray-500">尚無課程紀錄</p>
-                                </div>
+                        <p class="text-gray-500">尚無課程紀錄</p>
+                    </div>
                             </template>
-                        </DataTable>
-                    </TabPanel>
+                    </DataTable>
+                </TabPanel>
                     <TabPanel :value="tabItems[1].label">
                         <!-- 缺席紀錄面板 -->
                         <DataTable :value="filteredAbsenceRecords" stripedRows paginator :rows="10"
                             responsiveLayout="stack" :loading="loading" class="!flex-1 flex flex-col">
                             <Column field="courseTitle" header="課程名稱" sortable />
                             <Column field="date" header="日期" sortable>
-                                <template #body="{ data }">
-                                    {{ formatDateString(data.date) }}
-                                </template>
-                            </Column>
-                            <Column field="time" header="時間" />
+                            <template #body="{ data }">
+                                {{ formatDateString(data.date) }}
+                            </template>
+                        </Column>
+                        <Column field="time" header="時間" />
                             <Column field="courseType" header="課程類型" />
-                            <Column field="points" header="扣除點數" />
+                        <Column field="points" header="扣除點數" />
                             <Column field="reason" header="缺席原因" />
-
+    
                             <template #empty>
                                 <div class="text-center p-6 bg-gray-50 rounded-lg">
                                     <i class="pi pi-calendar-times text-4xl text-gray-400 mb-2"></i>
-                                    <p class="text-gray-500">無缺席紀錄</p>
-                                </div>
+                        <p class="text-gray-500">無缺席紀錄</p>
+                    </div>
                             </template>
                         </DataTable>
-                    </TabPanel>
+                </TabPanel>
                     <TabPanel :value="tabItems[2].label">
                         <!-- 評價紀錄面板 -->
                         <DataTable :value="filteredRatingHistory" stripedRows paginator :rows="10"
                             responsiveLayout="stack" :loading="loading" class="!flex-1 flex flex-col">
                             <Column field="courseTitle" header="課程名稱" sortable />
                             <Column field="date" header="日期" sortable>
-                                <template #body="{ data }">
-                                    {{ formatDateString(data.date) }}
-                                </template>
-                            </Column>
+                            <template #body="{ data }">
+                                {{ formatDateString(data.date) }}
+                            </template>
+                        </Column>
                             <Column field="instructor.name" header="講師" />
                             <Column field="rating" header="評分">
                                 <template #body="{ data }">
@@ -173,16 +173,16 @@
                                 </template>
                             </Column>
                             <Column field="comment" header="評論">
-                                <template #body="{ data }">
+                            <template #body="{ data }">
                                     <div class="max-w-xs truncate">{{ data.comment || '無評論' }}</div>
-                                </template>
-                            </Column>
+                            </template>
+                        </Column>
                             <Column field="action" header="操作">
-                                <template #body="{ data }">
+                            <template #body="{ data }">
                                     <Button icon="pi pi-pencil" text rounded aria-label="編輯評價"
                                         @click="openRatingDialog(data, true)" />
-                                </template>
-                            </Column>
+                            </template>
+                        </Column>
 
                             <template #empty>
                                 <div class="text-center p-6 bg-gray-50 rounded-lg">
@@ -190,10 +190,10 @@
                                     <p class="text-gray-500">尚無評價紀錄</p>
                                 </div>
                             </template>
-                        </DataTable>
-                    </TabPanel>
-                </TabPanels>
-            </Tabs>
+                    </DataTable>
+                </TabPanel>
+            </TabPanels>
+        </Tabs>
 
             <!-- 课程详情对话框 -->
             <Dialog v-model:visible="showDetailDialog" header="課程詳情" :modal="true" :closable="true"
@@ -318,7 +318,7 @@ import InputText from 'primevue/inputtext';
 import Dropdown from 'primevue/dropdown';
 import MultiSelect from 'primevue/multiselect';
 import Avatar from 'primevue/avatar';
-import type { CourseRecord, AbsenceRecord, RatingRecord } from '@/types/course';
+import type { CourseRecord, AbsenceRecord, RatingRecord } from '@/types/activity';
 
 const props = defineProps({
     courseHistory: {
@@ -623,7 +623,7 @@ const getStatusSeverity = (status: BookingStatus) => {
 </script>
 
 <style scoped>
-@reference "tailwindcss";
+ @reference "tailwindcss";
 
 .card {
     @apply bg-white border border-gray-100 rounded-lg p-4;

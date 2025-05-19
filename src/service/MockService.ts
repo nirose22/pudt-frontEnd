@@ -1,5 +1,6 @@
 import type { CourseDTO } from '@/types/course';
 import { MainCategory, SubCategory } from '@/enums/CourseCategory';
+import { RegionCode } from '@/enums/RegionCode';
 
 // 篩選選項數據 - 地區
 export const mockRegions = [
@@ -16,20 +17,22 @@ export function generateMockCourses(): CourseDTO[] {
   
   for (let i = 1; i <= 30; i++) {
     mockCourses.push({
-      courseId: i,
+      id: i,
       merchantId: Math.floor(i / 3) + 1,
       title: `測試課程 ${i}`,
       description: `這是第 ${i} 個測試課程的詳細描述。包含了課程內容、適合對象、學習目標等信息。`,
-      pointsRequired: Math.floor(Math.random() * 50) + 10,
-      merchantName: `測試商家 ${Math.floor(i / 3) + 1}`,
-      image: {
-        imageSrc: `https://picsum.photos/id/${i + 20}/300/200`,
-        alt: `課程 ${i} 圖片`
-      },
+      points: Math.floor(Math.random() * 50) + 10,
+      coverUrl: `https://picsum.photos/id/${i + 20}/300/200`,
+      region: getRandomRegionCode(),
       joinCount: Math.floor(Math.random() * 100),
       createdAt: generateRandomDate(),
-      region: getRandomRegion(),
-      categories: generateRandomCategories()
+      recommended: i % 5 === 0,
+      image: {
+        id: i,
+        courseId: i,
+        url: `https://picsum.photos/id/${i + 20}/300/200`,
+        alt: `課程 ${i} 圖片`
+      }
     });
   }
   
@@ -44,9 +47,16 @@ function generateRandomDate(): Date {
   return date;
 }
 
-// 获取随机地区
-function getRandomRegion(): string {
-  return mockRegions[Math.floor(Math.random() * mockRegions.length)].code;
+// 获取随机区域
+function getRandomRegionCode(): RegionCode {
+  const regions = [
+    RegionCode.TPE,
+    RegionCode.KHH,
+    RegionCode.TNN,
+    RegionCode.TCH,
+    RegionCode.TAO
+  ];
+  return regions[Math.floor(Math.random() * regions.length)];
 }
 
 // 生成随机分类

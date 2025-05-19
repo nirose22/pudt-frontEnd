@@ -3,16 +3,17 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { isEqual } from 'date-fns'
 import type { Result } from '@/types'
-import type { Booking, Course, CourseSession } from '@/types/course'
+import type { Course, CourseSession } from '@/types/course'
+import type { Booking } from '@/types/booking'
 import { BookingStatus } from '@/enums/BookingStatus'
-import { useCourseStore } from './courseStore'
 import { useUserStore } from './userStore'
 import { BookingService } from '@/service/BookingService'
+import { useCourseStore } from './courseStore'
 
 export const useBookingStore = defineStore('booking', () => {
     /* ---------- state ---------- */
-    const courseStore = useCourseStore()
     const userStore = useUserStore()
+    const courseStore = useCourseStore()
     const bookings = ref<Booking[]>([])
     const loading = ref(false)
     const error = ref<string | null>(null)
@@ -33,10 +34,10 @@ export const useBookingStore = defineStore('booking', () => {
 
     /* ---------- can-book logic ---------- */
     function canBook(courseId: number, slotId: number): boolean {
-        const course = courseStore.currentCourse
-        const slot = courseStore.getTimeSlotById(slotId)
+        const currentCourse = courseStore.currentCourse
+        const slot = courseStore.getSessionById(slotId)
         
-        if (!course || !slot) {
+        if (!currentCourse || !slot) {
             return false
         }
         
@@ -96,8 +97,7 @@ export const useBookingStore = defineStore('booking', () => {
             const { course, timeSlots, bookingStatus } = await BookingService.fetchCourseBookingDetail(courseId)
             
             // 更新 course store 中的数据
-            courseStore.currentCourse = course
-            courseStore.courseTime = timeSlots
+            await courseStore.loadCourseDetail(courseId)
             
             // 保存冲突时间槽
             conflictSlots.value = bookingStatus.conflictSlots
@@ -132,10 +132,10 @@ export const useBookingStore = defineStore('booking', () => {
                 }
             }
 
-            const course = courseStore.currentCourse
-            const slot = courseStore.getTimeSlotById(slotId)
+            const currentCourse = courseStore.currentCourse
+            const slot = courseStore.getSessionById(slotId)
             
-            if (!course || !slot || !userStore.profile) {
+            if (!currentCourse || !slot || !userStore.profile) {
                 error.value = '课程信息不完整或未登录'
                 return { 
                     success: false, 
@@ -152,7 +152,7 @@ export const useBookingStore = defineStore('booking', () => {
             
             if (result.success) {
                 // 1. 扣点
-                userStore.adjustPoints(-course.points)
+                userStore.adjustPoints(-currentCourse.points)
                 // 2. 减座位
                 courseStore.updateAvailableSeats(slotId, -1)
                 // 3. 添加到本地预约记录
@@ -160,7 +160,7 @@ export const useBookingStore = defineStore('booking', () => {
                     id: result.data?.bookingId || Date.now(),
                     userId: userStore.profile.id,
                     sessionId: slotId,
-                    points: course.points,
+                    points: currentCourse.points,
                     status: BookingStatus.Confirmed,
                     createdAt: new Date()
                 }
@@ -206,7 +206,7 @@ export const useBookingStore = defineStore('booking', () => {
                 
                 // 还原点数
                 const course = courseStore.currentCourse
-                if (course && course.courseId === bk.sessionId) {
+                if (course && course.id === bk.sessionId) {
                     userStore.adjustPoints(bk.points)
                 }
             }

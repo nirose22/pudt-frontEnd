@@ -1,9 +1,9 @@
-import type { PointsCard, PointHistoryItem } from "@/types/pointItems"
+import type { PointsCard, PointTxn } from "@/types/point"
 // import api from "@/utils/api"
 import { defineStore } from "pinia"
 import { ref, computed } from "vue"
 import { useUserStore } from "./userStore"
-import { PointType } from "@/enums/Point"
+import { PointKind, PointRefType, PointType } from "@/enums/Point"
 import { CardType } from "@/enums/Cards"
 import type { Result } from "@/types"
 
@@ -15,7 +15,7 @@ export const usePointsStore = defineStore('points', () => {
   
   /* ---------- state ---------- */
   /** 點數歷史記錄 */
-  const pointsHistory = ref<PointHistoryItem[]>([])
+  const pointsHistory = ref<PointTxn[]>([])
   
   /** 可購買的課卡 */
   const pointsCards = ref<PointsCard[]>([])
@@ -66,20 +66,20 @@ export const usePointsStore = defineStore('points', () => {
   /**
    * 獲取點數歷史記錄
    */
-  const fetchPointsHistory = async (): Promise<Result<PointHistoryItem[]>> => {
+  const fetchPointsHistory = async (): Promise<Result<PointTxn[]>> => {
     loading.value.history = true
     try {
       // 實際環境使用 API
       // const { data } = await api.get('/points/history')
       
       // 模擬數據
-      const data: PointHistoryItem[] = [
-        { date: '2025-04-20', type: PointType.Points, description: '瑜珈初階班', points: -12, balance: 108 },
-        { date: '2025-04-15', type: PointType.Points, description: '瑜珈冥想課', points: -8, balance: 120 },
-        { date: '2025-04-01', type: PointType.Course, description: '進階課卡', points: 20, balance: 128 },
-        { date: '2025-03-25', type: PointType.Points, description: '瑜珈進階班', points: -15, balance: 108 },
-        { date: '2025-03-15', type: PointType.Course, description: '基本課卡', points: 10, balance: 123 },
-        { date: '2025-03-05', type: PointType.System, description: '新會員禮', points: 3, balance: 113 }
+      const data: PointTxn[] = [
+        { id: 1, userId: 1, kind: PointKind.Deposit, amount: 100, balance: 100, refType: PointRefType.Order, refId: 1, note: '購買點數卡', createdAt: new Date()},
+        { id: 2, userId: 1, kind: PointKind.Consume, amount: -10, balance: 90, refType: PointRefType.Booking, refId: 1, note: '預約課程', createdAt: new Date()},
+        { id: 3, userId: 1, kind: PointKind.Reward, amount: 10, balance: 100, refType: PointRefType.Activity, refId: 1, note: '活動獎勵', createdAt: new Date()},
+        { id: 4, userId: 1, kind: PointKind.Expire, amount: -10, balance: 90, refType: PointRefType.Activity, refId: 1, note: '活動獎勵', createdAt: new Date()},
+        { id: 5, userId: 1, kind: PointKind.Deposit, amount: 100, balance: 100, refType: PointRefType.Order, refId: 1, note: '購買點數卡', createdAt: new Date()},
+        { id: 6, userId: 1, kind: PointKind.Consume, amount: -10, balance: 90, refType: PointRefType.Booking, refId: 1, note: '預約課程', createdAt: new Date()},
       ]
       
       pointsHistory.value = data
@@ -96,7 +96,7 @@ export const usePointsStore = defineStore('points', () => {
    * 添加點數歷史記錄
    * @param item 點數歷史項目
    */
-  const addPointsHistory = (item: PointHistoryItem) => {
+  const addPointsHistory = (item: PointTxn) => {
     pointsHistory.value.unshift(item)
   }
 
