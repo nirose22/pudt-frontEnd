@@ -71,8 +71,8 @@
                 <Column field="description" header="說明" />
                 <Column field="points" header="點數">
                     <template #body="{ data }">
-                        <span :class="data.type === 'add' ? 'text-green-600' : 'text-red-600'">
-                            {{ data.type === 'add' ? '+' : '-' }}{{ data.points }}
+                        <span :class="isPositiveType(data.type) ? 'text-green-600' : 'text-red-600'">
+                            {{ isPositiveType(data.type) ? '+' : '-' }}{{ data.points }}
                         </span>
                     </template>
                 </Column>
@@ -80,116 +80,79 @@
             </DataTable>
         </div>
 
-        <!-- 儲值對話框 -->
-        <Dialog v-model:visible="showPurchaseDialog" header="儲值點數" :style="{ width: '450px' }" :modal="true">
-            <div class="p-4">
-                <div class="mb-4">
-                    <h4 class="font-medium mb-2">選擇點數套餐</h4>
-                    <div class="grid grid-cols-1 gap-3">
-                        <div v-for="card in pointsCards" :key="card.id" 
-                            class="border rounded-lg p-3 flex justify-between items-center cursor-pointer"
-                            :class="{ 'border-primary-500 bg-primary-50': purchaseCardId === card.id }"
-                            @click="purchaseCardId = card.id">
-                            <div>
-                                <div class="font-medium">{{ card.name }}</div>
-                                <div class="text-sm text-gray-500">{{ card.points }} 點</div>
-                            </div>
-                            <div class="text-right">
-                                <div class="font-bold">NT$ {{ card.price }}</div>
-                                <div v-if="card.discount" class="text-xs text-green-600">{{ card.discount }}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="mb-4">
-                    <h4 class="font-medium mb-2">選擇付款方式</h4>
-                    <div class="flex flex-wrap gap-2">
-                        <div v-for="method in paymentMethods" :key="method.value"
-                            class="border rounded-lg p-3 flex items-center gap-2 cursor-pointer"
-                            :class="{ 'border-primary-500 bg-primary-50': paymentMethod === method.value }"
-                            @click="paymentMethod = method.value">
-                            <i :class="method.icon"></i>
-                            <span>{{ method.label }}</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="bg-gray-50 p-3 rounded-lg mb-4">
-                    <div class="flex justify-between items-center">
-                        <span>總金額:</span>
-                        <span class="font-bold text-lg">NT$ {{ selectedCardPrice }}</span>
-                    </div>
-                </div>
-                
-                <div class="flex justify-end gap-2">
-                    <Button label="取消" icon="pi pi-times" outlined @click="showPurchaseDialog = false" />
-                    <Button label="確認購買" icon="pi pi-check" :disabled="!purchaseCardId || !paymentMethod" @click="confirmPurchase" />
-                </div>
-            </div>
-        </Dialog>
+        <!-- 儲值對話框組件 -->
+        <PurchaseDialog
+            v-model:visible="showPurchaseDialog"
+            :points-cards="pointsCards"
+            :purchase-card-id="purchaseCardId"
+            :payment-method="paymentMethod"
+            @update:purchase-card-id="purchaseCardId = $event"
+            @update:payment-method="paymentMethod = $event"
+            @purchase="confirmPurchase"
+            @cancel="showPurchaseDialog = false"
+        />
 
-        <!-- 點數歷史對話框 -->
-        <Dialog v-model:visible="showHistoryDialog" header="點數歷史記錄" :style="{ width: '80vw' }" :modal="true">
-            <div class="p-4">
-                <div class="flex justify-between items-center mb-4">
-                    <h4 class="font-medium">所有交易記錄</h4>
-                    <div class="flex gap-2">
-                        <Calendar v-model="historyFilter.dateRange" selectionMode="range" placeholder="選擇日期範圍" />
-                        <Dropdown v-model="historyFilter.type" :options="typeOptions" optionLabel="label" optionValue="value" placeholder="類型" />
-                        <Button icon="pi pi-search" @click="applyHistoryFilter" />
-                        <Button icon="pi pi-filter-slash" text @click="resetHistoryFilter" />
-                    </div>
-                </div>
-                
-                <DataTable :value="filteredHistoryRecords" stripedRows responsiveLayout="stack" :paginator="true" :rows="10"
-                    class="p-datatable-sm" emptyMessage="無交易記錄">
-                    <Column field="date" header="日期" sortable>
-                        <template #body="{ data }">
-                            {{ formatDate(data.date) }}
-                        </template>
-                    </Column>
-                    <Column field="time" header="時間">
-                        <template #body="{ data }">
-                            {{ formatTime(data.date) }}
-                        </template>
-                    </Column>
-                    <Column field="type" header="類型" sortable>
-                        <template #body="{ data }">
-                            <Tag :severity="getTypeSeverity(data.type)" :value="getTypeLabel(data.type)" />
-                        </template>
-                    </Column>
-                    <Column field="description" header="說明" />
-                    <Column field="points" header="點數" sortable>
-                        <template #body="{ data }">
-                            <span :class="data.type === 'add' ? 'text-green-600' : 'text-red-600'">
-                                {{ data.type === 'add' ? '+' : '-' }}{{ data.points }}
-                            </span>
-                        </template>
-                    </Column>
-                    <Column field="balance" header="餘額" sortable />
-                    <Column field="remark" header="備註" />
-                </DataTable>
-            </div>
-            <template #footer>
-                <Button label="關閉" icon="pi pi-times" @click="showHistoryDialog = false" outlined />
-            </template>
-        </Dialog>
+        <!-- 點數歷史對話框組件 -->
+        <HistoryDialog
+            v-model:visible="showHistoryDialog"
+            :points-history="filteredHistoryRecords"
+            :type-options="typeOptions"
+            :history-filter="historyFilter"
+            @update:history-filter="historyFilter = $event"
+            @apply-filter="applyHistoryFilter"
+            @reset-filter="resetHistoryFilter"
+            @close="showHistoryDialog = false"
+        />
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import type { PropType } from 'vue';
 import Button from 'primevue/button';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import Dialog from 'primevue/dialog';
 import Dropdown from 'primevue/dropdown';
-import Calendar from 'primevue/calendar';
 import Tag from 'primevue/tag';
 import { useToast } from 'primevue/usetoast';
-import { useConfirm } from 'primevue/useconfirm';
+import PurchaseDialog from '@/components/user/PurchaseDialog.vue';
+import HistoryDialog from '@/components/user/HistoryDialog.vue';
+
+// 定義數據類型
+interface PointsCard {
+    id: number;
+    name: string;
+    description: string;
+    points: number;
+    price: number;
+    discount?: string;
+}
+
+interface TransactionRecord {
+    id: number;
+    date: string | Date;
+    type: string;
+    description: string;
+    points: number;
+    balance: number;
+    remark?: string;
+}
+
+interface FilterOptions {
+    month: string;
+    type: string;
+}
+
+interface HistoryFilterOptions {
+    dateRange: null | Date[];
+    type: string;
+}
+
+interface PaymentMethod {
+    label: string;
+    value: string;
+    icon: string;
+}
 
 const props = defineProps({
     points: {
@@ -197,22 +160,21 @@ const props = defineProps({
         required: true
     },
     pointsHistory: {
-        type: Array as PropType<any[]>,
+        type: Array as PropType<TransactionRecord[]>,
         required: true
     },
     pointsCards: {
-        type: Array as PropType<any[]>,
+        type: Array as PropType<PointsCard[]>,
         required: true
     }
 });
 
 const emit = defineEmits(['purchase']);
 const toast = useToast();
-const confirm = useConfirm();
 
 // 點數相關狀態
-const expiringPoints = ref(50); // 即將到期的點數
-const expiryDate = ref('2023/12/31'); // 到期日期
+const expiringPoints = ref(50); 
+const expiryDate = ref('2023/12/31');
 
 // 卡片選擇狀態
 const selectedCard = ref<number | null>(null);
@@ -224,12 +186,12 @@ const paymentMethod = ref<string | null>(null);
 const showHistoryDialog = ref(false);
 
 // 篩選條件
-const filter = ref({
+const filter = ref<FilterOptions>({
     month: '',
     type: ''
 });
 
-const historyFilter = ref({
+const historyFilter = ref<HistoryFilterOptions>({
     dateRange: null,
     type: ''
 });
@@ -237,18 +199,10 @@ const historyFilter = ref({
 // 月份選項
 const monthOptions = [
     { label: '全部月份', value: '' },
-    { label: '1月', value: '01' },
-    { label: '2月', value: '02' },
-    { label: '3月', value: '03' },
-    { label: '4月', value: '04' },
-    { label: '5月', value: '05' },
-    { label: '6月', value: '06' },
-    { label: '7月', value: '07' },
-    { label: '8月', value: '08' },
-    { label: '9月', value: '09' },
-    { label: '10月', value: '10' },
-    { label: '11月', value: '11' },
-    { label: '12月', value: '12' }
+    ...Array.from({ length: 12 }, (_, i) => ({ 
+        label: `${i + 1}月`, 
+        value: (i + 1).toString().padStart(2, '0') 
+    }))
 ];
 
 // 交易類型選項
@@ -261,11 +215,21 @@ const typeOptions = [
 ];
 
 // 付款方式
-const paymentMethods = [
+const paymentMethods: PaymentMethod[] = [
     { label: '信用卡', value: 'credit', icon: 'pi pi-credit-card' },
     { label: '銀行轉帳', value: 'bank', icon: 'pi pi-wallet' },
     { label: '行動支付', value: 'mobile', icon: 'pi pi-mobile' }
 ];
+
+// 判斷正向交易類型 (增加點數)
+const isPositiveType = (type: string): boolean => {
+    return ['add', 'reward'].includes(type);
+};
+
+// 按日期排序數據
+const sortByDateDesc = (a: TransactionRecord, b: TransactionRecord): number => {
+    return new Date(b.date).getTime() - new Date(a.date).getTime();
+};
 
 // 篩選後的點數歷史
 const filteredPointsHistory = computed(() => {
@@ -285,7 +249,8 @@ const filteredPointsHistory = computed(() => {
         result = result.filter(item => item.type === filter.value.type);
     }
     
-    return result.slice(0, 5); // 只顯示最近5筆
+    // 按日期降序排序
+    return result.sort(sortByDateDesc);
 });
 
 // 篩選後的歷史記錄
@@ -295,7 +260,10 @@ const filteredHistoryRecords = computed(() => {
     // 日期範圍篩選
     if (historyFilter.value.dateRange && historyFilter.value.dateRange[0] && historyFilter.value.dateRange[1]) {
         const startDate = new Date(historyFilter.value.dateRange[0]);
+        startDate.setHours(0, 0, 0, 0);
+        
         const endDate = new Date(historyFilter.value.dateRange[1]);
+        endDate.setHours(23, 59, 59, 999);
         
         result = result.filter(item => {
             const itemDate = new Date(item.date);
@@ -308,7 +276,8 @@ const filteredHistoryRecords = computed(() => {
         result = result.filter(item => item.type === historyFilter.value.type);
     }
     
-    return result;
+    // 按日期降序排序
+    return result.sort(sortByDateDesc);
 });
 
 // 選中卡片的價格
@@ -373,37 +342,37 @@ const resetHistoryFilter = () => {
 };
 
 // 格式化日期
-const formatDate = (dateString: string | Date) => {
+const formatDate = (dateString: string | Date): string => {
     const date = new Date(dateString);
     return `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
 };
 
 // 格式化時間
-const formatTime = (dateString: string | Date) => {
+const formatTime = (dateString: string | Date): string => {
     const date = new Date(dateString);
     return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
 };
 
 // 獲取交易類型標籤
-const getTypeLabel = (type: string) => {
-    switch (type) {
-        case 'add': return '儲值';
-        case 'use': return '消費';
-        case 'reward': return '獎勵';
-        case 'expire': return '過期';
-        default: return type;
-    }
+const getTypeLabel = (type: string): string => {
+    const typeMap: Record<string, string> = {
+        'add': '儲值',
+        'use': '消費',
+        'reward': '獎勵',
+        'expire': '過期'
+    };
+    return typeMap[type] || type;
 };
 
 // 獲取交易類型嚴重性
-const getTypeSeverity = (type: string) => {
-    switch (type) {
-        case 'add': return 'success';
-        case 'use': return 'info';
-        case 'reward': return 'warning';
-        case 'expire': return 'danger';
-        default: return 'secondary';
-    }
+const getTypeSeverity = (type: string): string => {
+    const severityMap: Record<string, string> = {
+        'add': 'success',
+        'use': 'info',
+        'reward': 'warning',
+        'expire': 'danger'
+    };
+    return severityMap[type] || 'secondary';
 };
 </script>
 

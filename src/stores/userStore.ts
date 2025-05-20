@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import type { User, Course, Result } from '@/types'
 import { UserGender, UserRole } from '@/enums/User';
 import { RegionCode } from '@/enums/RegionCode';
+import { MainCategory } from '@/enums/CourseCategory';
 // import * as userApi from '@/services/userApi'
 
 export const useUserStore = defineStore('user', () => {
@@ -10,11 +11,13 @@ export const useUserStore = defineStore('user', () => {
     const profile = ref<User | null>(null)
     const points = ref<number>(0)
     const favs = ref<Course[]>([])
+    const interests = ref<string[]>([]) // 用户兴趣标签 (主分类)
 
     /* ---------- getters ---------- */
     const isLoggedIn = computed(() => !!profile.value)
     const displayName = computed(() => profile.value?.name ?? UserRole.Guest)
     const isFavorite = (id: number) => favs.value.some(c => c.id === id)
+    const userInterests = computed(() => interests.value)
 
     /* ---------- actions ---------- */
     async function fetchProfile(id?: number) {
@@ -53,6 +56,20 @@ export const useUserStore = defineStore('user', () => {
             }
         ]
         favs.value = favsData
+
+        // 从localStorage获取用户兴趣标签
+        const savedInterests = localStorage.getItem('userInterests');
+        if (savedInterests) {
+            try {
+                const parsedInterests = JSON.parse(savedInterests);
+                if (Array.isArray(parsedInterests)) {
+                    interests.value = parsedInterests;
+                }
+            } catch (e) {
+                console.error('解析用户兴趣数据失败:', e);
+            }
+        }
+
         return data
     }
 
@@ -89,10 +106,23 @@ export const useUserStore = defineStore('user', () => {
         if (payload.points !== undefined) {
             points.value = payload.points
         }
+
+        // 检查并更新兴趣标签 (如果有传入)
+        if (payload.interests && payload.interests.categories) {
+            updateUserInterests(payload.interests.categories as string[]);
+        }
+        
         // TODO: update user
         // await api.put(`/users/${profile.value.id}`, payload)
 
         return { success: true, data: profile.value }
+    }
+
+    // 更新用户兴趣标签
+    function updateUserInterests(newInterests: string[]) {
+        interests.value = newInterests;
+        localStorage.setItem('userInterests', JSON.stringify(newInterests));
+        return { success: true, message: '兴趣标签已更新' };
     }
 
     /* 收藏 */
@@ -112,14 +142,17 @@ export const useUserStore = defineStore('user', () => {
         profile,
         points,
         favs,
+        interests,
         // getters
         isLoggedIn,
         displayName,
         isFavorite,
+        userInterests,
         // actions
         fetchProfile,
         adjustPoints,
         updateProfile,
+        updateUserInterests,
         addFavorite,
         removeFavorite,
     }
@@ -129,7 +162,7 @@ export const useUserStore = defineStore('user', () => {
         persist: {
             key: 'user',                // localStorage key
             storage: localStorage,      // 可改 sessionStorage
-            pick: ['profile', 'points', 'favs']
+            pick: ['profile', 'points', 'favs', 'interests']
         }
     }
 )

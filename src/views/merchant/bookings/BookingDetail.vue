@@ -103,7 +103,7 @@
                                     <div class="text-sm text-gray-500">{{ formatDateTime(slotProps.item.time) }}</div>
                                 </div>
                             </template>
-                            <template #opposite>
+                            <template #opposite="slotProps">
                                 <div class="flex items-center justify-center w-8 h-8 rounded-full"
                                     :class="getHistoryIconBgClass(slotProps.item.status)">
                                     <i class="text-white" :class="getHistoryIcon(slotProps.item.status)"></i>

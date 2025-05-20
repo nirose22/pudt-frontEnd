@@ -66,7 +66,7 @@
 
                     <!-- 5. 活動紀錄 -->
                     <template v-if="activeTab === 'history'">
-                        <ActivityHistory :courseHistory="userBookings" :absenceRecords="absenceRecords"/>
+                        <ActivityHistory :courseHistory="userBookings" :absenceRecords="absenceRecords" />
                     </template>
 
                     <!-- 6. 購買紀錄 -->
@@ -76,24 +76,24 @@
                 </section>
             </div>
         </div>
+        <Toast />
+        <ConfirmDialog class="max-w-lg w-full" />
+        <!-- 頭像上傳對話框 -->
+        <Dialog v-model:visible="showPhotoDialog" header="更新頭像" :style="{ width: '450px' }">
+            <div class="flex flex-col items-center gap-4">
+                <div class="border-2 border-dashed border-gray-300 p-6 rounded-lg text-center">
+                    <i class="pi pi-cloud-upload text-4xl text-gray-400 mb-2"></i>
+                    <p>拖拽照片到此處或點擊上傳</p>
+                    <input type="file" accept="image/*" class="hidden" ref="fileInput" @change="onPhotoSelected">
+                    <Button label="選擇照片" class="mt-3" @click="triggerFileInput()" />
+                </div>
+                <div class="flex justify-end w-full mt-4">
+                    <Button label="取消" class="p-button-text" @click="showPhotoDialog = false" />
+                    <Button label="確定上傳" @click="confirmPhotoUpload" />
+                </div>
+            </div>
+        </Dialog>
     </div>
-    <Toast />
-    <ConfirmDialog class="max-w-lg w-full" />
-    <!-- 頭像上傳對話框 -->
-    <Dialog v-model:visible="showPhotoDialog" header="更新頭像" :style="{ width: '450px' }">
-        <div class="flex flex-col items-center gap-4">
-            <div class="border-2 border-dashed border-gray-300 p-6 rounded-lg text-center">
-                <i class="pi pi-cloud-upload text-4xl text-gray-400 mb-2"></i>
-                <p>拖拽照片到此處或點擊上傳</p>
-                <input type="file" accept="image/*" class="hidden" ref="fileInput" @change="onPhotoSelected">
-                <Button label="選擇照片" class="mt-3" @click="triggerFileInput()" />
-            </div>
-            <div class="flex justify-end w-full mt-4">
-                <Button label="取消" class="p-button-text" @click="showPhotoDialog = false" />
-                <Button label="確定上傳" @click="confirmPhotoUpload" />
-            </div>
-        </div>
-    </Dialog>
 </template>
 
 <script setup lang="ts">
@@ -102,6 +102,7 @@ import { useToast } from 'primevue/usetoast';
 import Avatar from 'primevue/avatar';
 import Chip from 'primevue/chip';
 import Dialog from 'primevue/dialog';
+import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import { useUserStore } from '@/stores/userStore';
 
@@ -121,6 +122,9 @@ import { useConfirm } from 'primevue/useconfirm';
 import { useAuthStore } from '@/stores/authStore';
 import { OrderStatus } from '@/enums/PurchaseStatus';
 import { useRouter } from 'vue-router';
+import { showSuccess, showError, showInfo, initToast } from '@/utils/toast-helper';
+import { CardType } from '@/enums/Cards';
+import { PaymentMethod } from '@/enums/PurchaseStatus';
 
 const toast = useToast();
 const activeTab = ref('profile');
@@ -136,18 +140,139 @@ const purchaseStore = usePurchaseStore();
 const router = useRouter();
 
 // 用戶資料
-onMounted(async () => {
-    await userStore.fetchProfile();
-    await pointsStore.init();
-    await bookingStore.fetchBookings();
-    await purchaseStore.fetchHistory();
+onMounted(() => {
+    initToast(toast);
+    userStore.fetchProfile();
+    pointsStore.init();
+    bookingStore.fetchBookings();
+    purchaseStore.fetchHistory();
 })
 
+// 為 PointsManagement 組件定義本地接口
+interface PointsCardLocal {
+    id: number;
+    name: string;
+    description: string;
+    points: number;
+    price: number;
+    discount?: string;
+}
 
-const purchaseHistory = computed(() => purchaseStore.purchaseHistory);
-const userBookings = computed(() => bookingStore.bookings);
-const pointsCards = computed(() => pointsStore.pointsCards);
-const pointsHistory = computed(() => pointsStore.pointsHistory);
+interface TransactionRecordLocal {
+    id: number;
+    date: string | Date;
+    type: string;
+    description: string;
+    points: number;
+    balance: number;
+    remark?: string;
+}
+
+// 為 ActivityHistory 組件定義本地接口
+interface CourseRecordLocal {
+    id: number;
+    userId: number;
+    courseTitle: string;
+    courseType: string;
+    location: string;
+    date: string;
+    time: string;
+    points: number;
+    status: BookingStatus;
+    rating?: number;
+    comment?: string;
+    instructor?: {
+        name: string;
+        avatar?: string;
+        title?: string;
+    };
+}
+
+interface AbsenceRecordLocal {
+    id: number;
+    userId: number;
+    courseTitle: string;
+    courseType: string;
+    date: string;
+    time: string;
+    points: number;
+    reason?: string;
+}
+
+// 為 PurchaseHistory 組件定義本地接口
+interface ExtendedPurchaseItemLocal {
+    id: number;
+    date: string;
+    cardType: CardType;
+    amount: number;
+    points: number;
+    status: OrderStatus;
+    paymentMethod: PaymentMethod;
+    invoiceNo?: string;
+    invoiceAvailable?: boolean;
+    invoiceNumber?: string;
+    invoiceDate?: string;
+    paymentDate?: string;
+    expiry?: string;
+}
+
+// 適配 Store 數據到組件需要的格式
+const purchaseHistory = computed((): ExtendedPurchaseItemLocal[] => {
+    return purchaseStore.purchaseHistory.map(item => ({
+        id: item.id,
+        date: item.createdAt.toISOString().split('T')[0],
+        cardType: CardType.Basic, // 使用枚舉中的有效值
+        amount: item.total,
+        points: 0, // 假設的默認值
+        status: item.status,
+        paymentMethod: item.payMethod,
+        invoiceNo: item.invoiceNo,
+        invoiceAvailable: !!item.invoiceNo,
+        invoiceNumber: item.invoiceNo,
+        paymentDate: item.createdAt.toISOString().split('T')[0],
+    }));
+});
+
+const userBookings = computed((): CourseRecordLocal[] => {
+    return bookingStore.bookings.map(booking => ({
+        id: booking.id,
+        userId: booking.userId,
+        courseTitle: booking.courseTitle || '',
+        courseType: '瑜伽課', // 假設的默認值
+        location: booking.location || '',
+        date: booking.date ? booking.date.toISOString().split('T')[0] : '',
+        time: booking.time || '',
+        points: booking.points,
+        status: booking.status,
+        rating: booking.rating,
+        comment: booking.comment,
+        instructor: booking.instructor
+    }));
+});
+
+const pointsCards = computed((): PointsCardLocal[] => {
+    return pointsStore.pointsCards.map(card => ({
+        id: card.id,
+        name: `${card.points}點數卡`, // 生成一個名稱
+        description: card.description,
+        points: card.points,
+        price: card.price,
+        discount: card.discount
+    }));
+});
+
+const pointsHistory = computed((): TransactionRecordLocal[] => {
+    return pointsStore.pointsHistory.map(txn => ({
+        id: txn.id,
+        date: txn.createdAt,
+        type: txn.kind,
+        description: txn.note || '點數交易',
+        points: txn.amount,
+        balance: txn.balance,
+        remark: txn.refType?.toString()
+    }));
+});
+
 // 菜單項目
 const menuItems = [
     { id: 'profile', label: '會員資料管理', icon: 'pi-user' },
@@ -163,13 +288,35 @@ const userActiveBookings = computed(() => {
 })
 
 // 缺席記錄
-const absenceRecords = computed(() => {
-    return bookingStore.byStatus(BookingStatus.Pending)
+const absenceRecords = computed((): AbsenceRecordLocal[] => {
+    return bookingStore.byStatus(BookingStatus.Pending).map(booking => ({
+        id: booking.id,
+        userId: booking.userId,
+        courseTitle: booking.courseTitle || '',
+        courseType: '瑜伽課', // 假設的默認值
+        date: booking.date ? booking.date.toISOString().split('T')[0] : '',
+        time: booking.time || '',
+        points: booking.points,
+        reason: '未出席'
+    }));
 });
 
 // 未付費記錄
-const unpaidRecords = computed(() => {
-    return purchaseStore.byStatus(OrderStatus.Pending)
+const unpaidRecords = computed((): ExtendedPurchaseItemLocal[] => {
+    return purchaseStore.byStatus(OrderStatus.Pending).map(item => ({
+        id: item.id,
+        date: item.createdAt.toISOString().split('T')[0],
+        cardType: CardType.Basic, // 使用枚舉中的有效值
+        amount: item.total,
+        points: 0, // 假設的默認值
+        status: item.status,
+        paymentMethod: item.payMethod,
+        invoiceNo: item.invoiceNo,
+        invoiceAvailable: false,
+        invoiceNumber: '',
+        paymentDate: '',
+        expiry: ''
+    }));
 });
 
 const handlePhotoUpload = () => {
@@ -196,7 +343,7 @@ const confirmPhotoUpload = () => {
             if (userStore.profile) {
                 userStore.profile.avatarUrl = e.target?.result as string;
                 showPhotoDialog.value = false;
-                toast.add({ severity: 'success', summary: '成功', detail: '頭像已更新', life: 3000 });
+                showSuccess('頭像已更新', '成功');
             }
         };
         reader.readAsDataURL(selectedPhoto.value);
@@ -206,20 +353,18 @@ const confirmPhotoUpload = () => {
 const updateProfile = (updatedProfile: Partial<User>) => {
     const res = userStore.updateProfile(updatedProfile);
     if (res.success) {
-        toast.add({ severity: 'success', summary: '成功', detail: res.message, life: 3000 });
-
+        showSuccess(res.message || '個人資料更新成功', '成功');
     } else {
-        toast.add({ severity: 'error', summary: '失敗', detail: res.message, life: 3000 });
+        showError(res.message || '個人資料更新失敗', '失敗');
     }
 };
 
 const cancelBooking = async (bookingId: number) => {
     const res = await bookingStore.cancel(bookingId);
     if (res.success) {
-        toast.add({ severity: 'success', summary: '成功', detail: res.message, life: 3000 });
-
+        showSuccess(res.message || '預約取消成功', '成功');
     } else {
-        toast.add({ severity: 'error', summary: '失敗', detail: res.message, life: 3000 });
+        showError(res.message || '預約取消失敗', '失敗');
     }
 };
 
@@ -240,36 +385,25 @@ const handleLogout = () => {
 
 
 const handlePurchase = (cardId: number) => {
-    if (!userStore.profile) return;
     confirm.require({
-        message: `確認購買課卡點數? 將扣除 ${pointsCards.value.find(pkg => pkg.id === cardId)?.price} 元`,
-        header: '提示',
-        acceptLabel: '確認',
+        message: '確認購買此點數卡？',
+        header: '購買確認',
+        acceptLabel: '確認購買',
         rejectLabel: '取消',
-        acceptClass: 'p-button-primary p-button-lg',
-        rejectClass: 'p-button-secondary p-button-lg',
+        icon: 'pi pi-exclamation-triangle',
+        acceptClass: 'p-button-primary',
         accept: async () => {
-            if (cardId && userStore.profile) {
+            try {
                 const res = await purchaseStore.buyPointsCard(cardId)
                 if (res.success) {
-                    toast.add({
-                        severity: 'success',
-                        summary: '成功',
-                        detail: res.message,
-                        life: 3000
-                    });
+                    showSuccess(res.message || '點數卡購買成功', '成功');
                 } else {
-                    toast.add({
-                        severity: 'error',
-                        summary: '失敗',
-                        detail: res.message || '購買點數失敗',
-                        life: 3000
-                    });
+                    showError(res.message || '購買點數失敗', '失敗');
                 }
+            } catch (error) {
+                console.error('處理購買請求時出錯:', error);
+                showError('處理您的購買請求時出錯', '錯誤');
             }
-        },
-        reject: () => {
-            // 用戶取消，不執行任何動作
         }
     });
 }

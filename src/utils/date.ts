@@ -1,4 +1,3 @@
-
 export function formatDateKey(date: Date) {
     return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 }
@@ -14,24 +13,28 @@ export function isSameDate(d1: Date, d2: Date) {
         d1.getDate() === d2.getDate();
 }
 
-export function inRange(start: Date, end: Date, data: any[]) {
+export function inRange<T>(start: Date, end: Date, data: T[], getDate?: (item: T) => Date): T[] {
     const range = { start, end };
     return !range
         ? data
-        : data.filter(b =>
-            isWithinInterval(new Date(b.date), range)
-        )
+        : data.filter(item => {
+            const dateObj = getDate ? getDate(item) : (item as any).date;
+            return isWithinInterval(dateObj, range);
+        });
 }
 
-export function byDate(data: any[]) {
-    return data.reduce<Record<string, any[]>>((map, b) => {
-        const date = formatDateKey(new Date(b.date));
+export function byDate<T>(data: T[], getDate?: (item: T) => Date): Record<string, T[]> {
+    return data.reduce<Record<string, T[]>>((map, item) => {
+        // 如果提供了获取日期的函数，则使用它，否则假设有 date 属性
+        const dateObj = getDate ? getDate(item) : (item as any).date;
+        const date = formatDateKey(new Date(dateObj));
+        
         if (!map[date]) {
-            map[date] = []
+            map[date] = [];
         }
-        map[date].push(b)
-        return map
-    }, {})
+        map[date].push(item);
+        return map;
+    }, {});
 }
 
 export function isWithinInterval(date: Date, interval: { start: Date; end: Date }) {

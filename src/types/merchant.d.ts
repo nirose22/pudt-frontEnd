@@ -13,7 +13,6 @@ export interface Merchant {
   coverUrl?: string
   rating?: number               /** 平均評分 */
   reviewCount?: number
-  isVerified: boolean
   createdAt: Date
 }
 

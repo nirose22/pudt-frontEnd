@@ -53,8 +53,6 @@
                 <i class="pi pi-calendar-times text-4xl text-gray-400 mb-2"></i>
                 <p class="text-gray-500">您目前沒有任何預約</p>
             </div>
-            <Toast />
-            <ConfirmDialog class="w-100" />
             <Dialog v-model:visible="showDetailDialog" header="課程詳情" :modal="true" :closable="true"
                 :style="{ width: '500px' }">
                 <div v-if="selectedBooking" class="space-y-4">
@@ -102,17 +100,21 @@ import { useBookingStore } from '@/stores/bookingStore';
 import { inRange, byDate, formatDateString } from '@/utils/date';
 import { BookingStatus } from '@/enums/BookingStatus';
 import DataView from 'primevue/dataview';
-import { useToast } from 'primevue/usetoast';
-import type { CourseRecord } from '@/types';
+import type { Booking } from '@/types/booking';
 import { useConfirm } from 'primevue/useconfirm';
+import { showSuccess, showError, initToast } from '@/utils/toast-helper';
+import Dialog from 'primevue/dialog';
+import { useToast } from 'primevue/usetoast';
+
 
 const bookingStore = useBookingStore();
-const toast = useToast();
 const confirm = useConfirm();
 const layout = ref('list');
+const toast = useToast();
 
 const showDetailDialog = ref(false);
-const selectedBooking = ref<CourseRecord | null>(null);
+const selectedBooking = ref<Booking | null>(null);
+const loading = ref(false);
 
 // 日期範圍
 const startDate = ref(new Date());
@@ -122,6 +124,22 @@ const range = ref<{ start: Date; end: Date } | null>(null);
 
 const handleDateRangeChange = (dateRange: { start: Date; end: Date }) => {
     range.value = dateRange;
+    // 日期变化后，重新获取符合日期范围的预约
+    fetchFilteredBookings();
+};
+
+// 根据日期范围过滤预约
+const fetchFilteredBookings = async () => {
+    try {
+        loading.value = true;
+        // 先获取所有预约
+        await bookingStore.fetchBookings();
+    } catch (error) {
+        console.error('获取预约失败:', error);
+        showError('获取预约数据失败');
+    } finally {
+        loading.value = false;
+    }
 };
 
 // 獲取範圍內的預約
@@ -129,46 +147,52 @@ const bookingsInRange = computed(() => {
     if (!range.value) {
         return bookingStore.bookings;
     }
-    return inRange(range.value.start, range.value.end,
-        bookingStore.bookings.filter(b => b.status === BookingStatus.Confirmed));
+    
+    // 确保只筛选确认状态的预约
+    const confirmedBookings = bookingStore.bookings.filter(b => b.status === BookingStatus.Confirmed);
+    return inRange(
+        range.value.start, 
+        range.value.end,
+        confirmedBookings,
+        // 优先使用专门的预约日期字段，如果不存在则使用创建日期
+        booking => booking.date instanceof Date ? booking.date : booking.createdAt
+    );
 });
 
 const bookingsByDate = computed(() => {
-    return byDate(bookingsInRange.value);
+    return byDate(bookingsInRange.value, booking => booking.date || booking.createdAt);
 });
 
 // 显示课程详情
-const showBookingDetail = (booking: CourseRecord) => {
+const showBookingDetail = (booking: Booking) => {
     selectedBooking.value = booking;
     showDetailDialog.value = true;
 };
 
 // 取消课程预约
-const cancelBooking = async (booking: CourseRecord) => {
+const cancelBooking = async (booking: Booking) => {
     if (!booking) return;
     confirm.require({
         message: '確認取消預約？',
         header: '取消預約',
-        acceptLabel: '取消',
-        rejectLabel: '確認',
+        acceptLabel: '確認取消',
+        rejectLabel: '返回',
+        acceptClass: 'p-button-danger',
         rejectClass: 'p-button-secondary',
-        reject: async () => {
-            const result = await bookingStore.cancel(booking.id);
-            if (result.success) {
-                toast.add({
-                    severity: 'success',
-                    summary: '預約已取消',
-                    detail: result.message,
-                    life: 3000
-                });
-                showDetailDialog.value = false;
-            } else {
-                toast.add({
-                    severity: 'error',
-                    summary: '操作失敗',
-                    detail: result.message,
-                    life: 3000
-                });
+        accept: async () => {
+            try {
+                const result = await bookingStore.cancel(booking.id);
+                if (result.success) {
+                    showSuccess(result.message ?? '預約已取消', '預約已取消');
+                    showDetailDialog.value = false;
+                    // 重新获取数据
+                    fetchFilteredBookings();
+                } else {
+                    showError(result.message ?? '操作失敗', '操作失敗');
+                }
+            } catch (error) {
+                console.error('取消预约失败:', error);
+                showError('取消预约时发生错误');
             }
         }
     });
@@ -176,12 +200,13 @@ const cancelBooking = async (booking: CourseRecord) => {
 
 // 初始化設定日期範圍
 onMounted(() => {
+    initToast(toast);
     range.value = {
         start: startDate.value,
         end: endDate.value
     };
     // 獲取預約數據
-    bookingStore.fetchBookings();
+    fetchFilteredBookings();
 });
 
 // 格式化日期標題

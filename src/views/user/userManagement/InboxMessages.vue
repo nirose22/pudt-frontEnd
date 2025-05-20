@@ -186,6 +186,7 @@ import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import { MessageType } from '@/enums/Message'; 
 import type { Message } from '@/types';
+import { showSuccess, showError, showInfo, initToast } from '@/utils/toast-helper';
 
 
 const toast = useToast();
@@ -338,7 +339,7 @@ function markAsRead(): void {
             messages.value[index].isRead = true;
         }
     });
-    toast.add({ severity: 'success', summary: '成功', detail: `已將 ${selectedMessages.value.length} 則訊息標記為已讀`, life: 3000 });
+    showSuccess(`已將 ${selectedMessages.value.length} 則訊息標記為已讀`, '成功');
     selectedMessages.value = [];
 }
 
@@ -350,7 +351,7 @@ function markAsUnread(): void {
             messages.value[index].isRead = false;
         }
     });
-    toast.add({ severity: 'success', summary: '成功', detail: `已將 ${selectedMessages.value.length} 則訊息標記為未讀`, life: 3000 });
+    showSuccess(`已將 ${selectedMessages.value.length} 則訊息標記為未讀`, '成功');
     selectedMessages.value = [];
 }
 
@@ -383,14 +384,14 @@ function confirmDeleteMessages(): void {
 // 刪除單個訊息
 function deleteMessage(message: Message): void {
     messages.value = messages.value.filter(m => m.id !== message.id);
-    toast.add({ severity: 'success', summary: '成功', detail: '訊息已刪除', life: 3000 });
+    showSuccess('訊息已刪除', '成功');
 }
 
 // 刪除多個訊息
 function deleteMessages(): void {
     const deletedCount = selectedMessages.value.length;
     messages.value = messages.value.filter(message => !selectedMessages.value.some(selected => selected.id === message.id));
-    toast.add({ severity: 'success', summary: '成功', detail: `已刪除 ${deletedCount} 則訊息`, life: 3000 });
+    showSuccess(`已刪除 ${deletedCount} 則訊息`, '成功');
     selectedMessages.value = [];
 }
 
@@ -403,7 +404,7 @@ function replyToMessage(): void {
 // 發送回覆
 function sendReply(): void {
     if (!replyContent.value.trim()) {
-        toast.add({ severity: 'error', summary: '錯誤', detail: '請輸入回覆內容', life: 3000 });
+        showError('請輸入回覆內容', '錯誤');
         return;
     }
     
@@ -415,7 +416,7 @@ function sendReply(): void {
         replyDialogVisible.value = false;
         messageDetailVisible.value = false;
         
-        toast.add({ severity: 'success', summary: '成功', detail: '回覆已發送', life: 3000 });
+        showSuccess('回覆已發送', '成功');
         
         // 添加一條新訊息（模擬回覆）
         const newMessage: Message = {
@@ -435,7 +436,7 @@ function sendReply(): void {
 
 // 處理訊息操作
 function handleMessageAction(action: any): void {
-    toast.add({ severity: 'info', summary: '操作', detail: `執行操作: ${action.label}`, life: 3000 });
+    showInfo(`執行操作: ${action.label}`, '操作');
     
     // 根據不同的操作類型執行不同的操作
     switch (action.action) {
@@ -461,7 +462,7 @@ function refreshMessages(): void {
     setTimeout(() => {
         loadMessages();
         loading.value = false;
-        toast.add({ severity: 'success', summary: '成功', detail: '訊息已更新', life: 3000 });
+        showSuccess('訊息已更新', '成功');
     }, 1000);
 }
 
@@ -573,6 +574,7 @@ function loadMessages(): void {
 
 // 初始化
 onMounted(() => {
+    initToast(toast);
     loadMessages();
 });
 </script>

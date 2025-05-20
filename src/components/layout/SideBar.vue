@@ -3,9 +3,6 @@
         <template #header>
             <BaseLogo class="h-full w-25" />
         </template>
-        <template #contanier="{ closeCallback }">
-            <Button label="Close" @click="closeCallback" />
-        </template>
         <Toast position="top-center" />
         <div class="flex flex-col h-full">
             <div class="flex flex-col">
@@ -36,7 +33,8 @@
                 </template>
                 <template v-else>
                     <div class="menu-item" @click="handleProfile">
-                        <Avatar :label="profile?.name?.charAt(0)" size="large" class="!bg-green-100 !text-green-800" shape="circle" />
+                        <Avatar :label="profile?.name?.charAt(0)" size="large" class="!bg-green-100 !text-green-800"
+                            shape="circle" />
                         <span>{{ profile?.name }}</span>
                     </div>
                     <!-- <div class="menu-item" @click="handleLogout">
@@ -52,13 +50,14 @@
 import Drawer from 'primevue/drawer';
 import Divider from 'primevue/divider';
 import BaseLogo from '@/components/layout/BaseLogo.vue';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/userStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useToast } from 'primevue/usetoast';
 import Toast from 'primevue/toast';
 import Avatar from 'primevue/avatar';
+import { showError, initToast } from '@/utils/toast-helper';
 
 const visibleMenu = defineModel<boolean>('visible', { required: true });
 
@@ -81,10 +80,14 @@ const menuDt = ref({
     }
 })
 
+onMounted(() => {
+    initToast(toast);
+});
+
 const isLoggedIn = () => {
     if (!authStore.isLoggedIn) {
-        toast.add({ severity: 'error', summary: '錯誤', detail: '請先登入', life: 3000 });
-        return;
+        showError('請先登入', '錯誤');
+        return false;
     }
     return true;
 }
@@ -121,6 +124,14 @@ const handleProfile = () => {
     router.push('/profile');
     visibleMenu.value = false;
 }
+
+const handleNavigation = (item: any, level: number) => {
+    if (item.requireLogin && userStore.displayName === 'Guest') {
+        showError('請先登入', '錯誤');
+    }
+
+    // 原有代碼...
+};
 
 </script>
 <style scoped>

@@ -245,24 +245,9 @@ import { BookingStatus, BookingStatusLabel } from '@/enums/BookingStatus';
 import { useToast } from 'primevue/usetoast';
 import type { Booking } from '@/types';
 
-/**
- * 扩展预约接口，用于显示需要的附加信息
- */
- interface ExtendedBooking extends Booking {
-    // 显示需要的附加信息
-    courseTitle: string;
-    merchantName?: string;
-    location?: string;
-    time?: string;
-    instructor?: {
-        name: string;
-        avatar: string;
-    };
-}
-
 const props = defineProps({
     bookings: {
-        type: Array as PropType<ExtendedBooking[]>,
+        type: Array as PropType<Booking[]>,
         required: true
     }
 });
@@ -277,7 +262,7 @@ const showCancelDialog = ref(false);
 const showCalendarSyncDialog = ref(false);
 const showMapDialog = ref(false);
 const selectedBookingId = ref<number | null>(null);
-const selectedBooking = ref<ExtendedBooking | null>(null);
+const selectedBooking = ref<Booking | null>(null);
 
 // 過濾條件
 const filter = ref({
@@ -320,12 +305,12 @@ const upcomingBookings = computed(() => {
 
 // 日曆事件 - 需要根據新的接口調整
 const events = computed(() =>
-    filteredBookings.value.map((booking: ExtendedBooking) => ({
+    filteredBookings.value.map((booking: Booking) => ({
         id: booking.id.toString(),
-        title: booking.courseTitle || `u9810u7ea6 #${booking.id}`,
-        start: booking.createdAt, // createdAtu5df2u7ecfu662fDateu7c7bu578b
+        title: booking.courseTitle || `預約 #${booking.id}`,
+        start: booking.createdAt,
         extendedProps: {
-            location: booking.merchantName || booking.location || 'u672au6307u5b9a',
+            location: booking.merchantName || booking.location || '未指定',
             status: booking.status
         },
         classNames: getEventClassNames(booking.status)
@@ -391,7 +376,7 @@ function getStatusSeverity(status: BookingStatus): string {
 }
 
 // 獲取即將到來的預約邊框顏色
-function getUpcomingBorderClass(booking: ExtendedBooking): string {
+function getUpcomingBorderClass(booking: Booking): string {
     const daysLeft = getDaysLeft(booking.createdAt); // createdAtu5df2u7ecfu662fDateu7c7bu578b
     
     if (daysLeft <= 1) return 'border-red-500';
@@ -430,18 +415,18 @@ function getDaysLeft(date: Date): number {
 }
 
 // 是否可以取消預約
-function canCancel(booking: ExtendedBooking): boolean {
+function canCancel(booking: Booking): boolean {
     return booking.status === BookingStatus.Confirmed;
 }
 
 // 查看預約詳情
-function viewBookingDetail(booking: ExtendedBooking): void {
+function viewBookingDetail(booking: Booking): void {
     selectedBooking.value = booking;
     showDetailDialog.value = true;
 }
 
 // 查看地點地圖
-function showLocationMap(booking: ExtendedBooking): void {
+function showLocationMap(booking: Booking): void {
     selectedBooking.value = booking;
     showMapDialog.value = true;
 }

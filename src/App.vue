@@ -75,6 +75,6 @@ button.p-button, button.p-button:not(:disabled):hover {
 }
 
 .p-tab-active {
-    @apply !bg-blue-100;
+  @apply !bg-blue-100;
 }
 </style>

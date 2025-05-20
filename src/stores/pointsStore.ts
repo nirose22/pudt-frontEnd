@@ -3,7 +3,7 @@ import type { PointsCard, PointTxn } from "@/types/point"
 import { defineStore } from "pinia"
 import { ref, computed } from "vue"
 import { useUserStore } from "./userStore"
-import { PointKind, PointRefType, PointType } from "@/enums/Point"
+import { PointKind, PointRefType } from "@/enums/Point"
 import { CardType } from "@/enums/Cards"
 import type { Result } from "@/types"
 

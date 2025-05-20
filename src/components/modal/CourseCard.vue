@@ -7,14 +7,14 @@
             <ProgressSpinner style="width:40px;height:40px" strokeWidth="4" />
         </div>
         <template #header>
-            <img v-if="course.image && course.image.imageSrc" :src="course.image.imageSrc" :alt="course.title"
+            <img v-if="course.coverUrl" :src="course.coverUrl" :alt="course.title"
                 class="w-full h-full object-cover" />
         </template>
         <template #content>
             <h3 class="text-lg font-bold mt-2 line-clamp-1">{{ course.title }}</h3>
             <div class="flex items-center text-sm text-gray-600 mb-1">
                 <i class="pi pi-map-marker mr-1"></i>
-                <span class="line-clamp-1">{{ course.merchantName }}</span>
+                <span class="line-clamp-1">{{ course.region }}</span>
             </div>
             <div class="h-10">
                 <p class="text-sm text-gray-500 mb-2 line-clamp-2">{{ course.description }}</p>
@@ -22,7 +22,7 @@
         </template>
         <template #footer>
             <div class="flex items-center justify-between">
-                <span class="border rounded-md px-2 py-1 text-xs text-primary-600 font-medium">{{ course.pointsRequired
+                <span class="border rounded-md px-2 py-1 text-xs text-primary-600 font-medium">{{ course.points
                     }} 點數</span>
                 <Button label="預約" :disabled="disabled || loading" size="small" />
             </div>

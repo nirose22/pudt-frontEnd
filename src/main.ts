@@ -44,6 +44,5 @@ app.component('InputText', InputText);
 app.component('Toast', Toast);
 app.component('ConfirmDialog', ConfirmDialog);
 app.component('Dialog', Dialog);
-
 app.mount('#app')
 

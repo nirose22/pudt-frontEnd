@@ -31,31 +31,16 @@
                 </TabList>
                 <TabPanels>
                     <TabPanel value="popular">
-                        <CourseCarousel 
-                            title="熱門課程推薦" 
-                            :items="popularCourses" 
-                            :loading="isCoursesLoading" 
-                            :is-loading="isLoading"
-                            @select-course="selectCourse" 
-                        />
+                        <CourseCarousel title="熱門課程推薦" :items="popularCourses" :loading="isCoursesLoading"
+                            :is-loading="isLoading" @select-course="selectCourse" />
                     </TabPanel>
                     <TabPanel value="latest">
-                        <CourseCarousel 
-                            title="最新上架" 
-                            :items="latestCourses" 
-                            :loading="isCoursesLoading" 
-                            :is-loading="isLoading"
-                            @select-course="selectCourse" 
-                        />
+                        <CourseCarousel title="最新上架" :items="latestCourses" :loading="isCoursesLoading"
+                            :is-loading="isLoading" @select-course="selectCourse" />
                     </TabPanel>
                     <TabPanel value="recommended" v-if="isLoggedIn">
-                        <CourseCarousel 
-                            title="為您推薦的課程" 
-                            :items="recommendedCourses" 
-                            :loading="isCoursesLoading" 
-                            :is-loading="isLoading"
-                            @select-course="selectCourse" 
-                        />
+                        <CourseCarousel title="為您推薦的課程" :items="recommendedCourses" :loading="isCoursesLoading"
+                            :is-loading="isLoading" @select-course="selectCourse" />
                     </TabPanel>
                 </TabPanels>
             </Tabs>
@@ -87,14 +72,21 @@ import type { CourseDTO } from '@/types/course';
 import { CourseService } from '@/service/CourseService';
 import { useBookingStore } from '@/stores/bookingStore';
 import { MainCategory } from '@/enums/CourseCategory';
+import { showError, initToast } from '@/utils/toast-helper';
 
 // 一次性解構 userStore
 const { isLoggedIn } = useUserStore();
+const userStore = useUserStore();
 
 const visible = ref(false);
 const router = useRouter();
 const bookingStore = useBookingStore();
 const toast = useToast();
+
+// 初始化toast
+onMounted(() => {
+    initToast(toast);
+});
 
 // 數據狀態
 const isCoursesLoading = ref(false);
@@ -139,7 +131,7 @@ const recommendedCourses = computed(() => {
     if (!allCourses.value.filter(c => c.recommended).length) {
         return popularCourses.value;
     }
-    
+
     return allCourses.value
         .filter(course => course.recommended)
         .slice(0, 6);
@@ -156,24 +148,30 @@ async function fetchCourses() {
     try {
         // 获取课程数据
         const courses = await CourseService.getCourse();
-        
+
         // 添加推薦標記（實際應用中應由後端返回）
         const userAge = localStorage.getItem('userAge');
-        const userInterests = localStorage.getItem('userInterests');
+        // 优先使用 userStore 的兴趣标签，如果不存在则尝试从 localStorage 获取
+        const userInterests = userStore.interests || [];
         let age: number | null = null;
-        let interests: string[] = [];
-        
+        let interests: string[] = userInterests;
+
         try {
             if (userAge) {
                 age = parseInt(userAge);
             }
-            if (userInterests) {
-                interests = JSON.parse(userInterests);
+            
+            // 如果 userStore 中没有兴趣标签，则尝试从 localStorage 获取
+            if (interests.length === 0) {
+                const localInterests = localStorage.getItem('userInterests');
+                if (localInterests) {
+                    interests = JSON.parse(localInterests);
+                }
             }
         } catch (e) {
             console.error('解析用戶偏好錯誤', e);
         }
-        
+
         if (interests.length > 0 || age) {
             fetchRecommendations(age, interests);
         } else {
@@ -181,12 +179,7 @@ async function fetchCourses() {
         }
     } catch (error) {
         console.error('獲取課程數據失敗:', error);
-        toast.add({
-            severity: 'error',
-            summary: '獲取課程失敗',
-            detail: '無法載入課程數據，請稍後再試',
-            life: 3000
-        });
+        showError('無法載入課程數據，請稍後再試', '獲取課程失敗');
     } finally {
         isCoursesLoading.value = false;
     }
@@ -197,13 +190,13 @@ async function fetchRecommendations(age: number | null, interests: string[]) {
     // TODO: 推薦課程 
     //  實際應用：const res = await api.get(`/api/courses/recommendations?age=${age}&tags=${interests.join(',')}`)
     console.log(`請求推薦課程: age=${age}, interests=${interests.join(',')}`);
-    
+
     // 模擬後端處理邏輯
     const courses = await CourseService.getCourse();
     courses.forEach(course => {
         // 標記推薦課程，這部分邏輯在實際應用中應在後端處理
         course.recommended = false;
-        
+
         if (interests.length > 0) {
             // 標記推薦課程（實際邏輯應在後端）
             const courseTitle = course.title.toLowerCase();
@@ -218,7 +211,7 @@ async function fetchRecommendations(age: number | null, interests: string[]) {
             });
         }
     });
-    
+
     allCourses.value = courses;
 }
 
@@ -229,8 +222,6 @@ function loadMoreCourses() {
 
 async function selectCourse(course: CourseDTO) {
     const courseId = course.id;
-    console.log(course);
-    
     selectedCourseId.value = courseId;
 
     // 标记为加载中
@@ -243,21 +234,11 @@ async function selectCourse(course: CourseDTO) {
             // 成功加載後打開詳情彈窗
             visible.value = true;
         } else {
-            toast.add({
-                severity: 'error',
-                summary: '無法查看課程',
-                detail: result.message || '加載課程詳情失敗',
-                life: 3000
-            });
+            showError(result.message || '加載課程詳情失敗', '無法查看課程');
         }
     } catch (error: unknown) {
         console.error('加載課程詳情失敗:', error);
-        toast.add({
-            severity: 'error',
-            summary: '錯誤',
-            detail: bookingStore.error || '加載課程詳情時出錯，請稍後再試',
-            life: 3000
-        });
+        showError(bookingStore.error || '加載課程詳情時出錯，請稍後再試', '錯誤');
     } finally {
         // 标记加载完成
         loadingMap.value.set(courseId, false);
@@ -265,14 +246,12 @@ async function selectCourse(course: CourseDTO) {
 }
 
 function handleSearch() {
-    if (searchQuery.value.trim()) {
-        router.push({
-            name: 'Search',
-            query: {
-                keyword: searchQuery.value
-            }
-        });
-    }
+    router.push({
+        name: 'Search',
+        query: {
+            keyword: searchQuery.value
+        }
+    });
 }
 
 // 組件掛載時載入課程數據

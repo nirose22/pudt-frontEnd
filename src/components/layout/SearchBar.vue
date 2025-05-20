@@ -28,12 +28,9 @@ const suggestions = ref<string[]>([]);
 const emit = defineEmits(['update:modelValue', 'search', 'complete']);
 
 const onSearch = () => {
-  if (modelValue.value && modelValue.value.trim()) {
-    emit('search', modelValue.value);
-  } else {
-    console.log('onSearch', modelValue.value);
-    emit('search', '');
-  }
+  // 不管是否有值，都执行搜索操作
+  // 如果是空值，会搜索全部
+  emit('search', modelValue.value?.trim() || '');
 };
 
 function handleComplete() {

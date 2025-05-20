@@ -1,9 +1,7 @@
 // stores/bookingStore.ts
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { isEqual } from 'date-fns'
 import type { Result } from '@/types'
-import type { Course, CourseSession } from '@/types/course'
 import type { Booking } from '@/types/booking'
 import { BookingStatus } from '@/enums/BookingStatus'
 import { useUserStore } from './userStore'
@@ -210,7 +208,6 @@ export const useBookingStore = defineStore('booking', () => {
                     userStore.adjustPoints(bk.points)
                 }
             }
-            
             return result
         } catch (err) {
             error.value = err instanceof Error ? err.message : '取消预约失败'

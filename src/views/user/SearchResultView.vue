@@ -1,8 +1,5 @@
 <template>
 	<div class="flex flex-col min-h-screen overflow-y-auto">
-		<!-- Toast 组件用于显示错误消息 -->
-		<Toast />
-
 		<!-- 主要内容區 -->
 		<div class="flex-grow flex flex-col md:flex-row gap-2">
 			<!-- 左側篩選區 -->
@@ -18,9 +15,17 @@
 					<div class="mb-6">
 						<h3 class="text-lg font-medium mb-2">地區</h3>
 						<div class="flex flex-wrap gap-2">
-							<Chip v-for="region in mockRegions" :key="region.code" :label="region.name"
+							<Chip v-for="region in visibleRegions" :key="region.code" :label="region.name"
 								:class="{ 'chip-selected': isItemInArray(selectedRegions, region.code) }"
-								@click="toggleItem(selectedRegions, region.code)" class="chip" />
+								@click="toggleRegion(region.code)" class="chip" />
+							<Button v-if="!showAllRegions && allRegions.length > visibleRegionsCount" 
+								link class="text-blue-500 py-1" 
+								@click="showAllRegions = true"
+								label="顯示更多" />
+							<Button v-else-if="showAllRegions" 
+								link class="text-blue-500 py-1" 
+								@click="showAllRegions = false"
+								label="收起" />
 						</div>
 					</div>
 
@@ -252,8 +257,6 @@ import DataView from 'primevue/dataview';
 import Select from 'primevue/select';
 import Button from 'primevue/button';
 import { useBookingStore } from '@/stores/bookingStore';
-import Toast from 'primevue/toast';
-import { useToast } from 'primevue/usetoast';
 import ProgressSpinner from 'primevue/progressspinner';
 import { MainCategory, SubCategory } from '@/enums/CourseCategory';
 import Accordion from 'primevue/accordion';
@@ -266,7 +269,6 @@ import TabList from 'primevue/tablist';
 import Tab from 'primevue/tab';
 import TabPanels from 'primevue/tabpanels';
 import { useUserStore } from '@/stores/userStore';
-import { mockRegions } from '@/service/MockService';
 import { isItemInArray, toggleItem } from '@/utils/arrayUtils';
 import { getMainCategories, getGroupedSubCategories } from '@/utils/categoryUtils';
 import AsyncCarousel from '@/components/common/AsyncCarousel.vue';
@@ -274,6 +276,9 @@ import AsyncState from '@/components/common/AsyncState.vue';
 import { useCourseStore } from '@/stores/courseStore';
 import { useCourseFilters } from '@/composables/useCourseFilters';
 import { useLoadingMap } from '@/composables/useLoadingMap';
+import { RegionLabelMap } from '@/enums/RegionCode';
+import { showError, showInfo, initToast } from '@/utils/toast-helper';
+import { useToast } from 'primevue/usetoast';
 
 const route = useRoute();
 const router = useRouter();
@@ -338,6 +343,16 @@ const courseSessionMap = ref<Map<number, CourseSession[]>>(new Map());
 // 主分類和子分類
 const mainCategories = computed(() => getMainCategories());
 const groupedSubCategories = computed(() => getGroupedSubCategories());
+
+// 定义所有地区
+const allRegions = ref(Object.entries(RegionLabelMap).map(([code, name]) => ({ code, name })));
+const visibleRegionsCount = 5; // 默认显示的地区数量
+const showAllRegions = ref(false);
+const visibleRegions = computed(() => {
+	return showAllRegions.value 
+		? allRegions.value 
+		: allRegions.value.slice(0, visibleRegionsCount);
+});
 
 // 过滤后的课程列表
 const filteredCourses = computed(() => {
@@ -451,6 +466,9 @@ onMounted(async () => {
 	clearLoadingStates();
 	// 加载数据
 	await fetchCourses();
+	
+	// 初始化 toast
+	initToast(toast);
 });
 
 // 视图查看课程详情
@@ -475,21 +493,11 @@ async function selectCourse(course: CourseDTO): Promise<void> {
 			detailVisible.value = true;
 		} else {
 			// 顯示錯誤提示
-			toast.add({
-				severity: 'error',
-				summary: '無法查看課程詳情',
-				detail: result.message || '加載課程詳情失敗',
-				life: 3000
-			});
+			showError(result.message || '加載課程詳情失敗', '無法查看課程詳情');
 		}
 	} catch (error: unknown) {
 		console.error('加載課程詳情時出錯:', error);
-		toast.add({
-			severity: 'error',
-			summary: '無法查看課程詳情',
-			detail: coursesLoadError.value || '加載課程詳情時出錯，請稍後再試',
-			life: 3000
-		});
+		showError(coursesLoadError.value || '加載課程詳情時出錯，請稍後再試', '無法查看課程詳情');
 	} finally {
 		// 标记加载完成
 		setLoading(course.id, false);
@@ -516,10 +524,49 @@ function handleSubCategoryToggle(code: string): void {
 			);
 		}
 	}
+
+	// 立即获取过滤后的课程数据
+	fetchFilteredCourses();
 }
+
+// 修改地区切换函数，点击后立即应用筛选
+function toggleRegion(code: string): void {
+	toggleItem(selectedRegions.value, code);
+	// 立即获取课程数据
+	fetchFilteredCourses();
+}
+
+// 获取过滤后的课程数据
+async function fetchFilteredCourses(): Promise<void> {
+	try {
+		// 设置加载状态
+		clearLoadingStates();
+		
+		// 合并分类
+		const allCategories = [...selectedMainCategories.value, ...selectedSubCategories.value];
+		
+		// 调用API获取数据
+		await fetchCourses(
+			keyword.value, 
+			selectedRegions.value.length > 0 ? selectedRegions.value : undefined, 
+			allCategories.length > 0 ? allCategories : undefined
+		);
+		
+		// 显示过滤结果数量
+		if (filteredCourses.value.length === 0) {
+			showInfo('没有找到符合条件的课程', '无搜索结果');
+		}
+	} catch (error) {
+		console.error('获取课程失败:', error);
+		showError('请稍后再试', '获取数据失败');
+	}
+}
+
 // 處理應用篩選
 function handleApplyFilters(): void {
 	applyFilters(filteredCourses.value.length);
+	// 应用筛选条件后获取数据
+	fetchFilteredCourses();
 }
 </script>
 

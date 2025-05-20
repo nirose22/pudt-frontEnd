@@ -1,4 +1,4 @@
-import type { Merchant } from "@/types/course";
+import type { Merchant } from "@/types";
 
 export const MerchantService = {
     /**
@@ -12,6 +12,7 @@ export const MerchantService = {
         // 模擬 API 響應
         return Promise.resolve({
             id: merchantId,
+            email: 'merchant@example.com',
             name: `商家 ${merchantId}`,
             address: '台北市信義區和平東路一段100號',
             phone: '02-2345-6789',
