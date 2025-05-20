@@ -32,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Breadcrumb from 'primevue/breadcrumb';
 import type { MenuItem } from 'primevue/menuitem';
@@ -63,39 +63,56 @@ const isActive = (routeName: string | string[]) => {
 };
 
 // 麵包屑首頁項
-const homeItem = { icon: 'pi pi-home', to: '/merchant' };
+const homeItem = { icon: 'pi pi-home', to: '/merchant', label: '首頁' };
+
+// 用於調試
+const routeNameDisplay = computed(() => {
+    const name = route.name;
+    console.log("當前路由名稱:", name);
+    return name;
+});
 
 // 麵包屑導航項
 const breadcrumbItems = computed(() => {
     const items: MenuItem[] = [];
+    const path = route.path;
+
 
     // 根據當前路由動態生成麵包屑
-    if (route.name === 'MerchantDashboard') {
-        items.push({ label: '儀表板' });
-    } else if (route.name?.toString().includes('Course')) {
+    if (path === '/merchant') {
+        items.push({ label: '儀表板', to: '/merchant' });
+    } else if (path.includes('/merchant/courses')) {
         items.push({ label: '課程管理', to: '/merchant/courses' });
-
-        if (route.name === 'CourseCreate') {
-            items.push({ label: '新增課程' });
-        } else if (route.name === 'CourseEdit') {
-            items.push({ label: '編輯課程' });
-        }
-    } else if (route.name?.toString().includes('Booking')) {
+    } else if (path.includes('/merchant/courses/create')) {
+        items.push({ label: '課程管理', to: '/merchant/courses' });
+        items.push({ label: '新增課程', to: '/merchant/courses/create' });
+    } else if (path.includes('/merchant/courses/edit')) {
+        items.push({ label: '課程管理', to: '/merchant/courses' });
+        items.push({ label: '編輯課程', to: `/merchant/courses/edit/${route.params.id}` });
+    } else if (path.includes('/merchant/bookings')) {
         items.push({ label: '預約管理', to: '/merchant/bookings' });
-
-        if (route.name === 'BookingDetail') {
-            items.push({ label: '預約詳情' });
-        }
-    } else if (route.name === 'MerchantPointsManagement') {
-        items.push({ label: '點數管理' });
-    } else if (route.name === 'MerchantSettings') {
-        items.push({ label: '商家設定' });
-    } else if (route.name === 'MerchantNotifications') {
-        items.push({ label: '通知中心' });
+    } else if (path.includes('/merchant/bookings/')) {
+        items.push({ label: '預約管理', to: '/merchant/bookings' });
+        items.push({ label: '預約詳情', to: `/merchant/bookings/${route.params.id}` });
+    } else if (path.includes('/merchant/points')) {
+        items.push({ label: '點數管理', to: '/merchant/points' });
+    } else if (path.includes('/merchant/settings')) {
+        items.push({ label: '商家設定', to: '/merchant/settings' });
+    } else if (path.includes('/merchant/notifications')) {
+        items.push({ label: '通知中心', to: '/merchant/notifications' });
     }
 
+    console.log("生成的面包屑項目:", items);
     return items;
 });
+
+// 監視路由變化
+watch(
+    () => route.fullPath,
+    () => {
+        console.log("路由變化，當前路由:", route.name);
+    }
+);
 
 // 初始化
 onMounted(() => {
@@ -103,6 +120,7 @@ onMounted(() => {
     if (window.innerWidth < 768) {
         isSidebarOpen.value = false;
     }
+    console.log("組件掛載，當前路由:", route.name);
 });
 </script>
 
