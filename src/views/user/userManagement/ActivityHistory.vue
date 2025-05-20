@@ -58,25 +58,23 @@
             <div class="flex flex-wrap gap-3 items-end">
                 <!-- 日期範圍篩選 -->
                 <div class="flex-grow md:w-auto md:flex-grow-0">
-                    <DateRangeFilter v-model:startDate="startDate" v-model:endDate="endDate" @change="handleDateRangeChange"
-                        @apply="applyFilters" @reset="resetFilters" />
+                    <DateRangeFilter v-model:startDate="startDate" v-model:endDate="endDate"
+                        @change="handleDateRangeChange" @apply="applyFilters" @reset="resetFilters" />
                 </div>
-                
+
                 <!-- 狀態篩選 -->
                 <div class="w-full md:w-auto">
                     <label class="block text-sm mb-1">狀態</label>
-                    <Dropdown v-model="filters.status" :options="statusOptions" 
-                        optionLabel="label" optionValue="value" placeholder="選擇狀態" class="w-full md:w-40" />
+                    <Select v-model="filters.status" :options="statusOptions" optionLabel="label" optionValue="value"
+                        placeholder="選擇狀態" class="w-full md:w-40" />
                 </div>
-                
+
                 <!-- 搜尋 -->
-                <div class="w-full md:w-auto flex-grow md:flex-grow-0">
-                    <span class="p-input-icon-left w-full">
-                        <i class="pi pi-search" />
-                        <InputText v-model="filters.search" placeholder="搜尋課程名稱" class="w-full" />
-                    </span>
-                </div>
-                
+                <IconField>
+                    <InputIcon class="pi pi-search" />
+                    <InputText v-model="filters.search" placeholder="搜尋課程名稱..." />
+                </IconField>
+
                 <!-- 應用按鈕 -->
                 <div class="w-full md:w-auto">
                     <Button label="應用篩選" icon="pi pi-filter" @click="applyFilters" />
@@ -91,25 +89,25 @@
                         <i :class="tab.icon + ' mr-2'"></i>
                         {{ tab.label }}
                         <Badge v-if="tab.count" :value="tab.count" class="ml-2" />
-                </Tab>
-            </TabList>
-            <TabPanels>
+                    </Tab>
+                </TabList>
+                <TabPanels>
                     <TabPanel :value="tabItems[0].label">
                         <!-- 預約紀錄面板 -->
                         <DataTable :value="filteredCourseHistory" stripedRows paginator :rows="10"
                             responsiveLayout="stack" :loading="loading" class="!flex-1 flex flex-col">
                             <Column field="courseTitle" header="課程名稱" sortable />
                             <Column field="date" header="日期" sortable>
-                            <template #body="{ data }">
-                                {{ formatDateString(data.date) }}
-                            </template>
-                        </Column>
+                                <template #body="{ data }">
+                                    {{ formatDateString(data.date) }}
+                                </template>
+                            </Column>
                             <Column field="time" header="時間" />
-                        <Column field="instructor.name" header="講師" />
+                            <Column field="instructor.name" header="講師" />
                             <Column field="courseType" header="課程類型" />
-                        <Column field="points" header="消費點數" />
-                        <Column field="status" header="狀態">
-                            <template #body="{ data }">
+                            <Column field="points" header="消費點數" />
+                            <Column field="status" header="狀態">
+                                <template #body="{ data }">
                                     <Tag :severity="getStatusSeverity(data.status)"
                                         :value="getCourseStatus(data.status)" />
                                 </template>
@@ -122,50 +120,50 @@
                                         <Button v-if="canRate(data)" icon="pi pi-star" text rounded aria-label="評價課程"
                                             @click="openRatingDialog(data)" />
                                     </div>
-                            </template>
-                        </Column>
-    
+                                </template>
+                            </Column>
+
                             <template #empty>
                                 <div class="text-center p-6 bg-gray-50 rounded-lg">
                                     <i class="pi pi-calendar-times text-4xl text-gray-400 mb-2"></i>
-                        <p class="text-gray-500">尚無課程紀錄</p>
-                    </div>
+                                    <p class="text-gray-500">尚無課程紀錄</p>
+                                </div>
                             </template>
-                    </DataTable>
-                </TabPanel>
+                        </DataTable>
+                    </TabPanel>
                     <TabPanel :value="tabItems[1].label">
                         <!-- 缺席紀錄面板 -->
                         <DataTable :value="filteredAbsenceRecords" stripedRows paginator :rows="10"
                             responsiveLayout="stack" :loading="loading" class="!flex-1 flex flex-col">
                             <Column field="courseTitle" header="課程名稱" sortable />
                             <Column field="date" header="日期" sortable>
-                            <template #body="{ data }">
-                                {{ formatDateString(data.date) }}
-                            </template>
-                        </Column>
-                        <Column field="time" header="時間" />
+                                <template #body="{ data }">
+                                    {{ formatDateString(data.date) }}
+                                </template>
+                            </Column>
+                            <Column field="time" header="時間" />
                             <Column field="courseType" header="課程類型" />
-                        <Column field="points" header="扣除點數" />
+                            <Column field="points" header="扣除點數" />
                             <Column field="reason" header="缺席原因" />
-    
+
                             <template #empty>
                                 <div class="text-center p-6 bg-gray-50 rounded-lg">
                                     <i class="pi pi-calendar-times text-4xl text-gray-400 mb-2"></i>
-                        <p class="text-gray-500">無缺席紀錄</p>
-                    </div>
+                                    <p class="text-gray-500">無缺席紀錄</p>
+                                </div>
                             </template>
                         </DataTable>
-                </TabPanel>
+                    </TabPanel>
                     <TabPanel :value="tabItems[2].label">
                         <!-- 評價紀錄面板 -->
                         <DataTable :value="filteredRatingHistory" stripedRows paginator :rows="10"
                             responsiveLayout="stack" :loading="loading" class="!flex-1 flex flex-col">
                             <Column field="courseTitle" header="課程名稱" sortable />
                             <Column field="date" header="日期" sortable>
-                            <template #body="{ data }">
-                                {{ formatDateString(data.date) }}
-                            </template>
-                        </Column>
+                                <template #body="{ data }">
+                                    {{ formatDateString(data.date) }}
+                                </template>
+                            </Column>
                             <Column field="instructor.name" header="講師" />
                             <Column field="rating" header="評分">
                                 <template #body="{ data }">
@@ -173,16 +171,16 @@
                                 </template>
                             </Column>
                             <Column field="comment" header="評論">
-                            <template #body="{ data }">
+                                <template #body="{ data }">
                                     <div class="max-w-xs truncate">{{ data.comment || '無評論' }}</div>
-                            </template>
-                        </Column>
+                                </template>
+                            </Column>
                             <Column field="action" header="操作">
-                            <template #body="{ data }">
+                                <template #body="{ data }">
                                     <Button icon="pi pi-pencil" text rounded aria-label="編輯評價"
                                         @click="openRatingDialog(data, true)" />
-                            </template>
-                        </Column>
+                                </template>
+                            </Column>
 
                             <template #empty>
                                 <div class="text-center p-6 bg-gray-50 rounded-lg">
@@ -190,10 +188,10 @@
                                     <p class="text-gray-500">尚無評價紀錄</p>
                                 </div>
                             </template>
-                    </DataTable>
-                </TabPanel>
-            </TabPanels>
-        </Tabs>
+                        </DataTable>
+                    </TabPanel>
+                </TabPanels>
+            </Tabs>
 
             <!-- 课程详情对话框 -->
             <Dialog v-model:visible="showDetailDialog" header="課程詳情" :modal="true" :closable="true"
@@ -261,26 +259,28 @@
                 </div>
                 <template #footer>
                     <Button label="關閉" icon="pi pi-times" @click="showDetailDialog = false" outlined />
-                    <Button v-if="selectedCourse && canRate(selectedCourse)" label="評價課程" icon="pi pi-star" 
+                    <Button v-if="selectedCourse && canRate(selectedCourse)" label="評價課程" icon="pi pi-star"
                         @click="openRatingDialogFromDetail" />
                 </template>
             </Dialog>
 
             <!-- 評價對話框 -->
-            <Dialog v-model:visible="showRatingDialog" :header="isEditRating ? '編輯評價' : '評價課程'" :modal="true" :closable="true"
-                :style="{ width: '450px' }">
+            <Dialog v-model:visible="showRatingDialog" :header="isEditRating ? '編輯評價' : '評價課程'" :modal="true"
+                :closable="true" :style="{ width: '450px' }">
                 <div v-if="selectedCourse" class="space-y-4">
                     <div class="mb-3">
                         <h3 class="font-medium">{{ selectedCourse.courseTitle }}</h3>
-                        <div class="text-sm text-gray-500">{{ formatDateString(selectedCourse.date) }} {{ selectedCourse.time }}</div>
+                        <div class="text-sm text-gray-500">{{ formatDateString(selectedCourse.date) }} {{
+                            selectedCourse.time }}
+                        </div>
                         <div class="text-sm text-gray-500">講師: {{ selectedCourse.instructor?.name }}</div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label class="block text-sm mb-2">評分</label>
                         <Rating v-model="ratingForm.rating" :cancel="false" />
                     </div>
-                    
+
                     <div class="mb-3">
                         <label class="block text-sm mb-2">評論 (選填)</label>
                         <Textarea v-model="ratingForm.comment" rows="3" class="w-full" placeholder="分享您對課程的感受..." />
@@ -316,10 +316,12 @@ import Badge from 'primevue/badge';
 import Rating from 'primevue/rating';
 import Textarea from 'primevue/textarea';
 import InputText from 'primevue/inputtext';
-import Dropdown from 'primevue/dropdown';
+import Select from 'primevue/select';
 import MultiSelect from 'primevue/multiselect';
 import Avatar from 'primevue/avatar';
 import type { AbsenceRecord } from '@/types/activity';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
 
 // 定义数据接口
 interface CourseRecord {
@@ -403,18 +405,18 @@ const activityStats = computed(() => {
 
 // 標籤頁菜單
 const tabItems = computed(() => [
-    { 
-        label: '預約紀錄', 
+    {
+        label: '預約紀錄',
         icon: 'pi pi-calendar',
         count: filteredCourseHistory.value.length
     },
-    { 
-        label: '缺席紀錄', 
+    {
+        label: '缺席紀錄',
         icon: 'pi pi-calendar-times',
         count: filteredAbsenceRecords.value.length
     },
-    { 
-        label: '評價紀錄', 
+    {
+        label: '評價紀錄',
         icon: 'pi pi-star',
         count: filteredRatingHistory.value.length
     }
@@ -425,7 +427,7 @@ function calculateAverageRating(): string {
     if (!ratingHistory.value || ratingHistory.value.length === 0) {
         return '0.0';
     }
-    
+
     const sum = ratingHistory.value.reduce((total, item) => total + (item.rating || 0), 0);
     return (sum / ratingHistory.value.length).toFixed(1);
 }
@@ -433,43 +435,43 @@ function calculateAverageRating(): string {
 // 過濾後的課程歷史
 const filteredCourseHistory = computed(() => {
     let filtered = [...courseHistory.value];
-    
+
     // 日期範圍過濾
     if (range.value) {
         filtered = inRange(range.value.start, range.value.end, filtered);
     }
-    
+
     // 搜尋過濾
     if (filters.value.search) {
         const searchLower = filters.value.search.toLowerCase();
-        filtered = filtered.filter(item => 
+        filtered = filtered.filter(item =>
             item.courseTitle.toLowerCase().includes(searchLower) ||
             (item.instructor?.name && item.instructor.name.toLowerCase().includes(searchLower))
         );
     }
-    
+
     // 狀態過濾
     if (filters.value.status) {
         filtered = filtered.filter(item => item.status.toString() === filters.value.status);
     }
-    
-    
+
+
     return filtered;
 });
 
 // 過濾後的缺席記錄
 const filteredAbsenceRecords = computed(() => {
     let filtered = [...absenceRecords.value];
-    
+
     // 日期範圍過濾
     if (range.value) {
         filtered = inRange(range.value.start, range.value.end, filtered);
     }
-    
+
     // 搜尋過濾
     if (filters.value.search) {
         const searchLower = filters.value.search.toLowerCase();
-        filtered = filtered.filter(item => 
+        filtered = filtered.filter(item =>
             item.courseTitle.toLowerCase().includes(searchLower)
         );
     }
@@ -479,16 +481,16 @@ const filteredAbsenceRecords = computed(() => {
 // 過濾後的評價記錄
 const filteredRatingHistory = computed(() => {
     let filtered = [...ratingHistory.value];
-    
+
     // 日期範圍過濾
     if (range.value) {
         filtered = inRange(range.value.start, range.value.end, filtered);
     }
-    
+
     // 搜尋過濾
     if (filters.value.search) {
         const searchLower = filters.value.search.toLowerCase();
-        filtered = filtered.filter(item => 
+        filtered = filtered.filter(item =>
             item.courseTitle.toLowerCase().includes(searchLower) ||
             (item.instructor?.name && item.instructor.name.toLowerCase().includes(searchLower))
         );
@@ -535,15 +537,15 @@ const viewCourseDetail = (course: CourseRecord) => {
 // 判斷是否可以評價
 const canRate = (course: CourseRecord): boolean => {
     // 只有已完成的課程才能評價，且未評價過
-    return course.status === BookingStatus.Confirmed && 
-           (!course.rating || course.rating === 0);
+    return course.status === BookingStatus.Confirmed &&
+        (!course.rating || course.rating === 0);
 };
 
 // 打開評價對話框
 const openRatingDialog = (course: CourseRecord, isEdit = false) => {
     selectedCourse.value = course;
     isEditRating.value = isEdit;
-    
+
     // 如果是編輯，則填入現有評價
     if (isEdit && course.rating) {
         ratingForm.value.rating = course.rating;
@@ -553,7 +555,7 @@ const openRatingDialog = (course: CourseRecord, isEdit = false) => {
         ratingForm.value.rating = 0;
         ratingForm.value.comment = '';
     }
-    
+
     showRatingDialog.value = true;
 };
 
@@ -582,24 +584,24 @@ const submitRating = () => {
         });
         return;
     }
-    
+
     if (!selectedCourse.value) {
         return;
     }
-    
+
     // 触发评价提交事件
     emit('submit-rating', {
         courseId: selectedCourse.value.id,
         rating: ratingForm.value.rating,
         comment: ratingForm.value.comment
     });
-    
+
     // 更新本地數據
     if (isEditRating.value) {
         // 更新現有評價
         selectedCourse.value.rating = ratingForm.value.rating;
         selectedCourse.value.comment = ratingForm.value.comment;
-        
+
         toast.add({
             severity: 'success',
             summary: '成功',
@@ -610,7 +612,7 @@ const submitRating = () => {
         // 添加新評價
         selectedCourse.value.rating = ratingForm.value.rating;
         selectedCourse.value.comment = ratingForm.value.comment;
-        
+
         toast.add({
             severity: 'success',
             summary: '成功',
@@ -618,7 +620,7 @@ const submitRating = () => {
             life: 3000
         });
     }
-    
+
     showRatingDialog.value = false;
 };
 
@@ -641,7 +643,7 @@ const getStatusSeverity = (status: BookingStatus) => {
 </script>
 
 <style scoped>
- @reference "tailwindcss";
+@reference "tailwindcss";
 
 .card {
     @apply bg-white border border-gray-100 rounded-lg p-4;

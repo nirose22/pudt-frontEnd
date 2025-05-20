@@ -102,7 +102,7 @@ import { BookingStatus } from '@/enums/BookingStatus';
 import DataView from 'primevue/dataview';
 import type { Booking } from '@/types/booking';
 import { useConfirm } from 'primevue/useconfirm';
-import { showSuccess, showError, initToast } from '@/utils/toast-helper';
+import { showSuccess, showError, initToast } from '@/utils/toastHelper';
 import Dialog from 'primevue/dialog';
 import { useToast } from 'primevue/usetoast';
 

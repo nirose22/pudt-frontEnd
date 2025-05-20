@@ -101,7 +101,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <IftaLabel>
-                                    <Dropdown 
+                                    <Select 
                                         id="gender" 
                                         v-model="formData.gender" 
                                         :options="genderOptions" 
@@ -116,7 +116,7 @@
                             
                             <div>
                                 <IftaLabel>
-                                    <Dropdown 
+                                    <Select 
                                         id="location" 
                                         v-model="formData.location" 
                                         :options="locationOptions" 
@@ -196,7 +196,7 @@ import Steps from 'primevue/steps';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
 import Password from 'primevue/password';
-import Dropdown from 'primevue/dropdown';
+import Select from 'primevue/select';
 import Button from 'primevue/button';
 import IftaLabel from 'primevue/iftalabel';
 import { useAuthStore } from '@/stores/authStore';

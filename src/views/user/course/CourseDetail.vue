@@ -176,7 +176,7 @@ import { useBookingStore } from '@/stores/bookingStore';
 import type { CourseSession } from '@/types';
 import { useRouter } from 'vue-router';
 import { UserRole } from '@/enums/User';
-import { showSuccess, showError, showInfo, initToast } from '@/utils/toast-helper';
+import { showSuccess, showError, showInfo, initToast } from '@/utils/toastHelper';
 import type { Result } from '@/types';
 
 // 在 script setup 顶部获取 props

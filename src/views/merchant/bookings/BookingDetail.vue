@@ -171,7 +171,7 @@
                         <!-- 訊息範本 -->
                         <div class="mb-4">
                             <label for="messageTemplate" class="block mb-1 font-medium">訊息範本</label>
-                            <Dropdown id="messageTemplate" v-model="selectedTemplate" :options="messageTemplates"
+                            <Select id="messageTemplate" v-model="selectedTemplate" :options="messageTemplates"
                                 optionLabel="name" class="w-full" @change="applyTemplate" />
                         </div>
 
@@ -216,7 +216,7 @@ import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
-import Dropdown from 'primevue/dropdown';
+import Select from 'primevue/select';
 import Checkbox from 'primevue/checkbox';
 import Avatar from 'primevue/avatar';
 import Timeline from 'primevue/timeline';

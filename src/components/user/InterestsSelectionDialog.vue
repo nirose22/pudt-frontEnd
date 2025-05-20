@@ -83,7 +83,7 @@ import AccordionContent from 'primevue/accordioncontent';
 import AccordionHeader from 'primevue/accordionheader';
 import Badge from 'primevue/badge';
 import { MainCategory, MainCategoryLabel, SubCategory, SubCategoryLabel } from '@/enums/CourseCategory';
-import { showInfo } from '@/utils/toast-helper';
+import { showInfo } from '@/utils/toastHelper';
 
 const props = defineProps<{
     modelValue: boolean;

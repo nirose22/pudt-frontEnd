@@ -4,42 +4,43 @@
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
       <!-- 搜尋和篩選 -->
       <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-        <span class="p-input-icon-left w-full sm:w-auto">
-          <i class="pi pi-search" />
-          <InputText v-model="filters.search" placeholder="搜尋客戶或課程..." class="w-full" />
-        </span>
-        
+        <IconField>
+          <InputIcon class="pi pi-search" />
+          <InputText v-model="filters.search" placeholder="搜尋客戶或課程..." />
+        </IconField>
+
         <!-- 日期範圍篩選 -->
         <DateRangeFilter v-model="filters.dateRange" class="w-full sm:w-auto" />
-        
+
         <!-- 狀態篩選 -->
         <MultiSelect v-model="filters.status" :options="statusOptions" optionLabel="label" optionValue="value"
           placeholder="預約狀態" class="w-full sm:w-auto" display="chip" />
       </div>
-      
+
       <!-- 視圖切換 -->
       <div class="flex gap-2">
-        <Button icon="pi pi-calendar" :class="{ 'p-button-outlined': view !== 'calendar' }" @click="view = 'calendar'" />
+        <Button icon="pi pi-calendar" :class="{ 'p-button-outlined': view !== 'calendar' }"
+          @click="view = 'calendar'" />
         <Button icon="pi pi-list" :class="{ 'p-button-outlined': view !== 'list' }" @click="view = 'list'" />
       </div>
     </div>
-    
+
     <!-- 日曆視圖 -->
     <Card v-if="view === 'calendar'" class="mb-6">
       <template #content>
         <FullCalendar :options="calendarOptions" />
       </template>
     </Card>
-    
+
     <!-- 列表視圖 -->
     <Card v-else>
       <template #content>
-        <DataTable :value="filteredBookings" v-model:selection="selectedBookings" 
-          :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]"
+        <DataTable :value="filteredBookings" v-model:selection="selectedBookings" :paginator="true" :rows="10"
+          :rowsPerPageOptions="[5, 10, 20]"
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
           :loading="loading" stripedRows responsiveLayout="stack" breakpoint="960px"
           :globalFilterFields="['customerName', 'courseTitle', 'date', 'status']">
-          
+
           <!-- 表頭 -->
           <template #header>
             <div class="flex justify-between items-center">
@@ -50,12 +51,13 @@
               </div>
             </div>
           </template>
-          
+
           <!-- 客戶姓名 -->
           <Column field="customerName" header="客戶姓名" sortable>
             <template #body="slotProps">
               <div class="flex items-center gap-2">
-                <Avatar :label="getInitials(slotProps.data.customerName)" shape="circle" class="bg-blue-100 text-blue-600" />
+                <Avatar :label="getInitials(slotProps.data.customerName)" shape="circle"
+                  class="bg-blue-100 text-blue-600" />
                 <div>
                   <div class="font-medium">{{ slotProps.data.customerName }}</div>
                   <div class="text-xs text-gray-500">{{ slotProps.data.customerPhone }}</div>
@@ -63,7 +65,7 @@
               </div>
             </template>
           </Column>
-          
+
           <!-- 課程名稱 -->
           <Column field="courseTitle" header="課程名稱" sortable>
             <template #body="slotProps">
@@ -71,29 +73,31 @@
               <div class="text-xs text-gray-500">ID: {{ slotProps.data.courseId }}</div>
             </template>
           </Column>
-          
+
           <!-- 預約日期 -->
           <Column field="date" header="預約日期" sortable>
             <template #body="slotProps">
               <div>{{ formatDate(slotProps.data.date) }}</div>
-              <div class="text-xs text-gray-500">{{ formatTime(slotProps.data.startTime) }} - {{ formatTime(slotProps.data.endTime) }}</div>
+              <div class="text-xs text-gray-500">{{ formatTime(slotProps.data.startTime) }} - {{
+                formatTime(slotProps.data.endTime) }}</div>
             </template>
           </Column>
-          
+
           <!-- 點數 -->
           <Column field="points" header="點數" sortable style="width: 100px">
             <template #body="slotProps">
               <div class="text-center font-medium">{{ slotProps.data.points }}</div>
             </template>
           </Column>
-          
+
           <!-- 狀態 -->
           <Column field="status" header="狀態" sortable style="width: 120px">
             <template #body="slotProps">
-              <Tag :severity="getStatusSeverity(slotProps.data.status)" :value="getStatusLabel(slotProps.data.status)" />
+              <Tag :severity="getStatusSeverity(slotProps.data.status)"
+                :value="getStatusLabel(slotProps.data.status)" />
             </template>
           </Column>
-          
+
           <!-- 操作按鈕 -->
           <Column header="操作" style="width: 150px">
             <template #body="slotProps">
@@ -108,7 +112,7 @@
               </div>
             </template>
           </Column>
-          
+
           <!-- 無數據時顯示 -->
           <template #empty>
             <div class="text-center p-4">
@@ -120,7 +124,7 @@
         </DataTable>
       </template>
     </Card>
-    
+
     <!-- 確認對話框 -->
     <ConfirmDialog></ConfirmDialog>
   </div>
@@ -145,6 +149,8 @@ import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
 
 // 預約數據類型
 interface Booking {
@@ -194,16 +200,16 @@ const loading = ref(false);
 // 根據篩選條件過濾預約
 const filteredBookings = computed(() => {
   let result = [...bookings.value];
-  
+
   // 搜尋過濾
   if (filters.value.search) {
     const searchLower = filters.value.search.toLowerCase();
-    result = result.filter(booking => 
-      booking.customerName.toLowerCase().includes(searchLower) || 
+    result = result.filter(booking =>
+      booking.customerName.toLowerCase().includes(searchLower) ||
       booking.courseTitle.toLowerCase().includes(searchLower)
     );
   }
-  
+
   // 日期範圍過濾
   if (filters.value.dateRange.start && filters.value.dateRange.end) {
     result = result.filter(booking => {
@@ -213,12 +219,12 @@ const filteredBookings = computed(() => {
       return bookingDate >= startDate && bookingDate <= endDate;
     });
   }
-  
+
   // 狀態過濾
   if (filters.value.status.length > 0) {
     result = result.filter(booking => filters.value.status.includes(booking.status));
   }
-  
+
   return result;
 });
 
@@ -227,10 +233,10 @@ const calendarEvents = computed(() => {
   return filteredBookings.value.map(booking => {
     const startTime = new Date(booking.date);
     startTime.setHours(booking.startTime.getHours(), booking.startTime.getMinutes());
-    
+
     const endTime = new Date(booking.date);
     endTime.setHours(booking.endTime.getHours(), booking.endTime.getMinutes());
-    
+
     return {
       id: booking.id.toString(),
       title: `${booking.courseTitle} - ${booking.customerName}`,
@@ -320,18 +326,18 @@ function formatTime(date: Date): string {
 // 加載預約數據
 async function loadBookings(): Promise<void> {
   loading.value = true;
-  
+
   try {
     // 模擬 API 請求
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     // 模擬預約數據
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     const dayAfterTomorrow = new Date(today);
     dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
-    
+
     bookings.value = [
       {
         id: 101,
@@ -423,7 +429,7 @@ function confirmBooking(booking: Booking): void {
     accept: () => {
       // 實際應用中應該調用 API 確認預約
       booking.status = 'confirmed';
-      
+
       toast.add({
         severity: 'success',
         summary: '預約已確認',
@@ -445,7 +451,7 @@ function cancelBooking(booking: Booking): void {
     accept: () => {
       // 實際應用中應該調用 API 取消預約
       booking.status = 'cancelled';
-      
+
       toast.add({
         severity: 'info',
         summary: '預約已取消',
@@ -467,7 +473,7 @@ function completeBooking(booking: Booking): void {
     accept: () => {
       // 實際應用中應該調用 API 完成預約
       booking.status = 'completed';
-      
+
       toast.add({
         severity: 'success',
         summary: '預約已完成',

@@ -39,7 +39,7 @@
             
             <div class="flex gap-2">
                 <Button icon="pi pi-sync" label="同步至行事曆" outlined @click="showCalendarSyncDialog = true" />
-                <Dropdown v-model="filter.status" :options="statusOptions" optionLabel="label" optionValue="value" placeholder="狀態" />
+                <Select v-model="filter.status" :options="statusOptions" optionLabel="label" optionValue="value" placeholder="狀態" />
             </div>
         </div>
 
@@ -230,7 +230,7 @@ import { ref, computed, watch, inject, onMounted } from 'vue';
 import Button from 'primevue/button';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import Dropdown from 'primevue/dropdown';
+import Select from 'primevue/select';
 import Dialog from 'primevue/dialog';
 import Tag from 'primevue/tag';
 import Avatar from 'primevue/avatar';

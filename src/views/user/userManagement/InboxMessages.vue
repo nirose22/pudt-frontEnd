@@ -186,7 +186,7 @@ import Tag from 'primevue/tag';
 import ButtonGroup from 'primevue/buttongroup';
 import { MessageType } from '@/enums/Message';
 import type { Message } from '@/types/message';
-import { showSuccess, showError, showInfo, initToast } from '@/utils/toast-helper';
+import { showSuccess, showError, showInfo, initToast } from '@/utils/toastHelper';
 
 
 const toast = useToast();

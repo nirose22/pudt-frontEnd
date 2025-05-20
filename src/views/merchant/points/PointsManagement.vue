@@ -57,7 +57,7 @@
       <template #title>
         <div class="flex justify-between items-center">
           <span>點數趨勢</span>
-          <Dropdown v-model="chartPeriod" :options="periodOptions" optionLabel="label" optionValue="value" />
+          <Select v-model="chartPeriod" :options="periodOptions" optionLabel="label" optionValue="value" />
         </div>
       </template>
       <template #content>
@@ -72,7 +72,7 @@
           <span>交易記錄</span>
           <div class="flex gap-2">
             <DateRangeFilter v-model="filters.dateRange" />
-            <Dropdown v-model="filters.type" :options="typeOptions" optionLabel="label" optionValue="value" placeholder="交易類型" />
+            <Select v-model="filters.type" :options="typeOptions" optionLabel="label" optionValue="value" placeholder="交易類型" />
           </div>
         </div>
       </template>
@@ -193,7 +193,7 @@ import Chart from 'primevue/chart';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
-import Dropdown from 'primevue/dropdown';
+import Select from 'primevue/select';
 import InputNumber from 'primevue/inputnumber';
 import InputText from 'primevue/inputtext';
 import Tag from 'primevue/tag';

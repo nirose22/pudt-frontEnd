@@ -4,12 +4,11 @@
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
       <!-- 搜尋和篩選 -->
       <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-        <span class="p-input-icon-left w-full sm:w-auto">
-          <i class="pi pi-search" />
-          <InputText v-model="filters.search" placeholder="搜尋通知..." class="w-full" />
-        </span>
-        
-        <Dropdown v-model="filters.type" :options="typeOptions" optionLabel="label" optionValue="value"
+        <IconField>
+          <InputIcon class="pi pi-search" />
+          <InputText v-model="filters.search" placeholder="搜尋通知..." />
+        </IconField>
+        <Select v-model="filters.type" :options="typeOptions" optionLabel="label" optionValue="value"
           placeholder="通知類型" class="w-full sm:w-auto" />
       </div>
       
@@ -86,11 +85,10 @@ import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import Card from 'primevue/card';
 import DataView from 'primevue/dataview';
-import Button from 'primevue/button';
-import InputText from 'primevue/inputtext';
-import Dropdown from 'primevue/dropdown';
+import Select from 'primevue/select';
 import ConfirmDialog from 'primevue/confirmdialog';
-
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
 // 通知類型
 interface Notification {
   id: number;

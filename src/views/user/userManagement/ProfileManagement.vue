@@ -321,7 +321,7 @@ import { useUserStore } from '@/stores/userStore';
 import Accordion from 'primevue/accordion';
 import AccordionPanel from 'primevue/accordionpanel';
 import Badge from 'primevue/badge';
-import { showSuccess, showError, showInfo, initToast } from '@/utils/toast-helper';
+import { showSuccess, showError, showInfo, initToast } from '@/utils/toastHelper';
 
 // 初始化 toast
 const toast = useToast();

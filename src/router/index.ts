@@ -15,7 +15,7 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
     children: [
       {
-        path: '',
+        path: 'management',
         name: 'ProfileManagement',
         component: () => import('@/views/user/userManagement/ProfileManagement.vue'),
         meta: { title: '會員資料管理' }
@@ -50,13 +50,13 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/user/userManagement/PurchaseHistory.vue'),
         meta: { title: '購買紀錄' }
       },
+      {
+        path: 'favorite',
+        name: 'FavoriteCourses',
+        component: () => import('@/views/user/userManagement/FavoriteCourses.vue'),
+        meta: { title: '收藏課程' }
+      }
     ]
-  },
-  {
-    path: '/favorite',
-    name: 'Favorite',
-    component: () => import('@/views/user/userManagement/FavoriteCourses.vue'),
-    meta: { requiresAuth: true }
   },
   { path: '/login',
     name: 'Login',

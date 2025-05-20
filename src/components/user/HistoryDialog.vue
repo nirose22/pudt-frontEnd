@@ -5,7 +5,7 @@
                 <h4 class="font-medium">所有交易記錄</h4>
                 <div class="flex gap-2">
                     <Calendar v-model="localHistoryFilter.dateRange" selectionMode="range" placeholder="選擇日期範圍" />
-                    <Dropdown v-model="localHistoryFilter.type" :options="typeOptions" optionLabel="label" optionValue="value" placeholder="類型" />
+                    <Select v-model="localHistoryFilter.type" :options="typeOptions" optionLabel="label" optionValue="value" placeholder="類型" />
                     <Button icon="pi pi-search" @click="onApplyFilter" />
                     <Button icon="pi pi-filter-slash" text @click="onResetFilter" />
                 </div>
@@ -53,7 +53,7 @@ import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import Dropdown from 'primevue/dropdown';
+import Select from 'primevue/select';
 import Calendar from 'primevue/calendar';
 import Tag from 'primevue/tag';
 

@@ -89,7 +89,7 @@ const menuItems = [
     {
         label: '儀表板',
         icon: 'pi pi-chart-line',
-        to: '/merchant',
+        to: '/merchant/dashboard',
         routeName: 'MerchantDashboard'
     },
     {

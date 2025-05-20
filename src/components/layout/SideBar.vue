@@ -57,7 +57,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useToast } from 'primevue/usetoast';
 import Toast from 'primevue/toast';
 import Avatar from 'primevue/avatar';
-import { showError, initToast } from '@/utils/toast-helper';
+import { showError, initToast } from '@/utils/toastHelper';
 
 const visibleMenu = defineModel<boolean>('visible', { required: true });
 

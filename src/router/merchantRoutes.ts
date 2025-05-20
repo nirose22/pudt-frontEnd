@@ -9,7 +9,7 @@ const merchantRoutes: RouteRecordRaw[] = [
     meta: { requiresMerchantAuth: true },
     children: [
       {
-        path: '',
+        path: 'dashboard',
         name: 'MerchantDashboard',
         component: () => import('@/views/merchant/dashboard/MerchantDashboard.vue'),
         meta: { title: '商家儀表板' }

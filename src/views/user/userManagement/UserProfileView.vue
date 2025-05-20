@@ -1,5 +1,5 @@
 <template>
-    <div class="flex-1 flex py-4 px-4 sm:px-6 lg:px-8 overflow-auto">
+    <div class="flex-1 flex  overflow-auto">
         <div class="bg-white rounded-lg shadow-lg overflow-hidden min-h-7/12 grow flex flex-col">
             <!-- 頂部個人信息區 -->
             <nav class="bg-gradient-to-r from-blue-500 to-blue-300 p-6 ">
@@ -91,9 +91,9 @@ import { usePurchaseStore } from '@/stores/orderStore';
 import { useConfirm } from 'primevue/useconfirm';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter, useRoute } from 'vue-router';
-import { showSuccess, showError, initToast } from '@/utils/toast-helper';
+import { showSuccess, showError, initToast } from '@/utils/toastHelper';
 import { CardType } from '@/enums/Cards';
-import { PaymentMethod, OrderStatus } from '@/enums/PurchaseStatus';
+import { OrderStatus } from '@/enums/PurchaseStatus';
 
 const toast = useToast();
 const showPhotoDialog = ref(false);
@@ -119,7 +119,8 @@ onMounted(() => {
 
 // 菜單項目
 const menuItems = [
-    { id: 'profile', label: '會員資料管理', icon: 'pi-user', path: '/profile' },
+    { id: 'profile', label: '會員資料管理', icon: 'pi-user', path: '/profile/management' },
+    { id: 'favorite', label: '收藏課程', icon: 'pi-heart', path: '/profile/favorite' },
     { id: 'inbox', label: '站內收件夾', icon: 'pi-envelope', path: '/profile/inbox' },
     { id: 'points', label: '點數與課卡', icon: 'pi-wallet', path: '/profile/points' },
     { id: 'bookings', label: '預約行程管理', icon: 'pi-calendar', path: '/profile/bookings' },

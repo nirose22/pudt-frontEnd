@@ -28,7 +28,7 @@
               <!-- 課程分類 -->
               <div>
                 <label for="mainCategory" class="block mb-1 font-medium">主分類 <span class="text-red-500">*</span></label>
-                <Dropdown id="mainCategory" v-model="selectedMainCategory" :options="mainCategories"
+                <Select id="mainCategory" v-model="selectedMainCategory" :options="mainCategories"
                   optionLabel="name" optionValue="code" placeholder="選擇主分類" class="w-full"
                   :class="{ 'p-invalid': errors.categories }" />
               </div>
@@ -54,7 +54,7 @@
               <!-- 地區 -->
               <div>
                 <label for="region" class="block mb-1 font-medium">地區 <span class="text-red-500">*</span></label>
-                <Dropdown id="region" v-model="course.region" :options="regions"
+                <Select id="region" v-model="course.region" :options="regions"
                   optionLabel="name" optionValue="code" placeholder="選擇地區" class="w-full"
                   :class="{ 'p-invalid': errors.region }" />
                 <small v-if="errors.region" class="p-error">{{ errors.region }}</small>
@@ -139,7 +139,7 @@
           <template #content>
             <div class="mb-4">
               <label for="status" class="block mb-1 font-medium">狀態</label>
-              <Dropdown id="status" v-model="course.status" :options="statusOptions"
+              <Select id="status" v-model="course.status" :options="statusOptions"
                 optionLabel="label" optionValue="value" class="w-full" />
             </div>
             
@@ -261,7 +261,7 @@ import { useToast } from 'primevue/usetoast';
 import Card from 'primevue/card';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
-import Dropdown from 'primevue/dropdown';
+import Select from 'primevue/select';
 import MultiSelect from 'primevue/multiselect';
 import Calendar from 'primevue/calendar';
 import Editor from 'primevue/editor';

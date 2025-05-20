@@ -39,7 +39,7 @@
                 <!-- 商家類型 -->
                 <div>
                   <label for="type" class="block mb-1 font-medium">商家類型 <span class="text-red-500">*</span></label>
-                  <Dropdown id="type" v-model="merchantInfo.type" :options="merchantTypes" optionLabel="label" optionValue="value"
+                  <Select id="type" v-model="merchantInfo.type" :options="merchantTypes" optionLabel="label" optionValue="value"
                     :class="{ 'p-invalid': errors.type }" />
                   <small v-if="errors.type" class="p-error">請選擇商家類型</small>
                 </div>
@@ -281,7 +281,7 @@ import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import Card from 'primevue/card';
 import InputText from 'primevue/inputtext';
-import Dropdown from 'primevue/dropdown';
+import Select from 'primevue/select';
 import Button from 'primevue/button';
 import Editor from 'primevue/editor';
 import Password from 'primevue/password';

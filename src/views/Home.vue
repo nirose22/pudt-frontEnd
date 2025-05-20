@@ -72,7 +72,7 @@ import type { CourseDTO } from '@/types/course';
 import { CourseService } from '@/service/CourseService';
 import { useBookingStore } from '@/stores/bookingStore';
 import { MainCategory } from '@/enums/CourseCategory';
-import { showError, initToast } from '@/utils/toast-helper';
+import { showError, initToast } from '@/utils/toastHelper';
 
 // 一次性解構 userStore
 const { isLoggedIn } = useUserStore();

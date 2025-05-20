@@ -4,15 +4,15 @@
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
             <!-- 搜尋和篩選 -->
             <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-                <span class="p-input-icon-left w-full sm:w-auto">
-                    <i class="pi pi-search" />
-                    <InputText v-model="filters.search" placeholder="搜尋課程..." class="w-full" />
-                </span>
+                <IconField>
+                    <InputIcon class="pi pi-search" />
+                    <InputText v-model="filters.search" placeholder="搜尋課程..." />
+                </IconField>
 
-                <Dropdown v-model="filters.status" :options="statusOptions" optionLabel="label" optionValue="value"
+                <Select v-model="filters.status" :options="statusOptions" optionLabel="label" optionValue="value"
                     placeholder="課程狀態" class="w-full sm:w-auto" />
 
-                <Dropdown v-model="filters.sortBy" :options="sortOptions" optionLabel="label" optionValue="value"
+                <Select v-model="filters.sortBy" :options="sortOptions" optionLabel="label" optionValue="value"
                     placeholder="排序方式" class="w-full sm:w-auto" />
             </div>
 
@@ -128,9 +128,10 @@ import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
-import Dropdown from 'primevue/dropdown';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
+import Select from 'primevue/select';
 import Tag from 'primevue/tag';
 import ProgressBar from 'primevue/progressbar';
 import ConfirmDialog from 'primevue/confirmdialog';

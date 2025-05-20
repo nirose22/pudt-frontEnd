@@ -7,7 +7,7 @@
             <MerchantSidebar v-model="isSidebarOpen" />
 
             <!-- 主要內容區 -->
-            <main class="flex-1 p-4">
+            <main class="flex-1 p-3">
                 <div class="max-w-7xl mx-auto">
                     <!-- 麵包屑導航 -->
                     <div class="mb-4">
@@ -16,7 +16,7 @@
 
                     <!-- 頁面標題 -->
                     <div class="mb-6">
-                        <h1 class="text-2xl font-bold text-gray-800">{{ pageTitle }}</h1>
+                        <h1 class="text-2xl font-bold text-gray-700">{{ pageTitle }}</h1>
                     </div>
 
                     <!-- 路由視圖 -->
@@ -80,7 +80,7 @@ const breadcrumbItems = computed(() => {
 
     // 根據當前路由動態生成麵包屑
     if (path === '/merchant') {
-        items.push({ label: '儀表板', to: '/merchant' });
+        items.push({ label: '儀表板', to: '/merchant/dashboard' });
     } else if (path.includes('/merchant/courses')) {
         items.push({ label: '課程管理', to: '/merchant/courses' });
     } else if (path.includes('/merchant/courses/create')) {

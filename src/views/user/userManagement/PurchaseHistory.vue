@@ -52,31 +52,29 @@
                 <!-- 課卡類型篩選 -->
                 <div class="w-full md:w-auto">
                     <label class="block text-sm mb-1">課卡類型</label>
-                    <Dropdown v-model="filters.cardType" :options="cardTypeOptions" 
+                    <Select v-model="filters.cardType" :options="cardTypeOptions" 
                         optionLabel="label" optionValue="value" placeholder="選擇課卡類型" class="w-full md:w-40" />
                 </div>
                 
                 <!-- 狀態篩選 -->
                 <div class="w-full md:w-auto">
                     <label class="block text-sm mb-1">狀態</label>
-                    <Dropdown v-model="filters.status" :options="statusOptions" 
+                    <Select v-model="filters.status" :options="statusOptions" 
                         optionLabel="label" optionValue="value" placeholder="選擇狀態" class="w-full md:w-40" />
                 </div>
                 
                 <!-- 付款方式篩選 -->
                 <div class="w-full md:w-auto">
                     <label class="block text-sm mb-1">付款方式</label>
-                    <Dropdown v-model="filters.paymentMethod" :options="paymentMethodOptions" 
+                    <Select v-model="filters.paymentMethod" :options="paymentMethodOptions" 
                         optionLabel="label" optionValue="value" placeholder="選擇付款方式" class="w-full md:w-40" />
                 </div>
                 
                 <!-- 搜尋 -->
-                <div class="w-full md:w-auto flex-grow md:flex-grow-0">
-                    <span class="p-input-icon-left w-full">
-                        <i class="pi pi-search" />
-                        <InputText v-model="filters.search" placeholder="搜尋訂單編號" class="w-full" />
-                    </span>
-                </div>
+                <IconField>
+                    <InputIcon class="pi pi-search" />
+                    <InputText v-model="filters.search" placeholder="搜尋訂單編號..." />
+                </IconField>
                 
                 <!-- 應用按鈕 -->
                 <div class="w-full md:w-auto">
@@ -321,7 +319,6 @@ import { ref, computed, inject } from 'vue';
 import type { PropType } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
 import { useToast } from 'primevue/usetoast';
@@ -332,8 +329,9 @@ import { CardType, CardTypeLabel } from '@/enums/Cards';
 import type { PurchaseItem, ExtendedPurchaseItem } from '@/types/purchaseItem';
 import { PurchaseService } from '@/service/PurchaseService';
 import InputText from 'primevue/inputtext';
-import Dropdown from 'primevue/dropdown';
-
+import Select from 'primevue/select';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
 // 定义inject数据接口
 interface PurchaseDataInject {
     purchaseHistory: { value: ExtendedPurchaseItem[] };

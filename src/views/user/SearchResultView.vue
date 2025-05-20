@@ -18,14 +18,10 @@
 							<Chip v-for="region in visibleRegions" :key="region.code" :label="region.name"
 								:class="{ 'chip-selected': isItemInArray(selectedRegions, region.code) }"
 								@click="toggleRegion(region.code)" class="chip" />
-							<Button v-if="!showAllRegions && allRegions.length > visibleRegionsCount" 
-								link class="text-blue-500 py-1" 
-								@click="showAllRegions = true"
-								label="顯示更多" />
-							<Button v-else-if="showAllRegions" 
-								link class="text-blue-500 py-1" 
-								@click="showAllRegions = false"
-								label="收起" />
+							<Button v-if="!showAllRegions && allRegions.length > visibleRegionsCount" link
+								class="text-blue-500 py-1" @click="showAllRegions = true" label="顯示更多" />
+							<Button v-else-if="showAllRegions" link class="text-blue-500 py-1"
+								@click="showAllRegions = false" label="收起" />
 						</div>
 					</div>
 
@@ -109,16 +105,11 @@
 				<div class="bg-gray-100 rounded-lg p-2 mb-4">
 					<div class="flex justify-between items-center px-2 mb-2">
 						<h3 class="text-lg font-semibold">推薦課程</h3>
-						<Button 
-							:icon="isRecommendationCollapsed ? 'pi pi-chevron-down' : 'pi pi-chevron-up'" 
-							text 
-							rounded 
-							@click="isRecommendationCollapsed = !isRecommendationCollapsed" 
-							aria-label="收合/展開" 
-							class="p-1"
-						/>
+						<Button :icon="isRecommendationCollapsed ? 'pi pi-chevron-down' : 'pi pi-chevron-up'" text
+							rounded @click="isRecommendationCollapsed = !isRecommendationCollapsed" aria-label="收合/展開"
+							class="p-1" />
 					</div>
-					
+
 					<Transition name="fade">
 						<div v-show="!isRecommendationCollapsed">
 							<Tabs :value="activeTab">
@@ -131,7 +122,8 @@
 									<TabPanel value="popular">
 										<AsyncCarousel :items="popularCourses" :loading="isCoursesLoading">
 											<template #item="slotProps">
-												<CourseCard :course="slotProps.item" @click="selectCourse(slotProps.item)"
+												<CourseCard :course="slotProps.item"
+													@click="selectCourse(slotProps.item)"
 													:disabled="isLoading(slotProps.item.courseId)"
 													:loading="isLoading(slotProps.item.courseId)" />
 											</template>
@@ -140,7 +132,8 @@
 									<TabPanel value="latest">
 										<AsyncCarousel :items="latestCourses" :loading="isCoursesLoading">
 											<template #item="slotProps">
-												<CourseCard :course="slotProps.item" @click="selectCourse(slotProps.item)"
+												<CourseCard :course="slotProps.item"
+													@click="selectCourse(slotProps.item)"
 													:disabled="isLoading(slotProps.item.courseId)"
 													:loading="isLoading(slotProps.item.courseId)" />
 											</template>
@@ -149,7 +142,8 @@
 									<TabPanel value="recommended" v-if="isLoggedIn">
 										<AsyncCarousel :items="recommendedCourses" :loading="isCoursesLoading">
 											<template #item="slotProps">
-												<CourseCard :course="slotProps.item" @click="selectCourse(slotProps.item)"
+												<CourseCard :course="slotProps.item"
+													@click="selectCourse(slotProps.item)"
 													:disabled="isLoading(slotProps.item.courseId)"
 													:loading="isLoading(slotProps.item.courseId)" />
 											</template>
@@ -293,7 +287,7 @@ import { useCourseStore } from '@/stores/courseStore';
 import { useCourseFilters } from '@/composables/useCourseFilters';
 import { useLoadingMap } from '@/composables/useLoadingMap';
 import { RegionLabelMap } from '@/enums/RegionCode';
-import { showError, showInfo, initToast } from '@/utils/toast-helper';
+import { showError, showInfo, initToast } from '@/utils/toastHelper';
 import { useToast } from 'primevue/usetoast';
 
 const route = useRoute();
@@ -364,8 +358,8 @@ const allRegions = ref(Object.entries(RegionLabelMap).map(([code, name]) => ({ c
 const visibleRegionsCount = 5; // 默认显示的地区数量
 const showAllRegions = ref(false);
 const visibleRegions = computed(() => {
-	return showAllRegions.value 
-		? allRegions.value 
+	return showAllRegions.value
+		? allRegions.value
 		: allRegions.value.slice(0, visibleRegionsCount);
 });
 
@@ -481,7 +475,7 @@ onMounted(async () => {
 	clearLoadingStates();
 	// 加载数据
 	await fetchCourses();
-	
+
 	// 初始化 toast
 	initToast(toast);
 });
@@ -556,17 +550,17 @@ async function fetchFilteredCourses(): Promise<void> {
 	try {
 		// 设置加载状态
 		clearLoadingStates();
-		
+
 		// 合并分类
 		const allCategories = [...selectedMainCategories.value, ...selectedSubCategories.value];
-		
+
 		// 调用API获取数据
 		await fetchCourses(
-			keyword.value, 
-			selectedRegions.value.length > 0 ? selectedRegions.value : undefined, 
+			keyword.value,
+			selectedRegions.value.length > 0 ? selectedRegions.value : undefined,
 			allCategories.length > 0 ? allCategories : undefined
 		);
-		
+
 		// 显示过滤结果数量
 		if (filteredCourses.value.length === 0) {
 			showInfo('没有找到符合条件的课程', '无搜索结果');
@@ -598,31 +592,31 @@ const isRecommendationCollapsed = ref(false);
 }
 
 .chip {
-	@apply cursor-pointer hover:bg-blue-200! transition-colors
+	@apply cursor-pointer hover:bg-blue-200 ! transition-colors
 }
 
 .chip:hover:not(.chip-selected) {
-	@apply bg-blue-100!
+	@apply bg-blue-100 !
 }
 
 .chip-selected {
-	@apply bg-blue-400! text-white!
+	@apply bg-blue-400 ! text-white !
 }
 
 .chip.chip-selected:hover {
-	@apply bg-blue-500!
+	@apply bg-blue-500 !
 }
 
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.3s ease, max-height 0.3s ease;
-  max-height: 1000px;
-  overflow: hidden;
+	transition: opacity 0.3s ease, max-height 0.3s ease;
+	max-height: 1000px;
+	overflow: hidden;
 }
 
 .fade-enter-from,
 .fade-leave-to {
-  opacity: 0;
-  max-height: 0;
+	opacity: 0;
+	max-height: 0;
 }
 </style>

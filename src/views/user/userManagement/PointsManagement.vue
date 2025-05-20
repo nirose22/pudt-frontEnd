@@ -52,8 +52,8 @@
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-semibold">最近交易記錄</h3>
                 <div class="flex gap-2">
-                    <Dropdown v-model="filter.month" :options="monthOptions" optionLabel="label" optionValue="value" placeholder="月份" />
-                    <Dropdown v-model="filter.type" :options="typeOptions" optionLabel="label" optionValue="value" placeholder="類型" />
+                    <Select v-model="filter.month" :options="monthOptions" optionLabel="label" optionValue="value" placeholder="月份" />
+                    <Select v-model="filter.type" :options="typeOptions" optionLabel="label" optionValue="value" placeholder="類型" />
                 </div>
             </div>
             <DataTable :value="filteredPointsHistory" stripedRows responsiveLayout="stack" :paginator="true" :rows="5"
@@ -112,7 +112,7 @@ import type { PropType } from 'vue';
 import Button from 'primevue/button';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import Dropdown from 'primevue/dropdown';
+import Select from 'primevue/select';
 import Tag from 'primevue/tag';
 import { useToast } from 'primevue/usetoast';
 import PurchaseDialog from '@/components/user/PurchaseDialog.vue';
