@@ -21,8 +21,8 @@
               <!-- 課程名稱 -->
               <div class="md:col-span-2">
                 <label for="title" class="block mb-1 font-medium">課程名稱 <span class="text-red-500">*</span></label>
-                <InputText id="title" v-model="course.title" class="w-full" :class="{ 'p-invalid': v$.title.$invalid && v$.title.$dirty }" />
-                <small v-if="v$.title.$invalid && v$.title.$dirty" class="p-error">{{ v$.title.$errors[0].$message }}</small>
+                <InputText id="title" v-model="course.title" class="w-full" :class="{ 'p-invalid': errors.title }" />
+                <small v-if="errors.title" class="p-error">{{ errors.title }}</small>
               </div>
               
               <!-- 課程分類 -->
@@ -30,24 +30,24 @@
                 <label for="mainCategory" class="block mb-1 font-medium">主分類 <span class="text-red-500">*</span></label>
                 <Dropdown id="mainCategory" v-model="selectedMainCategory" :options="mainCategories"
                   optionLabel="name" optionValue="code" placeholder="選擇主分類" class="w-full"
-                  :class="{ 'p-invalid': v$.categories.$invalid && v$.categories.$dirty }" />
+                  :class="{ 'p-invalid': errors.categories }" />
               </div>
               
               <div>
                 <label for="subCategory" class="block mb-1 font-medium">子分類 <span class="text-red-500">*</span></label>
                 <MultiSelect id="subCategory" v-model="selectedSubCategories" :options="filteredSubCategories"
                   optionLabel="name" optionValue="code" placeholder="選擇子分類" class="w-full"
-                  :class="{ 'p-invalid': v$.categories.$invalid && v$.categories.$dirty }" />
-                <small v-if="v$.categories.$invalid && v$.categories.$dirty" class="p-error">請選擇至少一個分類</small>
+                  :class="{ 'p-invalid': errors.categories }" />
+                <small v-if="errors.categories" class="p-error block mt-1">{{ errors.categories }}</small>
               </div>
               
               <!-- 點數價格 -->
               <div>
                 <label for="pointsRequired" class="block mb-1 font-medium">點數價格 <span class="text-red-500">*</span></label>
                 <InputNumber id="pointsRequired" v-model="course.pointsRequired" class="w-full" :min="0" :max="1000"
-                  :class="{ 'p-invalid': v$.pointsRequired.$invalid && v$.pointsRequired.$dirty }" />
-                <small v-if="v$.pointsRequired.$invalid && v$.pointsRequired.$dirty" class="p-error">
-                  {{ v$.pointsRequired.$errors[0].$message }}
+                  :class="{ 'p-invalid': errors.pointsRequired }" />
+                <small v-if="errors.pointsRequired" class="p-error">
+                  {{ errors.pointsRequired }}
                 </small>
               </div>
               
@@ -56,8 +56,8 @@
                 <label for="region" class="block mb-1 font-medium">地區 <span class="text-red-500">*</span></label>
                 <Dropdown id="region" v-model="course.region" :options="regions"
                   optionLabel="name" optionValue="code" placeholder="選擇地區" class="w-full"
-                  :class="{ 'p-invalid': v$.region.$invalid && v$.region.$dirty }" />
-                <small v-if="v$.region.$invalid && v$.region.$dirty" class="p-error">請選擇地區</small>
+                  :class="{ 'p-invalid': errors.region }" />
+                <small v-if="errors.region" class="p-error">{{ errors.region }}</small>
               </div>
             </div>
           </template>
@@ -69,9 +69,9 @@
           <template #content>
             <div>
               <label for="description" class="block mb-1 font-medium">課程詳細描述 <span class="text-red-500">*</span></label>
-              <Editor v-model="course.description" editorStyle="height: 250px" :class="{ 'p-invalid': v$.description.$invalid && v$.description.$dirty }" />
-              <small v-if="v$.description.$invalid && v$.description.$dirty" class="p-error">
-                {{ v$.description.$errors[0].$message }}
+              <Editor v-model="course.description" editorStyle="height: 250px" :class="{ 'p-invalid': errors.description }" />
+              <small v-if="errors.description" class="p-error">
+                {{ errors.description }}
               </small>
             </div>
           </template>
@@ -126,9 +126,7 @@
               </div>
             </div>
             
-            <small v-if="v$.schedule.$invalid && v$.schedule.$dirty" class="p-error block mt-2">
-              請至少設定一個課程時段
-            </small>
+            <small v-if="errors.schedule" class="p-error block mt-2">{{ errors.schedule }}</small>
           </template>
         </Card>
       </div>
@@ -167,7 +165,7 @@
                 </div>
                 <img v-else :src="course.mainImage" alt="主圖" class="max-h-40 mx-auto" />
               </div>
-              <small v-if="v$.mainImage.$invalid && v$.mainImage.$dirty" class="p-error">請上傳課程主圖</small>
+              <small v-if="errors.mainImage" class="p-error">{{ errors.mainImage }}</small>
             </div>
             
             <div>
@@ -256,10 +254,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useVuelidate } from '@vuelidate/core';
-import { required, minValue, minLength } from '@vuelidate/validators';
+import { z } from 'zod';
 import { useToast } from 'primevue/usetoast';
 import Card from 'primevue/card';
 import InputText from 'primevue/inputtext';
@@ -272,38 +269,47 @@ import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 import Tag from 'primevue/tag';
 import { mockRegions } from '@/service/MockService';
+import type { CourseFormData, CourseScheduleItem, CourseMainCategory, SubCategoryCode } from '@/types/course';
 
+// 通用狀態與工具
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
+const showPreview = ref(false);
+const saving = ref(false);
 
 // 判斷是否為編輯模式
 const isEditMode = computed(() => route.name === 'CourseEdit');
 const courseId = computed(() => route.params.id ? parseInt(route.params.id as string) : 0);
 
 // 課程數據
-const course = ref({
+const course = ref<CourseFormData>({
   id: 0,
   title: '',
   description: '',
   mainImage: '',
-  images: [] as string[],
+  images: [],
   status: 'draft',
   pointsRequired: 0,
   region: '',
-  categories: [] as string[],
-  publishDate: null as Date | null,
-  schedule: [] as {
-    id?: number;
-    date: Date;
-    startTime: Date;
-    endTime: Date;
-    totalSeats: number;
-  }[]
+  categories: [],
+  publishDate: null,
+  schedule: []
 });
 
-// 分類選擇
-const selectedMainCategory = ref('');
+// 表單錯誤訊息
+const errors = reactive({
+  title: '',
+  description: '',
+  pointsRequired: '',
+  mainImage: '',
+  region: '',
+  categories: '',
+  schedule: ''
+});
+
+// 分類選擇狀態
+const selectedMainCategory = ref<string>('');
 const selectedSubCategories = ref<string[]>([]);
 
 // 狀態選項
@@ -313,29 +319,6 @@ const statusOptions = [
   { label: '已下架', value: 'inactive' },
   { label: '定時上架', value: 'scheduled' }
 ];
-
-// 預覽對話框
-const showPreview = ref(false);
-
-// 加載狀態
-const saving = ref(false);
-
-// 表單驗證規則
-const rules = {
-  title: { required, minLength: minLength(3) },
-  description: { required },
-  pointsRequired: { required, minValue: minValue(1) },
-  mainImage: { required },
-  region: { required },
-  categories: {
-    required: (val: string[]) => val.length > 0
-  },
-  schedule: {
-    required: (val: any[]) => val.length > 0
-  }
-};
-
-const v$ = useVuelidate(rules, course);
 
 // 主分類列表
 const mainCategories = [
@@ -347,32 +330,32 @@ const mainCategories = [
 ];
 
 // 子分類列表
-const subCategories = {
-  'SPORT': [
+const subCategories: Record<CourseMainCategory, { name: string; code: SubCategoryCode }[]> = {
+  SPORT: [
     { name: '瑜珈', code: 'SPORT_YOGA' },
     { name: '健身', code: 'SPORT_FITNESS' },
     { name: '舞蹈', code: 'SPORT_DANCE' },
     { name: '游泳', code: 'SPORT_SWIMMING' }
   ],
-  'COOKING': [
+  COOKING: [
     { name: '中式料理', code: 'COOKING_CHINESE' },
     { name: '西式料理', code: 'COOKING_WESTERN' },
     { name: '日式料理', code: 'COOKING_JAPANESE' },
     { name: '烘焙', code: 'COOKING_BAKING' }
   ],
-  'ART': [
+  ART: [
     { name: '繪畫', code: 'ART_PAINTING' },
     { name: '手工藝', code: 'ART_CRAFT' },
     { name: '攝影', code: 'ART_PHOTO' },
     { name: '音樂', code: 'ART_MUSIC' }
   ],
-  'LANGUAGE': [
+  LANGUAGE: [
     { name: '英語', code: 'LANGUAGE_ENGLISH' },
     { name: '日語', code: 'LANGUAGE_JAPANESE' },
     { name: '韓語', code: 'LANGUAGE_KOREAN' },
     { name: '法語', code: 'LANGUAGE_FRENCH' }
   ],
-  'PROFESSIONAL': [
+  PROFESSIONAL: [
     { name: '程式設計', code: 'PROFESSIONAL_CODING' },
     { name: '設計', code: 'PROFESSIONAL_DESIGN' },
     { name: '行銷', code: 'PROFESSIONAL_MARKETING' },
@@ -383,10 +366,28 @@ const subCategories = {
 // 地區列表
 const regions = mockRegions;
 
+// zod 表單驗證 schema
+const courseSchema = z.object({
+  title: z.string().min(3, '課程名稱至少需要3個字符').max(100, '課程名稱最多100個字符'),
+  description: z.string().min(1, '請填寫課程描述'),
+  pointsRequired: z.number().min(1, '點數價格必須大於0'),
+  mainImage: z.string().min(1, '請上傳課程主圖'),
+  region: z.string().min(1, '請選擇地區'),
+  categories: z.array(z.string()).min(1, '請選擇至少一個分類'),
+  schedule: z.array(
+    z.object({
+      date: z.instanceof(Date, { message: '請選擇日期' }),
+      startTime: z.instanceof(Date, { message: '請選擇開始時間' }),
+      endTime: z.instanceof(Date, { message: '請選擇結束時間' }),
+      totalSeats: z.number().min(1, '席位數至少為1')
+    })
+  ).min(1, '請至少添加一個課程時段')
+});
+
 // 根據選擇的主分類過濾子分類
 const filteredSubCategories = computed(() => {
   if (!selectedMainCategory.value) return [];
-  return subCategories[selectedMainCategory.value as keyof typeof subCategories] || [];
+  return subCategories[selectedMainCategory.value as CourseMainCategory] || [];
 });
 
 // 監聽分類選擇變化，更新課程分類
@@ -399,136 +400,176 @@ watch([selectedMainCategory, selectedSubCategories], () => {
   course.value.categories = categories;
 });
 
-// 獲取狀態標籤
-function getStatusLabel(status: string): string {
-  const statusMap: Record<string, string> = {
-    'active': '已上架',
-    'inactive': '已下架',
-    'draft': '草稿',
-    'scheduled': '定時上架'
-  };
-  return statusMap[status] || status;
-}
-
-// 獲取狀態嚴重性
-function getStatusSeverity(status: string): string {
-  const severityMap: Record<string, string> = {
-    'active': 'success',
-    'inactive': 'secondary',
-    'draft': 'info',
-    'scheduled': 'warning'
-  };
-  return severityMap[status] || 'info';
-}
-
-// 獲取地區名稱
-function getRegionName(code: string): string {
-  const region = regions.find(r => r.code === code);
-  return region ? region.name : '未指定地區';
-}
-
-// 格式化日期
-function formatDate(date: Date): string {
-  if (!date) return '';
-  return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
-}
-
-// 格式化時間
-function formatTime(date: Date): string {
-  if (!date) return '';
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-}
-
-// 添加時段
-function addTimeSlot(): void {
-  const now = new Date();
-  const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
-  
-  course.value.schedule.push({
-    date: new Date(),
-    startTime: now,
-    endTime: oneHourLater,
-    totalSeats: 10
-  });
-}
-
-// 移除時段
-function removeTimeSlot(index: number): void {
-  course.value.schedule.splice(index, 1);
-}
-
-// 上傳主圖
-function uploadMainImage(): void {
-  // 實際應用中應該調用文件上傳 API
-  // 這裡使用模擬數據
-  course.value.mainImage = 'https://via.placeholder.com/800x600?text=主圖';
-}
-
-// 上傳圖片
-function uploadImage(): void {
-  // 實際應用中應該調用文件上傳 API
-  // 這裡使用模擬數據
-  if (course.value.images.length < 5) {
-    course.value.images.push(`https://via.placeholder.com/400x300?text=圖片${course.value.images.length + 1}`);
-  }
-}
-
-// 移除圖片
-function removeImage(index: number): void {
-  course.value.images.splice(index, 1);
-}
-
-// 保存課程
-async function saveCourse(): Promise<void> {
-  const isValid = await v$.value.$validate();
-  
-  if (!isValid) {
-    toast.add({
-      severity: 'error',
-      summary: '表單驗證失敗',
-      detail: '請檢查並填寫所有必填欄位',
-      life: 3000
+// 公共方法定義
+const methods = {
+  // 清除所有錯誤訊息
+  clearErrors() {
+    Object.keys(errors).forEach(key => {
+      errors[key as keyof typeof errors] = '';
     });
-    return;
-  }
+  },
   
-  saving.value = true;
+  // 驗證並提取錯誤
+  validateForm(data: any): { success: boolean; errors: Record<string, string> } {
+    try {
+      courseSchema.parse(data);
+      return { success: true, errors: {} };
+    } catch (error) {
+      const errorMessages: Record<string, string> = {};
+      
+      if (error instanceof z.ZodError) {
+        error.errors.forEach(err => {
+          if (err.path.length > 0) {
+            const field = err.path[0].toString();
+            errorMessages[field] = err.message;
+          }
+        });
+      }
+      
+      return { success: false, errors: errorMessages };
+    }
+  },
   
-  try {
-    // 模擬 API 請求
-    await new Promise(resolve => setTimeout(resolve, 1000));
+  // 獲取狀態標籤
+  getStatusLabel(status: string): string {
+    const statusMap: Record<string, string> = {
+      'active': '已上架',
+      'inactive': '已下架',
+      'draft': '草稿',
+      'scheduled': '定時上架'
+    };
+    return statusMap[status] || status;
+  },
+  
+  // 獲取狀態嚴重性
+  getStatusSeverity(status: string): string {
+    const severityMap: Record<string, string> = {
+      'active': 'success',
+      'inactive': 'secondary',
+      'draft': 'info',
+      'scheduled': 'warning'
+    };
+    return severityMap[status] || 'info';
+  },
+  
+  // 獲取地區名稱
+  getRegionName(code: string): string {
+    const region = regions.find(r => r.code === code);
+    return region ? region.name : '未指定地區';
+  },
+  
+  // 格式化日期
+  formatDate(date: Date): string {
+    if (!date) return '';
+    return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+  },
+  
+  // 格式化時間
+  formatTime(date: Date): string {
+    if (!date) return '';
+    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  },
+  
+  // 添加時段
+  addTimeSlot(): void {
+    const now = new Date();
+    const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
     
-    // 實際應用中應該調用 API 保存課程
-    toast.add({
-      severity: 'success',
-      summary: '保存成功',
-      detail: isEditMode.value ? '課程已更新' : '課程已創建',
-      life: 3000
+    course.value.schedule.push({
+      date: new Date(),
+      startTime: now,
+      endTime: oneHourLater,
+      totalSeats: 10
     });
+  },
+  
+  // 移除時段
+  removeTimeSlot(index: number): void {
+    course.value.schedule.splice(index, 1);
+  },
+  
+  // 上傳主圖
+  uploadMainImage(): void {
+    // 實際應用中應該調用文件上傳 API
+    // 這裡使用模擬數據
+    course.value.mainImage = 'https://via.placeholder.com/800x600?text=主圖';
+  },
+  
+  // 上傳圖片
+  uploadImage(): void {
+    // 實際應用中應該調用文件上傳 API
+    // 這裡使用模擬數據
+    if (course.value.images.length < 5) {
+      course.value.images.push(`https://via.placeholder.com/400x300?text=圖片${course.value.images.length + 1}`);
+    }
+  },
+  
+  // 移除圖片
+  removeImage(index: number): void {
+    course.value.images.splice(index, 1);
+  },
+  
+  // 保存課程
+  async saveCourse(): Promise<void> {
+    methods.clearErrors();
     
-    // 返回課程列表頁
-    router.push('/merchant/courses');
-  } catch (error) {
-    console.error('保存課程失敗:', error);
-    toast.add({
-      severity: 'error',
-      summary: '保存失敗',
-      detail: '無法保存課程，請稍後再試',
-      life: 3000
-    });
-  } finally {
-    saving.value = false;
-  }
-}
-
-// 返回上一頁
-function navigateBack(): void {
-  router.back();
-}
-
-// 初始化
-onMounted(async () => {
-  if (isEditMode.value) {
+    const validation = methods.validateForm(course.value);
+    
+    if (!validation.success) {
+      // 更新錯誤狀態
+      Object.entries(validation.errors).forEach(([field, message]) => {
+        if (field in errors) {
+          errors[field as keyof typeof errors] = message;
+        }
+      });
+      
+      toast.add({
+        severity: 'error',
+        summary: '表單驗證失敗',
+        detail: '請檢查並填寫所有必填欄位',
+        life: 3000
+      });
+      return;
+    }
+    
+    saving.value = true;
+    
+    try {
+      // 模擬 API 請求
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // 實際應用中應該調用 API 保存課程
+      toast.add({
+        severity: 'success',
+        summary: '保存成功',
+        detail: isEditMode.value ? '課程已更新' : '課程已創建',
+        life: 3000
+      });
+      
+      // 返回課程列表頁
+      router.push('/merchant/courses');
+    } catch (error) {
+      console.error('保存課程失敗:', error);
+      toast.add({
+        severity: 'error',
+        summary: '保存失敗',
+        detail: '無法保存課程，請稍後再試',
+        life: 3000
+      });
+    } finally {
+      saving.value = false;
+    }
+  },
+  
+  // 返回上一頁
+  navigateBack(): void {
+    router.back();
+  },
+  
+  // 載入課程數據
+  async loadCourseData(): Promise<void> {
+    if (!isEditMode.value) return;
+    
     try {
       // 模擬 API 請求
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -581,7 +622,17 @@ onMounted(async () => {
       });
     }
   }
-});
+};
+
+// 從 methods 中提取出常用函數，方便在模板中使用
+const { 
+  getStatusLabel, getStatusSeverity, getRegionName, 
+  formatDate, formatTime, addTimeSlot, removeTimeSlot,
+  uploadMainImage, uploadImage, removeImage, saveCourse, navigateBack
+} = methods;
+
+// 初始化
+onMounted(() => methods.loadCourseData());
 </script>
 
 <style scoped>

@@ -172,20 +172,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import Button from 'primevue/button';
-import Dialog from 'primevue/dialog';
-import Tag from 'primevue/tag';
-import Avatar from 'primevue/avatar';
-import InputText from 'primevue/inputtext';
-import Textarea from 'primevue/textarea';
-import ConfirmDialog from 'primevue/confirmdialog';
+import { ref, computed, inject, defineProps, onMounted, watch } from 'vue';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
-import { MessageType } from '@/enums/Message'; 
-import type { Message } from '@/types';
+import Button from 'primevue/button';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import Dialog from 'primevue/dialog';
+import TextArea from 'primevue/textarea';
+import Avatar from 'primevue/avatar';
+import ConfirmDialog from 'primevue/confirmdialog';
+import Tag from 'primevue/tag';
+import ButtonGroup from 'primevue/buttongroup';
+import { MessageType } from '@/enums/Message';
+import type { Message } from '@/types/message';
 import { showSuccess, showError, showInfo, initToast } from '@/utils/toast-helper';
 
 

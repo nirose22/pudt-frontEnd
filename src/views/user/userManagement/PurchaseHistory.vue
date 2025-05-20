@@ -329,50 +329,21 @@ import DateRangeFilter from '@/components/common/DateRangeFilter.vue';
 import { formatDateString, inRange } from '@/utils/date';
 import { OrderStatus, PaymentMethod, OrderStatusLabel, PaymentMethodLabel } from '@/enums/PurchaseStatus';
 import { CardType, CardTypeLabel } from '@/enums/Cards';
-import type { ExtendedPurchaseItem } from '@/types/purchaseItem';
+import type { PurchaseItem, ExtendedPurchaseItem } from '@/types/purchaseItem';
 import { PurchaseService } from '@/service/PurchaseService';
 import InputText from 'primevue/inputtext';
 import Dropdown from 'primevue/dropdown';
 
-// 定义数据接口
-interface PurchaseItem {
-    id: number;
-    date: string;
-    cardType: number;
-    amount: number;
-    points: number;
-    status: number;
-    paymentMethod: number;
-    invoiceNo?: string;
-    invoiceAvailable?: boolean;
-    invoiceNumber?: string;
-    invoiceDate?: string;
-    paymentDate?: string;
-    expiry?: string;
-}
-
 // 定义inject数据接口
 interface PurchaseDataInject {
-    purchaseHistory: { value: PurchaseItem[] };
-    unpaidRecords: { value: PurchaseItem[] };
+    purchaseHistory: { value: ExtendedPurchaseItem[] };
+    unpaidRecords: { value: ExtendedPurchaseItem[] };
 }
 
 // 使用inject获取数据
 const purchaseData = inject<PurchaseDataInject>('purchaseData');
 const purchaseHistory = computed(() => purchaseData?.purchaseHistory.value || []);
 const unpaidRecords = computed(() => purchaseData?.unpaidRecords.value || []);
-
-// 删除props
-// const props = defineProps({
-//     purchaseHistory: {
-//         type: Array as PropType<ExtendedPurchaseItem[]>,
-//         required: true
-//     },
-//     unpaidRecords: {
-//         type: Array as PropType<ExtendedPurchaseItem[]>,
-//         default: () => []
-//     }
-// });
 
 const toast = useToast();
 const loading = ref(false);
@@ -396,7 +367,7 @@ const filters = ref({
 // 課卡類型選項
 const cardTypeOptions = Object.entries(CardTypeLabel).map(([value, label]) => ({
     label,
-    value: parseInt(value)
+    value: value
 }));
 
 // 狀態選項
@@ -404,7 +375,7 @@ const statusOptions = [
     { label: '全部狀態', value: null },
     ...Object.entries(OrderStatusLabel).map(([value, label]) => ({
         label,
-        value: parseInt(value)
+        value: value
     }))
 ];
 
@@ -413,7 +384,7 @@ const paymentMethodOptions = [
     { label: '全部付款方式', value: null },
     ...Object.entries(PaymentMethodLabel).map(([value, label]) => ({
         label,
-        value: parseInt(value)
+        value: value
     }))
 ];
 
@@ -562,16 +533,16 @@ const getCardType = (cardType: CardType) => {
 
 // 卡片描述
 const getCardDescription = (cardType: CardType) => {
-    // 使用数字枚举值进行比较
-    switch (Number(cardType)) {
-        case 0: // CardType.Standard
-            return '標準課卡，適用於所有常規課程';
-        case 1: // CardType.Premium
-            return '高級課卡，包含專屬課程與優先預約';
-        case 2: // CardType.Limited
-            return '限時課卡，有效期限較短但價格優惠';
-        case 3: // CardType.Special
-            return '特別課卡，針對特定活動或課程設計';
+    // 根据卡片类型返回描述文字
+    switch (cardType) {
+        case CardType.Basic:
+            return '基本課卡，適用於所有常規課程';
+        case CardType.Advanced:
+            return '進階課卡，包含專屬課程與優先預約';
+        case CardType.Professional:
+            return '專業課卡，有效期限較長並享受優惠';
+        case CardType.VIP:
+            return 'VIP課卡，針對特定活動或課程設計';
         default:
             return '課卡詳情';
     }

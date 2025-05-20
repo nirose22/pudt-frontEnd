@@ -3,7 +3,7 @@
     <!-- 設定頁面標籤頁 -->
     <TabView>
       <!-- 基本資料 -->
-      <TabPanel header="基本資料">
+      <TabPanel header="基本資料" value="basic">
         <Card>
           <template #content>
             <form @submit.prevent="saveBasicInfo" class="p-fluid">
@@ -11,37 +11,37 @@
                 <!-- 商家名稱 -->
                 <div class="md:col-span-2">
                   <label for="name" class="block mb-1 font-medium">商家名稱 <span class="text-red-500">*</span></label>
-                  <InputText id="name" v-model="merchantInfo.name" :class="{ 'p-invalid': v$.name.$invalid && v$.name.$dirty }" />
-                  <small v-if="v$.name.$invalid && v$.name.$dirty" class="p-error">{{ v$.name.$errors[0].$message }}</small>
+                  <InputText id="name" v-model="merchantInfo.name" :class="{ 'p-invalid': errors.name }" />
+                  <small v-if="errors.name" class="p-error">{{ errors.name }}</small>
                 </div>
                 
                 <!-- 聯絡電話 -->
                 <div>
                   <label for="phone" class="block mb-1 font-medium">聯絡電話 <span class="text-red-500">*</span></label>
-                  <InputText id="phone" v-model="merchantInfo.phone" :class="{ 'p-invalid': v$.phone.$invalid && v$.phone.$dirty }" />
-                  <small v-if="v$.phone.$invalid && v$.phone.$dirty" class="p-error">{{ v$.phone.$errors[0].$message }}</small>
+                  <InputText id="phone" v-model="merchantInfo.phone" :class="{ 'p-invalid': errors.phone }" />
+                  <small v-if="errors.phone" class="p-error">{{ errors.phone }}</small>
                 </div>
                 
                 <!-- 電子郵件 -->
                 <div>
                   <label for="email" class="block mb-1 font-medium">電子郵件 <span class="text-red-500">*</span></label>
-                  <InputText id="email" v-model="merchantInfo.email" :class="{ 'p-invalid': v$.email.$invalid && v$.email.$dirty }" />
-                  <small v-if="v$.email.$invalid && v$.email.$dirty" class="p-error">{{ v$.email.$errors[0].$message }}</small>
+                  <InputText id="email" v-model="merchantInfo.email" :class="{ 'p-invalid': errors.email }" />
+                  <small v-if="errors.email" class="p-error">{{ errors.email }}</small>
                 </div>
                 
                 <!-- 商家地址 -->
                 <div class="md:col-span-2">
                   <label for="address" class="block mb-1 font-medium">商家地址 <span class="text-red-500">*</span></label>
-                  <InputText id="address" v-model="merchantInfo.address" :class="{ 'p-invalid': v$.address.$invalid && v$.address.$dirty }" />
-                  <small v-if="v$.address.$invalid && v$.address.$dirty" class="p-error">{{ v$.address.$errors[0].$message }}</small>
+                  <InputText id="address" v-model="merchantInfo.address" :class="{ 'p-invalid': errors.address }" />
+                  <small v-if="errors.address" class="p-error">{{ errors.address }}</small>
                 </div>
                 
                 <!-- 商家類型 -->
                 <div>
                   <label for="type" class="block mb-1 font-medium">商家類型 <span class="text-red-500">*</span></label>
                   <Dropdown id="type" v-model="merchantInfo.type" :options="merchantTypes" optionLabel="label" optionValue="value"
-                    :class="{ 'p-invalid': v$.type.$invalid && v$.type.$dirty }" />
-                  <small v-if="v$.type.$invalid && v$.type.$dirty" class="p-error">請選擇商家類型</small>
+                    :class="{ 'p-invalid': errors.type }" />
+                  <small v-if="errors.type" class="p-error">請選擇商家類型</small>
                 </div>
                 
                 <!-- 營業時間 -->
@@ -74,7 +74,7 @@
       </TabPanel>
       
       <!-- 品牌設定 -->
-      <TabPanel header="品牌設定">
+      <TabPanel header="品牌設定" value="brand">
         <Card>
           <template #content>
             <form @submit.prevent="saveBrandInfo" class="p-fluid">
@@ -122,7 +122,7 @@
       </TabPanel>
       
       <!-- 帳號安全 -->
-      <TabPanel header="帳號安全">
+      <TabPanel header="帳號安全" value="security">
         <Card>
           <template #content>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -132,17 +132,20 @@
                 <form @submit.prevent="changePassword" class="p-fluid">
                   <div class="mb-3">
                     <label for="currentPassword" class="block mb-1 font-medium">目前密碼 <span class="text-red-500">*</span></label>
-                    <Password id="currentPassword" v-model="passwordForm.currentPassword" toggleMask :feedback="false" />
+                    <Password id="currentPassword" v-model="passwordForm.currentPassword" toggleMask :feedback="false" :class="{ 'p-invalid': passwordErrors.currentPassword }" />
+                    <small v-if="passwordErrors.currentPassword" class="p-error">{{ passwordErrors.currentPassword }}</small>
                   </div>
                   
                   <div class="mb-3">
                     <label for="newPassword" class="block mb-1 font-medium">新密碼 <span class="text-red-500">*</span></label>
-                    <Password id="newPassword" v-model="passwordForm.newPassword" toggleMask />
+                    <Password id="newPassword" v-model="passwordForm.newPassword" toggleMask :class="{ 'p-invalid': passwordErrors.newPassword }" />
+                    <small v-if="passwordErrors.newPassword" class="p-error">{{ passwordErrors.newPassword }}</small>
                   </div>
                   
                   <div class="mb-3">
                     <label for="confirmPassword" class="block mb-1 font-medium">確認新密碼 <span class="text-red-500">*</span></label>
-                    <Password id="confirmPassword" v-model="passwordForm.confirmPassword" toggleMask :feedback="false" />
+                    <Password id="confirmPassword" v-model="passwordForm.confirmPassword" toggleMask :feedback="false" :class="{ 'p-invalid': passwordErrors.confirmPassword }" />
+                    <small v-if="passwordErrors.confirmPassword" class="p-error">{{ passwordErrors.confirmPassword }}</small>
                   </div>
                   
                   <Button label="變更密碼" icon="pi pi-lock" type="submit" :loading="changingPassword" />
@@ -186,7 +189,7 @@
       </TabPanel>
       
       <!-- 通知設定 -->
-      <TabPanel header="通知設定">
+      <TabPanel header="通知設定" value="notifications">
         <Card>
           <template #content>
             <form @submit.prevent="saveNotificationSettings" class="p-fluid">
@@ -272,8 +275,7 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue';
-import { useVuelidate } from '@vuelidate/core';
-import { required, email, minLength } from '@vuelidate/validators';
+import { z } from 'zod';
 import { useToast } from 'primevue/usetoast';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
@@ -301,6 +303,53 @@ const merchantInfo = reactive({
   coverImage: null as string | null
 });
 
+// 定義 zod schema 進行表單驗證
+const merchantInfoSchema = z.object({
+  name: z.string().min(2, '商家名稱至少需要2個字符'),
+  phone: z.string().min(1, '請輸入聯絡電話'),
+  email: z.string().email('請輸入有效的電子郵件地址'),
+  address: z.string().min(1, '請輸入商家地址'),
+  type: z.string().min(1, '請選擇商家類型'),
+  businessHours: z.string().optional(),
+  website: z.string().optional(),
+  description: z.string().optional(),
+  logo: z.string().nullable(),
+  coverImage: z.string().nullable()
+});
+
+// 表單錯誤訊息
+const errors = reactive({
+  name: '',
+  phone: '',
+  email: '',
+  address: '',
+  type: ''
+});
+
+// 密碼表單
+const passwordForm = reactive({
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: ''
+});
+
+// 密碼驗證規則
+const passwordSchema = z.object({
+  currentPassword: z.string().min(1, '請輸入目前密碼'),
+  newPassword: z.string().min(8, '新密碼至少需要8個字符'),
+  confirmPassword: z.string()
+}).refine(data => data.newPassword === data.confirmPassword, {
+  message: '新密碼與確認密碼不符',
+  path: ['confirmPassword']
+});
+
+// 密碼表單錯誤訊息
+const passwordErrors = reactive({
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: ''
+});
+
 // 商家類型選項
 const merchantTypes = [
   { label: '健身運動', value: 'fitness' },
@@ -309,13 +358,6 @@ const merchantTypes = [
   { label: '語言學習', value: 'language' },
   { label: '專業技能', value: 'professional' }
 ];
-
-// 密碼表單
-const passwordForm = reactive({
-  currentPassword: '',
-  newPassword: '',
-  confirmPassword: ''
-});
 
 // 雙重驗證
 const twoFactorEnabled = ref(false);
@@ -352,34 +394,25 @@ const notificationSettings = reactive({
 const saving = ref(false);
 const changingPassword = ref(false);
 
-// 基本資料驗證規則
-const rules = {
-  name: { required, minLength: minLength(2) },
-  phone: { required },
-  email: { required, email },
-  address: { required },
-  type: { required }
-};
-
-const v$ = useVuelidate(rules, merchantInfo);
+// 清除所有錯誤訊息
+function clearErrors() {
+  errors.name = '';
+  errors.phone = '';
+  errors.email = '';
+  errors.address = '';
+  errors.type = '';
+}
 
 // 保存基本資料
 async function saveBasicInfo(): Promise<void> {
-  const isValid = await v$.value.$validate();
-  
-  if (!isValid) {
-    toast.add({
-      severity: 'error',
-      summary: '驗證失敗',
-      detail: '請檢查並填寫所有必填欄位',
-      life: 3000
-    });
-    return;
-  }
-  
-  saving.value = true;
+  clearErrors();
   
   try {
+    // 使用 zod 驗證表單
+    merchantInfoSchema.parse(merchantInfo);
+    
+    saving.value = true;
+    
     // 模擬 API 請求
     await new Promise(resolve => setTimeout(resolve, 1000));
     
@@ -390,13 +423,30 @@ async function saveBasicInfo(): Promise<void> {
       life: 3000
     });
   } catch (error) {
-    console.error('保存基本資料失敗:', error);
-    toast.add({
-      severity: 'error',
-      summary: '保存失敗',
-      detail: '無法保存商家基本資料，請稍後再試',
-      life: 3000
-    });
+    if (error instanceof z.ZodError) {
+      // 處理驗證錯誤
+      error.errors.forEach(err => {
+        const path = err.path[0] as keyof typeof errors;
+        if (path && path in errors) {
+          errors[path] = err.message;
+        }
+      });
+      
+      toast.add({
+        severity: 'error',
+        summary: '驗證失敗',
+        detail: '請檢查並填寫所有必填欄位',
+        life: 3000
+      });
+    } else {
+      console.error('保存基本資料失敗:', error);
+      toast.add({
+        severity: 'error',
+        summary: '保存失敗',
+        detail: '無法保存商家基本資料，請稍後再試',
+        life: 3000
+      });
+    }
   } finally {
     saving.value = false;
   }
@@ -443,32 +493,23 @@ function uploadCoverImage(): void {
   merchantInfo.coverImage = 'https://via.placeholder.com/1200x400?text=Cover+Image';
 }
 
+// 清除密碼錯誤訊息
+function clearPasswordErrors() {
+  passwordErrors.currentPassword = '';
+  passwordErrors.newPassword = '';
+  passwordErrors.confirmPassword = '';
+}
+
 // 變更密碼
 async function changePassword(): Promise<void> {
-  // 密碼驗證
-  if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
-    toast.add({
-      severity: 'error',
-      summary: '驗證失敗',
-      detail: '請填寫所有密碼欄位',
-      life: 3000
-    });
-    return;
-  }
-  
-  if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-    toast.add({
-      severity: 'error',
-      summary: '驗證失敗',
-      detail: '新密碼與確認密碼不符',
-      life: 3000
-    });
-    return;
-  }
-  
-  changingPassword.value = true;
+  clearPasswordErrors();
   
   try {
+    // 使用 zod 驗證密碼表單
+    passwordSchema.parse(passwordForm);
+    
+    changingPassword.value = true;
+    
     // 模擬 API 請求
     await new Promise(resolve => setTimeout(resolve, 1000));
     
@@ -484,13 +525,23 @@ async function changePassword(): Promise<void> {
     passwordForm.newPassword = '';
     passwordForm.confirmPassword = '';
   } catch (error) {
-    console.error('變更密碼失敗:', error);
-    toast.add({
-      severity: 'error',
-      summary: '變更失敗',
-      detail: '無法變更密碼，請確認目前密碼是否正確',
-      life: 3000
-    });
+    if (error instanceof z.ZodError) {
+      // 處理驗證錯誤
+      error.errors.forEach(err => {
+        const path = err.path[0] as keyof typeof passwordErrors;
+        if (path && path in passwordErrors) {
+          passwordErrors[path] = err.message;
+        }
+      });
+    } else {
+      console.error('變更密碼失敗:', error);
+      toast.add({
+        severity: 'error',
+        summary: '變更失敗',
+        detail: '無法變更密碼，請確認目前密碼是否正確',
+        life: 3000
+      });
+    }
   } finally {
     changingPassword.value = false;
   }

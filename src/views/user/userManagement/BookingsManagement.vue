@@ -244,25 +244,7 @@ import { useToast } from 'primevue/usetoast';
 import { BookingStatus } from '@/enums/BookingStatus';
 import { formatDateString } from '@/utils/date';
 import type { CalendarOptions, EventClickArg  } from '@fullcalendar/core';
-
-// 定义数据类型
-interface Booking {
-    id: number;
-    userId: number;
-    courseTitle?: string;
-    location?: string;
-    time?: string;
-    points: number;
-    status: BookingStatus;
-    merchantName?: string;
-    instructor?: {
-        name: string;
-        avatar?: string;
-        title?: string;
-    };
-    createdAt: Date;
-    // 其他可能的字段
-}
+import type { Booking } from '@/types/booking';
 
 // 定义inject数据接口
 interface BookingsDataInject {

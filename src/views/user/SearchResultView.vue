@@ -107,42 +107,58 @@
 
 				<!-- 推薦課程分頁區塊 -->
 				<div class="bg-gray-100 rounded-lg p-2 mb-4">
-					<Tabs :value="activeTab">
-						<TabList>
-							<Tab v-for="tab in tabs" :key="tab.value" :value="tab.value">
-								{{ tab.label }}
-							</Tab>
-						</TabList>
-						<TabPanels class="!p-2">
-							<TabPanel value="popular">
-								<AsyncCarousel :items="popularCourses" :loading="isCoursesLoading">
-									<template #item="slotProps">
-										<CourseCard :course="slotProps.item" @click="selectCourse(slotProps.item)"
-											:disabled="isLoading(slotProps.item.courseId)"
-											:loading="isLoading(slotProps.item.courseId)" />
-									</template>
-								</AsyncCarousel>
-							</TabPanel>
-							<TabPanel value="latest">
-								<AsyncCarousel :items="latestCourses" :loading="isCoursesLoading">
-									<template #item="slotProps">
-										<CourseCard :course="slotProps.item" @click="selectCourse(slotProps.item)"
-											:disabled="isLoading(slotProps.item.courseId)"
-											:loading="isLoading(slotProps.item.courseId)" />
-									</template>
-								</AsyncCarousel>
-							</TabPanel>
-							<TabPanel value="recommended" v-if="isLoggedIn">
-								<AsyncCarousel :items="recommendedCourses" :loading="isCoursesLoading">
-									<template #item="slotProps">
-										<CourseCard :course="slotProps.item" @click="selectCourse(slotProps.item)"
-											:disabled="isLoading(slotProps.item.courseId)"
-											:loading="isLoading(slotProps.item.courseId)" />
-									</template>
-								</AsyncCarousel>
-							</TabPanel>
-						</TabPanels>
-					</Tabs>
+					<div class="flex justify-between items-center px-2 mb-2">
+						<h3 class="text-lg font-semibold">推薦課程</h3>
+						<Button 
+							:icon="isRecommendationCollapsed ? 'pi pi-chevron-down' : 'pi pi-chevron-up'" 
+							text 
+							rounded 
+							@click="isRecommendationCollapsed = !isRecommendationCollapsed" 
+							aria-label="收合/展開" 
+							class="p-1"
+						/>
+					</div>
+					
+					<Transition name="fade">
+						<div v-show="!isRecommendationCollapsed">
+							<Tabs :value="activeTab">
+								<TabList>
+									<Tab v-for="tab in tabs" :key="tab.value" :value="tab.value">
+										{{ tab.label }}
+									</Tab>
+								</TabList>
+								<TabPanels class="!p-2">
+									<TabPanel value="popular">
+										<AsyncCarousel :items="popularCourses" :loading="isCoursesLoading">
+											<template #item="slotProps">
+												<CourseCard :course="slotProps.item" @click="selectCourse(slotProps.item)"
+													:disabled="isLoading(slotProps.item.courseId)"
+													:loading="isLoading(slotProps.item.courseId)" />
+											</template>
+										</AsyncCarousel>
+									</TabPanel>
+									<TabPanel value="latest">
+										<AsyncCarousel :items="latestCourses" :loading="isCoursesLoading">
+											<template #item="slotProps">
+												<CourseCard :course="slotProps.item" @click="selectCourse(slotProps.item)"
+													:disabled="isLoading(slotProps.item.courseId)"
+													:loading="isLoading(slotProps.item.courseId)" />
+											</template>
+										</AsyncCarousel>
+									</TabPanel>
+									<TabPanel value="recommended" v-if="isLoggedIn">
+										<AsyncCarousel :items="recommendedCourses" :loading="isCoursesLoading">
+											<template #item="slotProps">
+												<CourseCard :course="slotProps.item" @click="selectCourse(slotProps.item)"
+													:disabled="isLoading(slotProps.item.courseId)"
+													:loading="isLoading(slotProps.item.courseId)" />
+											</template>
+										</AsyncCarousel>
+									</TabPanel>
+								</TabPanels>
+							</Tabs>
+						</div>
+					</Transition>
 				</div>
 
 				<!-- 課程列表 -->
@@ -567,6 +583,9 @@ function handleApplyFilters(): void {
 	// 应用筛选条件后获取数据
 	fetchFilteredCourses();
 }
+
+// 推薦課程分頁區塊狀態控制
+const isRecommendationCollapsed = ref(false);
 </script>
 
 
@@ -592,5 +611,18 @@ function handleApplyFilters(): void {
 
 .chip.chip-selected:hover {
 	@apply bg-blue-500!
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease, max-height 0.3s ease;
+  max-height: 1000px;
+  overflow: hidden;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  max-height: 0;
 }
 </style>

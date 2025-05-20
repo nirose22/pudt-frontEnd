@@ -319,6 +319,7 @@ import InputText from 'primevue/inputtext';
 import Dropdown from 'primevue/dropdown';
 import MultiSelect from 'primevue/multiselect';
 import Avatar from 'primevue/avatar';
+import type { AbsenceRecord } from '@/types/activity';
 
 // 定义数据接口
 interface CourseRecord {
@@ -338,17 +339,6 @@ interface CourseRecord {
         avatar?: string;
         title?: string;
     };
-}
-
-interface AbsenceRecord {
-    id: number;
-    userId: number;
-    courseTitle: string;
-    courseType: string;
-    date: string;
-    time: string;
-    points: number;
-    reason?: string;
 }
 
 // 定义注入数据接口

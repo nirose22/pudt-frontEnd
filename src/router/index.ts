@@ -55,16 +55,9 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/favorite',
     name: 'Favorite',
-    component: () => import('@/views/user/userManagement/UserProfileView.vue'),
+    component: () => import('@/views/user/userManagement/FavoriteCourses.vue'),
     meta: { requiresAuth: true }
   },
-  {
-    path: '/my-card',
-    name: 'MyCard',
-    component: () => import('@/views/user/userManagement/UserProfileView.vue'),
-    meta: { requiresAuth: true }
-  },
-
   { path: '/login',
     name: 'Login',
     component: () => import('@/views/auth/Login.vue'),
