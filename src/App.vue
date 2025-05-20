@@ -1,15 +1,10 @@
 <template>
-  <div class="min-h-screen h-full overflow-y-auto flex flex-col max-h-screen items-center bg-gray-50">
-    <Header v-if="route.name !== 'MerchantLayout'" />
-    <div class="w-full grow mx-auto flex flex-col" :class="{ 'max-w-11/12': route.name !== 'MerchantLayout' }">
-      <router-view></router-view>
-    </div>
+  <div class="h-full max-h-screen bg-gray-50 flex flex-col">
+    <RouterView></RouterView>
     <Footer />
   </div>
 </template>
 <script setup lang="ts">
-import Header from '@/components/layout/Header.vue'
-import MerchantHeader from '@/components/layout/MerchantHeader.vue'
 import Footer from '@/components/layout/Footer.vue'
 import { useRoute } from 'vue-router'
 

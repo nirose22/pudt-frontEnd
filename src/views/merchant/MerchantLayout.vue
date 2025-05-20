@@ -1,13 +1,11 @@
 <template>
-    <div class="min-h-screen bg-gray-100">
+    <div class="h-full overflow-hidden flex flex-col">
         <!-- 顶部导航栏 -->
         <MerchantHeader @toggle-sidebar="toggleSidebar" />
-        <div class="flex">
-            <!-- Gmail 风格侧边栏 -->
+        <div class="flex overflow-hidden">
             <MerchantSidebar v-model="isSidebarOpen" />
-
             <!-- 主要內容區 -->
-            <main class="flex-1 p-3">
+            <main class="flex-1 p-3 overflow-auto">
                 <div class="max-w-7xl mx-auto">
                     <!-- 麵包屑導航 -->
                     <div class="mb-4">
@@ -124,6 +122,4 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>
