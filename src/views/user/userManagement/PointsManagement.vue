@@ -107,7 +107,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, inject } from 'vue';
 import type { PropType } from 'vue';
 import Button from 'primevue/button';
 import DataTable from 'primevue/datatable';
@@ -154,22 +154,23 @@ interface PaymentMethod {
     icon: string;
 }
 
-const props = defineProps({
-    points: {
-        type: Number,
-        required: true
-    },
-    pointsHistory: {
-        type: Array as PropType<TransactionRecord[]>,
-        required: true
-    },
-    pointsCards: {
-        type: Array as PropType<PointsCard[]>,
-        required: true
-    }
-});
+// 定义inject的数据类型
+interface PointsDataInject {
+    points: { value: number };
+    pointsHistory: { value: TransactionRecord[] };
+    pointsCards: { value: PointsCard[] };
+    handlePurchase: (cardId: number) => void;
+}
 
-const emit = defineEmits(['purchase']);
+// 使用inject获取数据
+const pointsData = inject<PointsDataInject>('pointsData');
+const points = computed(() => pointsData?.points.value || 0);
+const pointsHistory = computed(() => pointsData?.pointsHistory.value || []);
+const pointsCards = computed(() => pointsData?.pointsCards.value || []);
+const handlePurchase = pointsData?.handlePurchase;
+
+// 删除emit
+// const emit = defineEmits(['purchase']);
 const toast = useToast();
 
 // 點數相關狀態
@@ -233,7 +234,7 @@ const sortByDateDesc = (a: TransactionRecord, b: TransactionRecord): number => {
 
 // 篩選後的點數歷史
 const filteredPointsHistory = computed(() => {
-    let result = [...props.pointsHistory];
+    let result = [...pointsHistory.value];
     
     // 月份篩選
     if (filter.value.month) {
@@ -255,7 +256,7 @@ const filteredPointsHistory = computed(() => {
 
 // 篩選後的歷史記錄
 const filteredHistoryRecords = computed(() => {
-    let result = [...props.pointsHistory];
+    let result = [...pointsHistory.value];
     
     // 日期範圍篩選
     if (historyFilter.value.dateRange && historyFilter.value.dateRange[0] && historyFilter.value.dateRange[1]) {
@@ -283,7 +284,7 @@ const filteredHistoryRecords = computed(() => {
 // 選中卡片的價格
 const selectedCardPrice = computed(() => {
     if (!purchaseCardId.value) return 0;
-    const card = props.pointsCards.find(card => card.id === purchaseCardId.value);
+    const card = pointsCards.value.find(card => card.id === purchaseCardId.value);
     return card ? card.price : 0;
 });
 
@@ -294,8 +295,8 @@ const selectCard = (cardId: number) => {
 
 // 購買卡片
 const purchaseCard = (cardId: number) => {
-    purchaseCardId.value = cardId;
-    showPurchaseDialog.value = true;
+    if (!handlePurchase) return;
+    handlePurchase(cardId);
 };
 
 // 確認購買
@@ -314,8 +315,6 @@ const confirmPurchase = () => {
     
     // 延遲模擬付款完成
     setTimeout(() => {
-        emit('purchase', purchaseCardId.value);
-        
         // 重置狀態
         purchaseCardId.value = null;
         paymentMethod.value = null;

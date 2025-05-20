@@ -299,7 +299,8 @@
 </template>
 
 <script setup lang="ts">
-import { type PropType, ref, reactive, onMounted } from 'vue';
+import { ref, computed, inject } from 'vue';
+import { type PropType, reactive, onMounted } from 'vue';
 import Select from 'primevue/select';
 import DatePicker from 'primevue/datepicker';
 import Button from 'primevue/button';
@@ -325,6 +326,17 @@ import { showSuccess, showError, showInfo, initToast } from '@/utils/toast-helpe
 // 初始化 toast
 const toast = useToast();
 
+// 定义profileData的类型接口
+interface ProfileDataInject {
+  profile: { value: User | null };
+  updateProfile: (data: Partial<User>) => void;
+}
+
+// 使用inject获取数据，指定类型
+const profileData = inject<ProfileDataInject>('profileData');
+const profile = computed(() => profileData?.profile.value || null);
+const updateProfile = profileData?.updateProfile;
+
 // 擴展 User 類型，添加新的欄位
 interface ExtendedUser extends User {
     twoFactorEnabled: boolean;
@@ -347,14 +359,6 @@ interface ExtendedUser extends User {
     };
 }
 
-const props = defineProps({
-    profile: {
-        type: Object as PropType<User | null>,
-        required: true
-    }
-});
-
-const emit = defineEmits(['update-profile']);
 const showPasswordModal = ref(false);
 const showInterestsModal = ref(false);
 const userStore = useUserStore();
@@ -391,16 +395,16 @@ const getSubCategoriesForMainCategory = (mainCatCode: string) => {
 
 // 表單數據
 const form = reactive<ExtendedUser>({
-    ...props.profile as User,
-    id: props.profile?.id ?? 0,
-    name: props.profile?.name ?? '',
-    gender: props.profile?.gender ?? UserGender.Other,
-    birthday: new Date(props.profile?.birthday ?? new Date()),
-    address: props.profile?.address ?? '',
-    email: props.profile?.email ?? '',
-    phone: props.profile?.phone ?? '',
-    points: props.profile?.points ?? 0,
-    createdAt: new Date(props.profile?.createdAt ?? new Date()),
+    ...profile.value as User,
+    id: profile.value?.id ?? 0,
+    name: profile.value?.name ?? '',
+    gender: profile.value?.gender ?? UserGender.Other,
+    birthday: new Date(profile.value?.birthday ?? new Date()),
+    address: profile.value?.address ?? '',
+    email: profile.value?.email ?? '',
+    phone: profile.value?.phone ?? '',
+    points: profile.value?.points ?? 0,
+    createdAt: new Date(profile.value?.createdAt ?? new Date()),
     // 新增欄位的默認值
     twoFactorEnabled: false,
     socialAccounts: {
@@ -650,24 +654,21 @@ const submitPasswordChange = ({ valid }: any) => {
 // 重置表單
 const resetForm = () => {
     // 只重置基本資料，保留其他設定
-    if (props.profile) {
-        form.name = props.profile.name || '';
-        form.gender = props.profile.gender || UserGender.Other;
-        form.birthday = new Date(props.profile.birthday || new Date());
-        form.address = props.profile.address || '';
-        form.phone = props.profile.phone || '';
+    if (profile.value) {
+        form.name = profile.value.name || '';
+        form.gender = profile.value.gender || UserGender.Other;
+        form.birthday = new Date(profile.value.birthday || new Date());
+        form.address = profile.value.address || '';
+        form.phone = profile.value.phone || '';
     }
 
     showInfo('表單已重置為原始資料', '已重置');
 };
 
 // 儲存個人資料
-const saveProfile = ({ valid, values }: any) => {
-    if (!valid) {
-        showError('請檢查輸入資料');
-        return;
-    }
-
+const saveProfile = (values: any) => {
+    if (!updateProfile) return;
+    
     // 合併基本資料和擴展資料
     const profileData = {
         ...values,
@@ -676,20 +677,11 @@ const saveProfile = ({ valid, values }: any) => {
         interests: form.interests,
         notifications: form.notifications
     };
-
+    
     // 保存兴趣标签到localStorage和userStore
     saveUserInterests();
-
-    // 更新用户信息到userStore
-    userStore.updateProfile({
-        ...profileData
-    });
-
-    // 模擬 API 調用
-    setTimeout(() => {
-        emit('update-profile', profileData);
-        showSuccess('會員資料已更新');
-    }, 1000);
+    
+    updateProfile(profileData);
 };
 </script>
 

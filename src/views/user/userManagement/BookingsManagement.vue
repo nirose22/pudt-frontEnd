@@ -226,36 +226,58 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, type PropType } from 'vue';
+import { ref, computed, watch, inject, onMounted } from 'vue';
 import Button from 'primevue/button';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import Dropdown from 'primevue/dropdown';
 import Dialog from 'primevue/dialog';
+import Tag from 'primevue/tag';
+import Avatar from 'primevue/avatar';
+import InputText from 'primevue/inputtext';
+import ButtonGroup from 'primevue/buttongroup';
 import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import ButtonGroup from 'primevue/buttongroup';
-import Dropdown from 'primevue/dropdown';
-import Tag from 'primevue/tag';
-import Avatar from 'primevue/avatar';
+import { useToast } from 'primevue/usetoast';
+import { BookingStatus } from '@/enums/BookingStatus';
 import { formatDateString } from '@/utils/date';
 import type { CalendarOptions, EventClickArg  } from '@fullcalendar/core';
-import { BookingStatus, BookingStatusLabel } from '@/enums/BookingStatus';
-import { useToast } from 'primevue/usetoast';
-import type { Booking } from '@/types';
 
-const props = defineProps({
-    bookings: {
-        type: Array as PropType<Booking[]>,
-        required: true
-    }
-});
+// 定义数据类型
+interface Booking {
+    id: number;
+    userId: number;
+    courseTitle?: string;
+    location?: string;
+    time?: string;
+    points: number;
+    status: BookingStatus;
+    merchantName?: string;
+    instructor?: {
+        name: string;
+        avatar?: string;
+        title?: string;
+    };
+    createdAt: Date;
+    // 其他可能的字段
+}
 
-const emit = defineEmits(['cancel-booking']);
+// 定义inject数据接口
+interface BookingsDataInject {
+    bookings: { value: Booking[] };
+    cancelBooking: (id: number) => Promise<any>;
+}
+
+// 使用inject获取数据
+const bookingsData = inject<BookingsDataInject>('bookingsData');
+const bookings = computed(() => bookingsData?.bookings.value || []);
+const cancelBookingFn = bookingsData?.cancelBooking;
+
 const toast = useToast();
 
-// 列表視圖
+// 视图模式
 const viewMode = ref('list');
 const showDetailDialog = ref(false);
 const showCancelDialog = ref(false);
@@ -263,51 +285,62 @@ const showCalendarSyncDialog = ref(false);
 const showMapDialog = ref(false);
 const selectedBookingId = ref<number | null>(null);
 const selectedBooking = ref<Booking | null>(null);
+const loading = ref(false);
 
-// 過濾條件
+// 确认是否是即将到来的预约
+const isUpcoming = (date: Date, time: string): boolean => {
+    const now = new Date();
+    const bookingDate = new Date(date);
+    
+    // 设置时分秒
+    if (time) {
+        const [hours, minutes] = time.split(':').map(Number);
+        bookingDate.setHours(hours || 0, minutes || 0, 0, 0);
+    }
+    
+    const sevenDaysLater = new Date();
+    sevenDaysLater.setDate(now.getDate() + 7);
+    
+    return bookingDate >= now && bookingDate <= sevenDaysLater;
+};
+
+// 即将到来的预约
+const upcomingBookings = computed(() => {
+    return bookings.value
+        .filter(b => isUpcoming(b.createdAt, b.time || ''))
+        .slice(0, 3);
+});
+
+// 状态选项
+const statusOptions = [
+    { label: '全部', value: '' },
+    { label: '已确认', value: BookingStatus.Confirmed.toString() },
+    { label: '已取消', value: BookingStatus.Canceled.toString() },
+    { label: '待处理', value: BookingStatus.Pending.toString() }
+];
+
+// 过滤条件
 const filter = ref({
     status: ''
 });
 
-// 狀態選項
-const statusOptions = [
-    { label: '全部', value: '' },
-    { label: '已確認', value: BookingStatus.Confirmed },
-    { label: '已取消', value: BookingStatus.Canceled },
-    { label: '待處理', value: BookingStatus.Pending }
-];
-
-// 過濾後的預約
+// 过滤后的预约
 const filteredBookings = computed(() => {
-    let result = [...props.bookings];
+    let result = [...bookings.value];
     
-    // 狀態過濾
+    // 状态过滤
     if (filter.value.status) {
-        result = result.filter(booking => booking.status === filter.value.status);
+        result = result.filter(booking => booking.status.toString() === filter.value.status);
     }
     
     return result;
 });
 
-// 即將到來的預約（最近7天）
-const upcomingBookings = computed(() => {
-    const now = new Date();
-    const sevenDaysLater = new Date();
-    sevenDaysLater.setDate(now.getDate() + 7);
-    
-    return props.bookings.filter(booking => {
-        if (booking.status !== BookingStatus.Confirmed) return false;
-        
-        // createdAt 先前是 Date 類型
-        return booking.createdAt >= now && booking.createdAt <= sevenDaysLater;
-    }).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-});
-
-// 日曆事件 - 需要根據新的接口調整
+// 日历事件 - 需要根据新的接口调整
 const events = computed(() =>
     filteredBookings.value.map((booking: Booking) => ({
         id: booking.id.toString(),
-        title: booking.courseTitle || `預約 #${booking.id}`,
+        title: booking.courseTitle || `预约 #${booking.id}`,
         start: booking.createdAt,
         extendedProps: {
             location: booking.merchantName || booking.location || '未指定',
@@ -317,7 +350,7 @@ const events = computed(() =>
     }))
 );
 
-// 日曆配置
+// 日历配置
 const calendarOptions: CalendarOptions = {
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
     initialView: 'dayGridMonth',
@@ -328,7 +361,7 @@ const calendarOptions: CalendarOptions = {
     },
     eventClick: (info: EventClickArg) => {
         const bookingId = parseInt(info.event.id);
-        const booking = props.bookings.find(b => b.id === bookingId);
+        const booking = bookings.value.find(b => b.id === bookingId);
         if (booking) {
             selectedBooking.value = booking;
             showDetailDialog.value = true;
@@ -342,7 +375,7 @@ const calendarOptions: CalendarOptions = {
     locale: 'zh-tw',
 };
 
-// 獲取日曆事件樣式
+// 获取日历事件样式
 function getEventClassNames(status: BookingStatus): string[] {
     switch (status) {
         case BookingStatus.Confirmed:
@@ -356,12 +389,23 @@ function getEventClassNames(status: BookingStatus): string[] {
     }
 }
 
-// 獲取狀態標籤
-function getStatusLabel(status: BookingStatus): string {
-    return BookingStatusLabel[status] || status;
-}
+// 获取状态标签
+const getStatusLabel = (status: BookingStatus) => {
+    switch (status) {
+        case BookingStatus.Pending:
+            return '待确认';
+        case BookingStatus.Confirmed:
+            return '已确认';
+        case BookingStatus.Completed:
+            return '已完成';
+        case BookingStatus.Canceled:
+            return '已取消';
+        default:
+            return '未知状态';
+    }
+};
 
-// 獲取狀態嚴重性
+// 获取状态严重性
 function getStatusSeverity(status: BookingStatus): string {
     switch (status) {
         case BookingStatus.Confirmed:
@@ -375,7 +419,7 @@ function getStatusSeverity(status: BookingStatus): string {
     }
 }
 
-// 獲取即將到來的預約邊框顏色
+// 获取即将到来的预约边框颜色
 function getUpcomingBorderClass(booking: Booking): string {
     const daysLeft = getDaysLeft(booking.createdAt); // createdAtu5df2u7ecfu662fDateu7c7bu578b
     
@@ -384,7 +428,7 @@ function getUpcomingBorderClass(booking: Booking): string {
     return 'border-green-500';
 }
 
-// 獲取剩餘時間標籤
+// 获取剩余时间标签
 function getTimeLeftLabel(date: Date, time: string): string {
     const daysLeft = getDaysLeft(date);
     
@@ -393,7 +437,7 @@ function getTimeLeftLabel(date: Date, time: string): string {
     return `${daysLeft} u5929u5f6c`;
 }
 
-// 獲取剩餘時間嚴重性
+// 获取剩余时间严重性
 function getTimeLeftSeverity(date: Date, time: string): string {
     const daysLeft = getDaysLeft(date);
     
@@ -402,7 +446,7 @@ function getTimeLeftSeverity(date: Date, time: string): string {
     return 'success';
 }
 
-// 計算剩餘天數
+// 计算剩余天数
 function getDaysLeft(date: Date): number {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
@@ -414,30 +458,31 @@ function getDaysLeft(date: Date): number {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
 
-// 是否可以取消預約
-function canCancel(booking: Booking): boolean {
-    return booking.status === BookingStatus.Confirmed;
-}
+// 是否可以取消预约
+const canCancel = (booking: Booking) => {
+    return booking.status === BookingStatus.Pending || 
+           booking.status === BookingStatus.Confirmed;
+};
 
-// 查看預約詳情
+// 查看预约详情
 function viewBookingDetail(booking: Booking): void {
     selectedBooking.value = booking;
     showDetailDialog.value = true;
 }
 
-// 查看地點地圖
+// 查看地点地图
 function showLocationMap(booking: Booking): void {
     selectedBooking.value = booking;
     showMapDialog.value = true;
 }
 
-// 確認取消預約
+// 确认取消预约
 function confirmCancelBooking(bookingId: number): void {
     selectedBookingId.value = bookingId;
     showCancelDialog.value = true;
 }
 
-// 確認取消選中的預約
+// 确认取消选中的预约
 function confirmCancelSelectedBooking(): void {
     if (selectedBooking.value) {
         selectedBookingId.value = selectedBooking.value.id;
@@ -446,21 +491,22 @@ function confirmCancelSelectedBooking(): void {
     }
 }
 
-// 取消預約
-function cancelBooking(): void {
-    if (selectedBookingId.value) {
-        emit('cancel-booking', selectedBookingId.value);
+// 取消预约
+const cancelBooking = async () => {
+    if (!selectedBookingId.value || !cancelBookingFn) return;
+    
+    try {
+        await cancelBookingFn(selectedBookingId.value);
         showCancelDialog.value = false;
+        selectedBookingId.value = null;
         
-        // 顯示取消成功提示
-        toast.add({
-            severity: 'success',
-            summary: '取消成功',
-            detail: '預約已取消',
-            life: 3000
-        });
-    }   
-}
+        // 可以加入成功提示
+        toast.add({ severity: 'success', summary: '成功', detail: '預約已取消', life: 3000 });
+    } catch (error) {
+        console.error('取消預約失败', error);
+        toast.add({ severity: 'error', summary: '错误', detail: '取消預約失败', life: 3000 });
+    }
+};
 
 // 同步至行事曆
 function syncToCalendar(platform: string): void {

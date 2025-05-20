@@ -1,8 +1,7 @@
 <template>
   <div class="min-h-screen h-full overflow-y-auto flex flex-col max-h-screen items-center bg-gray-50">
     <Header v-if="route.name !== 'MerchantLayout'" />
-    <MerchantHeader v-if="route.name === 'MerchantLayout'" />
-    <div class="w-full max-w-11/12 grow mx-auto flex flex-col">
+    <div class="w-full grow mx-auto flex flex-col" :class="{ 'max-w-11/12': route.name !== 'MerchantLayout' }">
       <router-view></router-view>
     </div>
     <Footer />
@@ -76,5 +75,16 @@ button.p-button, button.p-button:not(:disabled):hover {
 
 .p-tab-active {
   @apply !bg-blue-100;
+}
+
+/* transition */
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
 }
 </style>

@@ -1,18 +1,13 @@
 <template>
     <!-- 頂部導航欄 -->
-    <header v-if="shouldShowHeader" class="bg-white shadow-sm">
+    <header v-if="shouldShowHeader" class="bg-white w-full shadow-sm">
         <div class="flex justify-between items-center px-4 py-2">
-            <div class="flex items-center gap-3">
-                <!-- 移動端菜單按鈕 -->
-                <Button icon="pi pi-bars" text rounded @click="toggleSidebar" class="md:hidden" />
-
-                <!-- Logo -->
-                <RouterLink to="/merchant" class="flex items-center gap-2">
-                    <img src="../../assets/image/pudt_bg.png" alt="PUDT Logo" class="h-10" />
-                    <span class="text-xl font-bold text-blue-700">PUDT 商家中心</span>
-                </RouterLink>
-            </div>
-
+            <RouterLink to="/merchant" class="flex gap-2 w-40 flex-1 items-center">
+                <!-- 菜單按鈕 - 始終可見 -->
+                <Button icon="pi pi-bars" text rounded @click="toggleSidebar" />
+                <BaseLogo class="h-7" />
+                <span class="text-xl font-bold text-sky-700">PUDT 商家中心</span>
+            </RouterLink>
             <!-- 右側工具欄 -->
             <div class="flex items-center gap-2">
                 <!-- 通知圖標 -->
@@ -44,7 +39,7 @@ import Menu from 'primevue/menu';
 import type { MenuItem } from 'primevue/menuitem';
 import { useAuthStore } from '@/stores/authStore';
 import { UserRole } from '@/enums/User';
-
+import BaseLogo from '@/components/layout/BaseLogo.vue';
 const router = useRouter();
 const authStore = useAuthStore();
 

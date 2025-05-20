@@ -21,6 +21,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '會員資料管理' }
       },
       {
+        path: 'inbox',
+        name: 'InboxMessages',
+        component: () => import('@/views/user/userManagement/InboxMessages.vue'),
+        meta: { title: '站內收件夾' }
+      },
+      {
         path: 'points',
         name: 'UserPointsManagement',
         component: () => import('@/views/user/userManagement/PointsManagement.vue'),

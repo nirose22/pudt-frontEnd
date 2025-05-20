@@ -296,7 +296,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, inject } from 'vue';
+import type { PropType } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
@@ -318,29 +319,58 @@ import InputText from 'primevue/inputtext';
 import Dropdown from 'primevue/dropdown';
 import MultiSelect from 'primevue/multiselect';
 import Avatar from 'primevue/avatar';
-import type { CourseRecord, AbsenceRecord, RatingRecord } from '@/types/activity';
 
-const props = defineProps({
-    courseHistory: {
-        type: Array as () => CourseRecord[],
-        required: true
-    },
-    absenceRecords: {
-        type: Array as () => AbsenceRecord[],
-        required: true
-    },
-    ratingHistory: {
-        type: Array as () => RatingRecord[],
-        default: () => []
-    }
+// 定义数据接口
+interface CourseRecord {
+    id: number;
+    userId: number;
+    courseTitle: string;
+    courseType: string;
+    location: string;
+    date: string;
+    time: string;
+    points: number;
+    status: BookingStatus;
+    rating?: number;
+    comment?: string;
+    instructor?: {
+        name: string;
+        avatar?: string;
+        title?: string;
+    };
+}
+
+interface AbsenceRecord {
+    id: number;
+    userId: number;
+    courseTitle: string;
+    courseType: string;
+    date: string;
+    time: string;
+    points: number;
+    reason?: string;
+}
+
+// 定义注入数据接口
+interface ActivityDataInject {
+    courseHistory: { value: CourseRecord[] };
+    absenceRecords: { value: AbsenceRecord[] };
+}
+
+// 使用inject获取数据
+const activityData = inject<ActivityDataInject>('activityData');
+const courseHistory = computed(() => activityData?.courseHistory.value || []);
+const absenceRecords = computed(() => activityData?.absenceRecords.value || []);
+
+// 添加评分记录数据 - 因为现在没有通过props传入，所以需要从课程历史中提取
+const ratingHistory = computed(() => {
+    return courseHistory.value.filter(course => course.rating && course.rating > 0);
 });
-
-const emit = defineEmits(['submit-rating']);
 
 // 狀態與過濾
 const toast = useToast();
 const loading = ref(false);
-const selectedCourse = ref<any>(null);
+const selectedCourse = ref<CourseRecord | null>(null);
 const showDetailDialog = ref(false);
 const showRatingDialog = ref(false);
 const activeTabIndex = ref(0);
@@ -363,22 +393,20 @@ const ratingForm = ref({
     comment: ''
 });
 
-
-
 // 狀態選項
 const statusOptions = [
     { label: '全部狀態', value: '' },
-    { label: '已完成', value: BookingStatus.Confirmed },
-    { label: '已取消', value: BookingStatus.Canceled },
-    { label: '待處理', value: BookingStatus.Pending }
+    { label: '已完成', value: BookingStatus.Confirmed.toString() },
+    { label: '已取消', value: BookingStatus.Canceled.toString() },
+    { label: '待處理', value: BookingStatus.Pending.toString() }
 ];
 
 // 活動統計
 const activityStats = computed(() => {
     return {
-        totalCourses: props.courseHistory.length,
-        completedCourses: props.courseHistory.filter(c => c.status === BookingStatus.Confirmed).length,
-        absenceCourses: props.absenceRecords.length,
+        totalCourses: courseHistory.value.length,
+        completedCourses: courseHistory.value.filter(c => c.status === BookingStatus.Confirmed).length,
+        absenceCourses: absenceRecords.value.length,
         averageRating: calculateAverageRating()
     };
 });
@@ -404,17 +432,17 @@ const tabItems = computed(() => [
 
 // 計算平均評分
 function calculateAverageRating(): string {
-    if (!props.ratingHistory || props.ratingHistory.length === 0) {
+    if (!ratingHistory.value || ratingHistory.value.length === 0) {
         return '0.0';
     }
     
-    const sum = props.ratingHistory.reduce((total, item) => total + (item.rating || 0), 0);
-    return (sum / props.ratingHistory.length).toFixed(1);
+    const sum = ratingHistory.value.reduce((total, item) => total + (item.rating || 0), 0);
+    return (sum / ratingHistory.value.length).toFixed(1);
 }
 
 // 過濾後的課程歷史
 const filteredCourseHistory = computed(() => {
-    let filtered = [...props.courseHistory];
+    let filtered = [...courseHistory.value];
     
     // 日期範圍過濾
     if (range.value) {
@@ -432,7 +460,7 @@ const filteredCourseHistory = computed(() => {
     
     // 狀態過濾
     if (filters.value.status) {
-        filtered = filtered.filter(item => item.status === filters.value.status);
+        filtered = filtered.filter(item => item.status.toString() === filters.value.status);
     }
     
     
@@ -441,7 +469,7 @@ const filteredCourseHistory = computed(() => {
 
 // 過濾後的缺席記錄
 const filteredAbsenceRecords = computed(() => {
-    let filtered = [...props.absenceRecords];
+    let filtered = [...absenceRecords.value];
     
     // 日期範圍過濾
     if (range.value) {
@@ -460,7 +488,7 @@ const filteredAbsenceRecords = computed(() => {
 
 // 過濾後的評價記錄
 const filteredRatingHistory = computed(() => {
-    let filtered = [...props.ratingHistory];
+    let filtered = [...ratingHistory.value];
     
     // 日期範圍過濾
     if (range.value) {
@@ -509,20 +537,20 @@ const resetAllFilters = () => {
 };
 
 // 查看课程详情
-const viewCourseDetail = (course: any) => {
+const viewCourseDetail = (course: CourseRecord) => {
     selectedCourse.value = course;
     showDetailDialog.value = true;
 };
 
 // 判斷是否可以評價
-const canRate = (course: any): boolean => {
+const canRate = (course: CourseRecord): boolean => {
     // 只有已完成的課程才能評價，且未評價過
     return course.status === BookingStatus.Confirmed && 
            (!course.rating || course.rating === 0);
 };
 
 // 打開評價對話框
-const openRatingDialog = (course: any, isEdit = false) => {
+const openRatingDialog = (course: CourseRecord, isEdit = false) => {
     selectedCourse.value = course;
     isEditRating.value = isEdit;
     
@@ -543,13 +571,17 @@ const openRatingDialog = (course: any, isEdit = false) => {
 const openRatingDialogFromDetail = () => {
     if (selectedCourse.value) {
         showDetailDialog.value = false;
+        const course = selectedCourse.value;
         setTimeout(() => {
-            openRatingDialog(selectedCourse.value);
+            openRatingDialog(course);
         }, 300);
     }
 };
 
-// 提交評價
+// 自定义事件，用于提交评价
+const emit = defineEmits(['submit-rating']);
+
+// 提交评价
 const submitRating = () => {
     if (ratingForm.value.rating === 0) {
         toast.add({
@@ -561,7 +593,11 @@ const submitRating = () => {
         return;
     }
     
-    // 提交評價
+    if (!selectedCourse.value) {
+        return;
+    }
+    
+    // 触发评价提交事件
     emit('submit-rating', {
         courseId: selectedCourse.value.id,
         rating: ratingForm.value.rating,
@@ -584,14 +620,6 @@ const submitRating = () => {
         // 添加新評價
         selectedCourse.value.rating = ratingForm.value.rating;
         selectedCourse.value.comment = ratingForm.value.comment;
-        
-        // 如果評價記錄中沒有這個課程，則添加
-        if (!props.ratingHistory.some(item => item.id === selectedCourse.value.id)) {
-            props.ratingHistory.push({
-                ...selectedCourse.value,
-                ratingDate: new Date().toISOString()
-            });
-        }
         
         toast.add({
             severity: 'success',

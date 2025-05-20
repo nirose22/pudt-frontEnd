@@ -282,7 +282,6 @@ import { useToast } from 'primevue/usetoast';
 
 const route = useRoute();
 const router = useRouter();
-const bookingStore = useBookingStore();
 const toast = useToast();
 const userStore = useUserStore();
 const isLoggedIn = computed(() => userStore.isLoggedIn);

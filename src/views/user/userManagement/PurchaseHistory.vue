@@ -317,7 +317,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, inject } from 'vue';
+import type { PropType } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
@@ -333,15 +334,45 @@ import { PurchaseService } from '@/service/PurchaseService';
 import InputText from 'primevue/inputtext';
 import Dropdown from 'primevue/dropdown';
 
-// 定義介面
-interface FilterOption {
-    label: string;
-    value: string | number | null;
+// 定义数据接口
+interface PurchaseItem {
+    id: number;
+    date: string;
+    cardType: number;
+    amount: number;
+    points: number;
+    status: number;
+    paymentMethod: number;
+    invoiceNo?: string;
+    invoiceAvailable?: boolean;
+    invoiceNumber?: string;
+    invoiceDate?: string;
+    paymentDate?: string;
+    expiry?: string;
 }
 
-const props = defineProps<{
-    purchaseHistory: ExtendedPurchaseItem[]
-}>();
+// 定义inject数据接口
+interface PurchaseDataInject {
+    purchaseHistory: { value: PurchaseItem[] };
+    unpaidRecords: { value: PurchaseItem[] };
+}
+
+// 使用inject获取数据
+const purchaseData = inject<PurchaseDataInject>('purchaseData');
+const purchaseHistory = computed(() => purchaseData?.purchaseHistory.value || []);
+const unpaidRecords = computed(() => purchaseData?.unpaidRecords.value || []);
+
+// 删除props
+// const props = defineProps({
+//     purchaseHistory: {
+//         type: Array as PropType<ExtendedPurchaseItem[]>,
+//         required: true
+//     },
+//     unpaidRecords: {
+//         type: Array as PropType<ExtendedPurchaseItem[]>,
+//         default: () => []
+//     }
+// });
 
 const toast = useToast();
 const loading = ref(false);
@@ -388,20 +419,26 @@ const paymentMethodOptions = [
 
 // 購買統計
 const purchaseStats = computed(() => {
-    const totalAmount = props.purchaseHistory.reduce((sum, item) => sum + item.amount, 0);
-    const totalPoints = props.purchaseHistory.reduce((sum, item) => sum + item.points, 0);
-    const totalOrders = props.purchaseHistory.length;
-    
     return {
-        totalAmount: totalAmount.toLocaleString(),
-        totalPoints: totalPoints.toLocaleString(),
-        totalOrders
+        totalAmount: calculateTotalAmount(),
+        totalPoints: calculateTotalPoints(),
+        totalOrders: purchaseHistory.value.length
     };
 });
 
+// 計算總消費金額
+const calculateTotalAmount = () => {
+    return purchaseHistory.value.reduce((total, item) => total + item.amount, 0);
+};
+
+// 計算總購買點數
+const calculateTotalPoints = () => {
+    return purchaseHistory.value.reduce((total, item) => total + item.points, 0);
+};
+
 // 篩選後的數據
 const filteredPurchaseHistory = computed(() => {
-    let filtered = [...props.purchaseHistory];
+    let filtered = [...purchaseHistory.value];
     
     // 日期範圍過濾
     if (range.value) {

@@ -27,11 +27,15 @@
                 <!-- 左側菜單 -->
                 <div class="w-full md:w-1/4 border-r border-gray-200">
                     <ul class="py-2 text-gray-700">
-                        <li v-for="(menuItem, index) in menuItems" :key="index" @click="activeTab = menuItem.id"
-                            :class="['p-3 cursor-pointer flex items-center transition-colors duration-200',
-                                activeTab === menuItem.id ? 'bg-blue-50 text-blue-600 border-l-4 border-blue-500' : 'hover:bg-blue-100']">
-                            <i :class="['pi mr-2', menuItem.icon]"></i>
-                            {{ menuItem.label }}
+                        <li v-for="(menuItem, index) in menuItems" :key="index">
+                            <RouterLink :to="menuItem.path" custom v-slot="{ navigate, isActive }">
+                                <div @click="navigate"
+                                    :class="['p-3 cursor-pointer flex items-center transition-colors duration-200',
+                                        isActive ? 'bg-blue-50 text-blue-600 border-l-4 border-blue-500' : 'hover:bg-blue-100']">
+                                    <i :class="['pi mr-2', menuItem.icon]"></i>
+                                    {{ menuItem.label }}
+                                </div>
+                            </RouterLink>
                         </li>
                         <li class="p-3 cursor-pointer flex items-center text-red-500 hover:bg-gray-50"
                             @click="handleLogout">
@@ -41,38 +45,13 @@
                     </ul>
                 </div>
 
-                <!-- 右側內容 -->
+                <!-- 右側內容 - 使用路由顯示 -->
                 <section class="w-full md:w-3/4 p-6 flex flex-1">
-                    <!-- 1. 個人資料管理 -->
-                    <template v-if="activeTab === 'profile'">
-                        <ProfileManagement :profile="userStore.profile" @update-profile="updateProfile" />
-                    </template>
-
-                    <!-- 2. 站內收件夾 -->
-                    <template v-if="activeTab === 'inbox'">
-                        <InboxMessages />
-                    </template>
-
-                    <!-- 3. 點數管理與課卡購買 -->
-                    <template v-if="activeTab === 'points'">
-                        <PointsManagement :points="userStore.points" :pointsHistory="pointsHistory"
-                            :pointsCards="pointsCards" @purchase="handlePurchase" />
-                    </template>
-
-                    <!-- 4. 預約行程管理 -->
-                    <template v-if="activeTab === 'bookings'">
-                        <BookingsManagement :bookings="userActiveBookings" @cancel-booking="cancelBooking" />
-                    </template>
-
-                    <!-- 5. 活動紀錄 -->
-                    <template v-if="activeTab === 'history'">
-                        <ActivityHistory :courseHistory="userBookings" :absenceRecords="absenceRecords" />
-                    </template>
-
-                    <!-- 6. 購買紀錄 -->
-                    <template v-if="activeTab === 'purchase'">
-                        <PurchaseHistory :purchaseHistory="purchaseHistory" :unpaidRecords="unpaidRecords" />
-                    </template>
+                    <RouterView v-slot="{ Component }">
+                        <transition name="fade" mode="out-in">
+                            <component :is="Component" />
+                        </transition>
+                    </RouterView>
                 </section>
             </div>
         </div>
@@ -97,7 +76,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, provide } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import Avatar from 'primevue/avatar';
 import Chip from 'primevue/chip';
@@ -105,29 +84,18 @@ import Dialog from 'primevue/dialog';
 import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import { useUserStore } from '@/stores/userStore';
-
-import ProfileManagement from '@/views/user/userManagement/ProfileManagement.vue';
-import InboxMessages from '@/views/user/userManagement/InboxMessages.vue';
-import PointsManagement from '@/views/user/userManagement/PointsManagement.vue';
-import BookingsManagement from '@/views/user/userManagement/BookingsManagement.vue';
-import ActivityHistory from '@/views/user/userManagement/ActivityHistory.vue';
-import PurchaseHistory from '@/views/user/userManagement/PurchaseHistory.vue';
-
-import type { User } from '@/types';
 import { useBookingStore } from '@/stores/bookingStore';
 import { BookingStatus } from '@/enums/BookingStatus';
 import { usePointsStore } from '@/stores/pointsStore';
 import { usePurchaseStore } from '@/stores/orderStore';
 import { useConfirm } from 'primevue/useconfirm';
 import { useAuthStore } from '@/stores/authStore';
-import { OrderStatus } from '@/enums/PurchaseStatus';
-import { useRouter } from 'vue-router';
-import { showSuccess, showError, showInfo, initToast } from '@/utils/toast-helper';
+import { useRouter, useRoute } from 'vue-router';
+import { showSuccess, showError, initToast } from '@/utils/toast-helper';
 import { CardType } from '@/enums/Cards';
-import { PaymentMethod } from '@/enums/PurchaseStatus';
+import { PaymentMethod, OrderStatus } from '@/enums/PurchaseStatus';
 
 const toast = useToast();
-const activeTab = ref('profile');
 const showPhotoDialog = ref(false);
 const fileInput = ref<HTMLInputElement | null>(null);
 const selectedPhoto = ref<File | null>(null);
@@ -138,8 +106,9 @@ const bookingStore = useBookingStore();
 const pointsStore = usePointsStore();
 const purchaseStore = usePurchaseStore();
 const router = useRouter();
+const route = useRoute();
 
-// 用戶資料
+// 初始化数据
 onMounted(() => {
     initToast(toast);
     userStore.fetchProfile();
@@ -148,176 +117,15 @@ onMounted(() => {
     purchaseStore.fetchHistory();
 })
 
-// 為 PointsManagement 組件定義本地接口
-interface PointsCardLocal {
-    id: number;
-    name: string;
-    description: string;
-    points: number;
-    price: number;
-    discount?: string;
-}
-
-interface TransactionRecordLocal {
-    id: number;
-    date: string | Date;
-    type: string;
-    description: string;
-    points: number;
-    balance: number;
-    remark?: string;
-}
-
-// 為 ActivityHistory 組件定義本地接口
-interface CourseRecordLocal {
-    id: number;
-    userId: number;
-    courseTitle: string;
-    courseType: string;
-    location: string;
-    date: string;
-    time: string;
-    points: number;
-    status: BookingStatus;
-    rating?: number;
-    comment?: string;
-    instructor?: {
-        name: string;
-        avatar?: string;
-        title?: string;
-    };
-}
-
-interface AbsenceRecordLocal {
-    id: number;
-    userId: number;
-    courseTitle: string;
-    courseType: string;
-    date: string;
-    time: string;
-    points: number;
-    reason?: string;
-}
-
-// 為 PurchaseHistory 組件定義本地接口
-interface ExtendedPurchaseItemLocal {
-    id: number;
-    date: string;
-    cardType: CardType;
-    amount: number;
-    points: number;
-    status: OrderStatus;
-    paymentMethod: PaymentMethod;
-    invoiceNo?: string;
-    invoiceAvailable?: boolean;
-    invoiceNumber?: string;
-    invoiceDate?: string;
-    paymentDate?: string;
-    expiry?: string;
-}
-
-// 適配 Store 數據到組件需要的格式
-const purchaseHistory = computed((): ExtendedPurchaseItemLocal[] => {
-    return purchaseStore.purchaseHistory.map(item => ({
-        id: item.id,
-        date: item.createdAt.toISOString().split('T')[0],
-        cardType: CardType.Basic, // 使用枚舉中的有效值
-        amount: item.total,
-        points: 0, // 假設的默認值
-        status: item.status,
-        paymentMethod: item.payMethod,
-        invoiceNo: item.invoiceNo,
-        invoiceAvailable: !!item.invoiceNo,
-        invoiceNumber: item.invoiceNo,
-        paymentDate: item.createdAt.toISOString().split('T')[0],
-    }));
-});
-
-const userBookings = computed((): CourseRecordLocal[] => {
-    return bookingStore.bookings.map(booking => ({
-        id: booking.id,
-        userId: booking.userId,
-        courseTitle: booking.courseTitle || '',
-        courseType: '瑜伽課', // 假設的默認值
-        location: booking.location || '',
-        date: booking.date ? booking.date.toISOString().split('T')[0] : '',
-        time: booking.time || '',
-        points: booking.points,
-        status: booking.status,
-        rating: booking.rating,
-        comment: booking.comment,
-        instructor: booking.instructor
-    }));
-});
-
-const pointsCards = computed((): PointsCardLocal[] => {
-    return pointsStore.pointsCards.map(card => ({
-        id: card.id,
-        name: `${card.points}點數卡`, // 生成一個名稱
-        description: card.description,
-        points: card.points,
-        price: card.price,
-        discount: card.discount
-    }));
-});
-
-const pointsHistory = computed((): TransactionRecordLocal[] => {
-    return pointsStore.pointsHistory.map(txn => ({
-        id: txn.id,
-        date: txn.createdAt,
-        type: txn.kind,
-        description: txn.note || '點數交易',
-        points: txn.amount,
-        balance: txn.balance,
-        remark: txn.refType?.toString()
-    }));
-});
-
 // 菜單項目
 const menuItems = [
-    { id: 'profile', label: '會員資料管理', icon: 'pi-user' },
-    { id: 'inbox', label: '站內收件夾', icon: 'pi-envelope' },
-    { id: 'points', label: '點數與課卡', icon: 'pi-wallet' },
-    { id: 'bookings', label: '預約行程管理', icon: 'pi-calendar' },
-    { id: 'history', label: '活動紀錄', icon: 'pi-history' },
-    { id: 'purchase', label: '購買紀錄', icon: 'pi-shopping-cart' }
+    { id: 'profile', label: '會員資料管理', icon: 'pi-user', path: '/profile' },
+    { id: 'inbox', label: '站內收件夾', icon: 'pi-envelope', path: '/profile/inbox' },
+    { id: 'points', label: '點數與課卡', icon: 'pi-wallet', path: '/profile/points' },
+    { id: 'bookings', label: '預約行程管理', icon: 'pi-calendar', path: '/profile/bookings' },
+    { id: 'history', label: '活動紀錄', icon: 'pi-history', path: '/profile/history' },
+    { id: 'purchase', label: '購買紀錄', icon: 'pi-shopping-cart', path: '/profile/purchase' }
 ];
-
-const userActiveBookings = computed(() => {
-    return bookingStore.byStatus(BookingStatus.Confirmed)
-})
-
-// 缺席記錄
-const absenceRecords = computed((): AbsenceRecordLocal[] => {
-    return bookingStore.byStatus(BookingStatus.Pending).map(booking => ({
-        id: booking.id,
-        userId: booking.userId,
-        courseTitle: booking.courseTitle || '',
-        courseType: '瑜伽課', // 假設的默認值
-        date: booking.date ? booking.date.toISOString().split('T')[0] : '',
-        time: booking.time || '',
-        points: booking.points,
-        reason: '未出席'
-    }));
-});
-
-// 未付費記錄
-const unpaidRecords = computed((): ExtendedPurchaseItemLocal[] => {
-    return purchaseStore.byStatus(OrderStatus.Pending).map(item => ({
-        id: item.id,
-        date: item.createdAt.toISOString().split('T')[0],
-        cardType: CardType.Basic, // 使用枚舉中的有效值
-        amount: item.total,
-        points: 0, // 假設的默認值
-        status: item.status,
-        paymentMethod: item.payMethod,
-        invoiceNo: item.invoiceNo,
-        invoiceAvailable: false,
-        invoiceNumber: '',
-        paymentDate: '',
-        expiry: ''
-    }));
-});
 
 const handlePhotoUpload = () => {
     showPhotoDialog.value = true;
@@ -350,7 +158,7 @@ const confirmPhotoUpload = () => {
     }
 };
 
-const updateProfile = (updatedProfile: Partial<User>) => {
+const updateProfile = (updatedProfile: Partial<any>) => {
     const res = userStore.updateProfile(updatedProfile);
     if (res.success) {
         showSuccess(res.message || '個人資料更新成功', '成功');
@@ -383,7 +191,6 @@ const handleLogout = () => {
     });
 };
 
-
 const handlePurchase = (cardId: number) => {
     confirm.require({
         message: '確認購買此點數卡？',
@@ -408,4 +215,109 @@ const handlePurchase = (cardId: number) => {
     });
 }
 
+// 為 ProfileManagement 提供数据
+provide('profileData', {
+    profile: computed(() => userStore.profile),
+    updateProfile: updateProfile
+});
+
+// 為 PointsManagement 提供数据
+provide('pointsData', {
+    points: computed(() => userStore.points),
+    pointsHistory: computed(() => {
+        return pointsStore.pointsHistory.map(txn => ({
+            id: txn.id,
+            date: txn.createdAt,
+            type: txn.kind,
+            description: txn.note || '點數交易',
+            points: txn.amount,
+            balance: txn.balance,
+            remark: txn.refType?.toString()
+        }));
+    }),
+    pointsCards: computed(() => {
+        return pointsStore.pointsCards.map(card => ({
+            id: card.id,
+            name: `${card.points}點數卡`,
+            description: card.description,
+            points: card.points,
+            price: card.price,
+            discount: card.discount
+        }));
+    }),
+    handlePurchase: handlePurchase
+});
+
+// 為 BookingsManagement 提供数据
+provide('bookingsData', {
+    bookings: computed(() => bookingStore.byStatus(BookingStatus.Confirmed)),
+    cancelBooking: cancelBooking
+});
+
+// 為 ActivityHistory 提供数据
+provide('activityData', {
+    courseHistory: computed(() => {
+        return bookingStore.bookings.map(booking => ({
+            id: booking.id,
+            userId: booking.userId,
+            courseTitle: booking.courseTitle || '',
+            courseType: '瑜伽課',
+            location: booking.location || '',
+            date: booking.date ? booking.date.toISOString().split('T')[0] : '',
+            time: booking.time || '',
+            points: booking.points,
+            status: booking.status,
+            rating: booking.rating,
+            comment: booking.comment,
+            instructor: booking.instructor
+        }));
+    }),
+    absenceRecords: computed(() => {
+        return bookingStore.byStatus(BookingStatus.Pending).map(booking => ({
+            id: booking.id,
+            userId: booking.userId,
+            courseTitle: booking.courseTitle || '',
+            courseType: '瑜伽課',
+            date: booking.date ? booking.date.toISOString().split('T')[0] : '',
+            time: booking.time || '',
+            points: booking.points,
+            reason: '未出席'
+        }));
+    })
+});
+
+// 為 PurchaseHistory 提供数据
+provide('purchaseData', {
+    purchaseHistory: computed(() => {
+        return purchaseStore.purchaseHistory.map(item => ({
+            id: item.id,
+            date: item.createdAt.toISOString().split('T')[0],
+            cardType: CardType.Basic,
+            amount: item.total,
+            points: 0,
+            status: item.status,
+            paymentMethod: item.payMethod,
+            invoiceNo: item.invoiceNo,
+            invoiceAvailable: !!item.invoiceNo,
+            invoiceNumber: item.invoiceNo,
+            paymentDate: item.createdAt.toISOString().split('T')[0],
+        }));
+    }),
+    unpaidRecords: computed(() => {
+        return purchaseStore.byStatus(OrderStatus.Pending).map(item => ({
+            id: item.id,
+            date: item.createdAt.toISOString().split('T')[0],
+            cardType: CardType.Basic,
+            amount: item.total,
+            points: 0,
+            status: item.status,
+            paymentMethod: item.payMethod,
+            invoiceNo: item.invoiceNo,
+            invoiceAvailable: false,
+            invoiceNumber: '',
+            paymentDate: '',
+            expiry: ''
+        }));
+    })
+});
 </script>
