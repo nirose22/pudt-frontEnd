@@ -4,6 +4,8 @@ import type { User, Course, Result } from '@/types'
 import { UserGender, UserRole } from '@/enums/User';
 import { RegionCode } from '@/enums/RegionCode';
 import { MainCategory } from '@/enums/CourseCategory';
+import { UserLevel } from '@/enums/UserLevel';
+import { calculateUserLevel, calculateNextLevelProgress } from '@/utils/userLevelUtils';
 // import * as userApi from '@/services/userApi'
 
 // 带有商家信息的扩展课程接口，用于模拟数据
@@ -22,6 +24,7 @@ export const useUserStore = defineStore('user', () => {
     const points = ref<number>(0)
     const favs = ref<Course[]>([])
     const interests = ref<string[]>([]) // 用户兴趣标签 (主分类)
+    const completedCoursesCount = ref<number>(50) // 用戶已完成的課程總數，默認為50
 
     /* ---------- getters ---------- */
     const isLoggedIn = computed(() => !!profile.value)
@@ -35,6 +38,10 @@ export const useUserStore = defineStore('user', () => {
     // 判断课程是否被收藏
     const isFavorite = (id: number) => favs.value.some(c => c.id === id)
     const userInterests = computed(() => interests.value)
+    
+    // 用戶等級相關計算
+    const userLevel = computed(() => calculateUserLevel(completedCoursesCount.value))
+    const levelProgress = computed(() => calculateNextLevelProgress(completedCoursesCount.value))
 
     /* ---------- actions ---------- */
     async function fetchProfile(id?: number) {
@@ -58,6 +65,10 @@ export const useUserStore = defineStore('user', () => {
             profile.value = data
             points.value = data.points ?? 0
         }
+
+        // TODO: 從 API 取得完成的課程數量
+        // const { success, data } = await userApi.fetchCompletedCourses(id)
+        // completedCoursesCount.value = data.completedCoursesCount ?? 50;
 
         //TODO: 從 API 取得收藏
         // const { success, data } = await userApi.fetchFavorites(id)
@@ -240,7 +251,6 @@ export const useUserStore = defineStore('user', () => {
         }
     }
 
-
     /**
      * 调整用户点数
      * @param amount 要调整的点数
@@ -285,34 +295,52 @@ export const useUserStore = defineStore('user', () => {
         }
     }
 
+    /**
+     * 增加已完成課程數量
+     * @param count 要增加的課程數量，默認為1
+     */
+    function increaseCompletedCourses(count: number = 1) {
+        completedCoursesCount.value += count;
+        // TODO: 同步到API
+    }
+    
+    /**
+     * 設定已完成課程數量
+     * @param count 新的課程總數
+     */
+    function setCompletedCoursesCount(count: number) {
+        completedCoursesCount.value = count;
+        // TODO: 同步到API
+    }
+
     return {
-        // state
         profile,
         points,
         favs,
         interests,
-        // getters
+        completedCoursesCount,
         isLoggedIn,
         displayName,
         userId,
-        isFavorite,
-        userInterests,
         favoriteCourses,
-        // actions
+        userInterests,
+        userLevel,
+        levelProgress,
+        isFavorite,
         fetchProfile,
         fetchFavoriteCourses,
-        adjustPoints,
-        updateProfile,
-        updateUserInterests,
         addFavorite,
         removeFavorite,
+        adjustPoints,
+        increaseCompletedCourses,
+        setCompletedCoursesCount,
+        updateProfile,
+        updateUserInterests
     }
-},
-    {
-        // ---------- persist plugin options ----------
-        persist: {
-            key: 'user',                // localStorage key
-            storage: localStorage,      // 可改 sessionStorage
-            pick: ['profile', 'points', 'favs', 'interests']
-        }
-    })
+}, {
+    persist: {
+        key: 'user',
+        storage: sessionStorage,
+        pick: ['profile', 'points', 'favs', 'interests', 'completedCoursesCount'],
+    }
+})

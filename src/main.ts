@@ -16,6 +16,7 @@ import { MyPreset } from '@/theme/preset'
 import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import Dialog from 'primevue/dialog';
+import Tooltip from 'primevue/tooltip';
 
 const app = createApp(App)
 
@@ -44,5 +45,6 @@ app.component('InputText', InputText);
 app.component('Toast', Toast);
 app.component('ConfirmDialog', ConfirmDialog);
 app.component('Dialog', Dialog);
+app.directive('tooltip', Tooltip);
 app.mount('#app')
 

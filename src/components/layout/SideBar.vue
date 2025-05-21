@@ -4,39 +4,44 @@
             <BaseLogo class="h-full w-25" />
         </template>
         <Toast position="top-center" />
-        <div class="flex flex-col h-full">
+        <div class="flex flex-col h-full  justify-between">
             <div class="flex flex-col">
-                <div class="menu-item" @click="router.push('/')">
-                    <i class="pi pi-map-marker"></i>
-                    <span>探索</span>
-                </div>
-                <div class="menu-item" @click="handleFavorite">
-                    <i class="pi pi-heart"></i>
-                    <span>我的最愛</span>
-                </div>
-                <div class="menu-item" @click="handleMyCard">
-                    <i class="pi pi-ticket"></i>
-                    <span>我的課卡</span>
-                </div>
+                <ul class="py-2 text-gray-700">
+                    <li v-for="(menuItem, index) in menuItems" :key="index">
+                        <RouterLink :to="menuItem.path" custom v-slot="{ navigate, isActive }">
+                            <div @click="navigate" :class="['p-3 cursor-pointer flex items-center transition-colors duration-200 rounded-md',
+                                isActive ? 'bg-blue-50 text-blue-600' : 'hover:bg-blue-100']">
+                                <i :class="['pi mr-2', menuItem.icon]"></i>
+                                {{ menuItem.label }}
+                            </div>
+                        </RouterLink>
+                    </li>
+                </ul>
             </div>
             <div class="flex flex-col">
                 <Divider />
                 <template v-if="!authStore.isLoggedIn">
-                    <div class="menu-item" @click="handleLogin">
-                        <i class="pi pi-user"></i>
-                        <span>登入</span>
-                    </div>
-                    <div class="menu-item" @click="handleRegister">
-                        <i class="pi pi-user"></i>
-                        <span>註冊</span>
-                    </div>
+                    <RouterLink to="/login" custom v-slot="{ navigate, isActive }">
+                        <div class="menu-item" @click="navigate">
+                            <i class="pi pi-user"></i>
+                            <span>登入</span>
+                        </div>
+                    </RouterLink>
+                    <RouterLink to="/register" custom v-slot="{ navigate, isActive }">
+                        <div class="menu-item" @click="navigate">
+                            <i class="pi pi-user"></i>
+                            <span>註冊</span>
+                        </div>
+                    </RouterLink>
                 </template>
                 <template v-else>
-                    <div class="menu-item" @click="handleProfile">
-                        <Avatar :label="profile?.name?.charAt(0)" size="large" class="!bg-green-100 !text-green-800"
-                            shape="circle" />
-                        <span>{{ profile?.name }}</span>
-                    </div>
+                    <RouterLink to="/profile/management" custom v-slot="{ navigate, isActive }">
+                        <div class="menu-item" @click="navigate">
+                            <Avatar :label="profile?.name?.charAt(0)" size="large" class="!bg-green-100 !text-green-800"
+                                shape="circle" />
+                            <span>{{ profile?.name }}</span>
+                        </div>
+                    </RouterLink>
                     <!-- <div class="menu-item" @click="handleLogout">
                         <i class="pi pi-user"></i>
                         <span>登出</span>
@@ -83,6 +88,15 @@ const menuDt = ref({
 onMounted(() => {
     initToast(toast);
 });
+// 菜單項目
+const menuItems = [
+    { id: 'search', label: '探索', icon: 'pi-map-marker', path: '/search' },
+    { id: 'favorite', label: '我的收藏', icon: 'pi-heart', path: '/profile/favorite' },
+    { id: 'points', label: '點數管理', icon: 'pi-wallet', path: '/profile/points' },
+    { id: 'bookings', label: '預約行程管理', icon: 'pi-calendar', path: '/profile/bookings' },
+    { id: 'history', label: '活動紀錄', icon: 'pi-history', path: '/profile/history' },
+];
+
 
 const isLoggedIn = () => {
     if (!authStore.isLoggedIn) {
@@ -92,17 +106,6 @@ const isLoggedIn = () => {
     return true;
 }
 
-const handleFavorite = () => {
-    if (!isLoggedIn()) return;
-    router.push('/favorite');
-    visibleMenu.value = false;
-}
-
-const handleMyCard = () => {
-    if (!isLoggedIn()) return;
-    router.push('/my-card');
-    visibleMenu.value = false;
-}
 const handleLogin = () => {
     router.push('/login');
     visibleMenu.value = false;

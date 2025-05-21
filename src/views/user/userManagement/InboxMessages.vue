@@ -1,32 +1,44 @@
 <template>
     <div class="flex flex-col flex-1 gap-4">
-        <h2 class="text-2xl font-bold">站內收件夾</h2>
+        <h2 class="text-2xl font-bold text-sky-700 flex items-center">
+            <i class="pi pi-envelope mr-2"></i>站內收件夾
+        </h2>
 
-        <div class="card h-full flex flex-col gap-4">
+        <div class="bg-white rounded-lg shadow-md border border-gray-100 h-full flex flex-col gap-4">
             <!-- 頂部操作區 -->
-            <div class="flex flex-wrap justify-between items-center gap-3">
+            <div class="flex flex-wrap justify-between items-center gap-3 p-3 border-b border-gray-100 bg-sky-50">
                 <div class="flex gap-2">
-                    <Button icon="pi pi-refresh" outlined aria-label="刷新" @click="refreshMessages" />
+                    <Button icon="pi pi-refresh" outlined aria-label="刷新" @click="refreshMessages"
+                        class="!border-sky-500 !text-sky-500 hover:!bg-sky-50" />
                     <Button icon="pi pi-trash" outlined severity="danger" aria-label="刪除" 
                         :disabled="selectedMessages.length === 0" @click="confirmDeleteMessages" />
-                    <Button icon="pi pi-envelope" outlined :class="{'p-button-success': true}" 
+                    <Button icon="pi pi-envelope" outlined 
+                        class="!border-green-500 !text-green-500 hover:!bg-green-50"
                         :disabled="selectedMessages.length === 0" @click="markAsRead" />
-                    <Button icon="pi pi-envelope-open" outlined :class="{'p-button-warning': true}" 
+                    <Button icon="pi pi-envelope-open" outlined 
+                        class="!border-yellow-500 !text-yellow-500 hover:!bg-yellow-50"
                         :disabled="selectedMessages.length === 0" @click="markAsUnread" />
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="text-sm text-gray-500">{{ unreadCount }} 封未讀</span>
-                    <InputText v-model="filters.search" placeholder="搜尋訊息..." class="w-full md:w-auto" />
+                    <span class="text-sm bg-sky-100 text-sky-600 px-2 py-1 rounded-full font-medium">
+                        {{ unreadCount }} 封未讀
+                    </span>
+                    <div class="relative">
+                        <i class="pi pi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <InputText v-model="filters.search" placeholder="搜尋訊息..." 
+                            class="w-full md:w-auto pl-8 border-sky-200 focus:border-sky-500" />
+                    </div>
                 </div>
             </div>
 
             <!-- 分類標籤列 -->
-            <div class="flex flex-wrap gap-2 border-b pb-2">
+            <div class="flex flex-wrap gap-2 px-4 pb-2 overflow-x-auto">
                 <Button v-for="category in categories" :key="category.value"
                     :label="category.label" 
                     :badge="category.count > 0 ? category.count.toString() : undefined"
+                    :badgeClass="'bg-sky-100 text-sky-600'"
                     :outlined="filters.category !== category.value"
-                    :class="{'p-button-text': true}"
+                    :class="{'p-button-text': true, 'bg-sky-50 !border-b-2 !border-sky-500': filters.category === category.value}"
                     @click="filters.category = category.value" />
             </div>
 
@@ -34,42 +46,48 @@
             <DataTable v-model:selection="selectedMessages" :value="filteredMessages" 
                 stripedRows selectionMode="multiple" dataKey="id" 
                 :loading="loading" class="flex-1" paginator :rows="10"
-                :rowsPerPageOptions="[5, 10, 20]" paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown">
+                :rowsPerPageOptions="[5, 10, 20]" 
+                paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+                :rowHover="true"
+                emptyMessage="無訊息"
+                responsiveLayout="stack">
                 
-                <Column selectionMode="multiple" headerStyle="width: 3rem"></Column>
+                <Column selectionMode="multiple" headerStyle="width: 3rem" headerClass="bg-sky-50 text-sky-700"></Column>
                 
-                <Column field="isRead" header="狀態" style="width: 4rem">
+                <Column field="isRead" header="狀態" style="width: 4rem" headerClass="bg-sky-50 text-sky-700">
                     <template #body="{ data }">
-                        <i :class="['pi', data.isRead ? 'pi-envelope-open text-gray-400' : 'pi-envelope text-blue-500']"></i>
+                        <div class="flex justify-center">
+                            <i :class="['pi', data.isRead ? 'pi-envelope-open text-gray-400' : 'pi-envelope text-sky-500']"></i>
+                        </div>
                     </template>
                 </Column>
                 
-                <Column field="type" header="類型" style="width: 6rem">
+                <Column field="type" header="類型" style="width: 6rem" headerClass="bg-sky-50 text-sky-700">
                     <template #body="{ data }">
                         <Tag :value="getMessageTypeLabel(data.type)" :severity="getMessageTypeSeverity(data.type)" />
                     </template>
                 </Column>
                 
-                <Column field="sender" header="發送者">
+                <Column field="sender" header="發送者" headerClass="bg-sky-50 text-sky-700">
                     <template #body="{ data }">
                         <div class="flex items-center gap-2">
                             <Avatar :image="data.senderAvatar" :label="data.sender.charAt(0)" 
-                                shape="circle" size="small" />
+                                shape="circle" size="small" class="!bg-sky-100 !text-sky-700" />
                             <span>{{ data.sender }}</span>
                         </div>
                     </template>
                 </Column>
                 
-                <Column field="title" header="標題">
+                <Column field="title" header="標題" headerClass="bg-sky-50 text-sky-700">
                     <template #body="{ data }">
-                        <div class="cursor-pointer" @click="openMessage(data)"
+                        <div class="cursor-pointer hover:text-sky-600" @click="openMessage(data)"
                             :class="{'font-bold': !data.isRead}">
                             {{ data.title }}
                         </div>
                     </template>
                 </Column>
                 
-                <Column field="createdAt" header="時間" sortable>
+                <Column field="createdAt" header="時間" sortable headerClass="bg-sky-50 text-sky-700">
                     <template #body="{ data }">
                         <div class="text-sm text-gray-600">
                             {{ formatMessageDate(data.createdAt) }}
@@ -77,10 +95,11 @@
                     </template>
                 </Column>
                 
-                <Column style="width: 5rem">
+                <Column style="width: 5rem" headerClass="bg-sky-50 text-sky-700">
                     <template #body="{ data }">
                         <div class="flex gap-1">
-                            <Button icon="pi pi-eye" text rounded aria-label="查看" @click="openMessage(data)" />
+                            <Button icon="pi pi-eye" text rounded aria-label="查看" 
+                                class="text-sky-500 hover:bg-sky-50" @click="openMessage(data)" />
                             <Button icon="pi pi-trash" text rounded severity="danger" 
                                 aria-label="刪除" @click="confirmDeleteMessage(data)" />
                         </div>
@@ -88,9 +107,9 @@
                 </Column>
                 
                 <template #empty>
-                    <div class="text-center p-6 bg-gray-50 rounded-lg">
-                        <i class="pi pi-inbox text-4xl text-gray-400 mb-2"></i>
-                        <p class="text-gray-500">沒有訊息</p>
+                    <div class="text-center p-8 bg-sky-50/50 rounded-lg">
+                        <i class="pi pi-inbox text-5xl text-sky-200 mb-3"></i>
+                        <p class="text-sky-600">沒有訊息</p>
                     </div>
                 </template>
             </DataTable>
@@ -98,14 +117,15 @@
 
         <!-- 訊息詳情對話框 -->
         <Dialog v-model:visible="messageDetailVisible" :header="selectedMessage?.title || '訊息詳情'" 
-            :modal="true" :closable="true" :style="{ width: '50vw' }">
+            :modal="true" :closable="true" :style="{ width: '50vw' }"
+            :contentStyle="{ 'background-color': '#f8fafc' }">
             <div v-if="selectedMessage" class="space-y-4">
-                <div class="flex justify-between items-center border-b pb-3">
-                    <div class="flex items-center gap-2">
+                <div class="flex justify-between items-center border-b border-sky-100 pb-3">
+                    <div class="flex items-center gap-3">
                         <Avatar :image="selectedMessage.senderAvatar" :label="selectedMessage.sender.charAt(0)" 
-                            shape="circle" size="large" />
+                            shape="circle" size="large" class="!bg-sky-100 !text-sky-700" />
                         <div>
-                            <div class="font-medium">{{ selectedMessage.sender }}</div>
+                            <div class="font-medium text-sky-700">{{ selectedMessage.sender }}</div>
                             <div class="text-sm text-gray-500">{{ formatMessageDate(selectedMessage.createdAt) }}</div>
                         </div>
                     </div>
@@ -113,17 +133,17 @@
                         :severity="getMessageTypeSeverity(selectedMessage.type)" />
                 </div>
                 
-                <div class="py-4">
-                    <div class="whitespace-pre-wrap">{{ selectedMessage.content }}</div>
+                <div class="py-4 bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                    <div class="whitespace-pre-wrap text-gray-700">{{ selectedMessage.content }}</div>
                 </div>
                 
                 <!-- 附件區 -->
-                <div v-if="selectedMessage.attachments && selectedMessage.attachments.length > 0" class="border-t pt-3">
-                    <h3 class="font-medium mb-2">附件</h3>
+                <div v-if="selectedMessage.attachments && selectedMessage.attachments.length > 0" class="border-t border-sky-100 pt-3">
+                    <h3 class="font-medium mb-2 text-sky-700">附件</h3>
                     <div class="flex flex-wrap gap-2">
                         <div v-for="(attachment, index) in selectedMessage.attachments" :key="index"
-                            class="flex items-center gap-2 p-2 border rounded-md bg-gray-50 hover:bg-gray-100 cursor-pointer">
-                            <i class="pi pi-file"></i>
+                            class="flex items-center gap-2 p-2 border border-sky-100 rounded-md bg-white hover:bg-sky-50 cursor-pointer transition-colors">
+                            <i class="pi pi-file text-sky-500"></i>
                             <span>{{ attachment.name }}</span>
                             <span class="text-xs text-gray-500">({{ formatFileSize(attachment.size) }})</span>
                         </div>
@@ -131,43 +151,65 @@
                 </div>
                 
                 <!-- 相關操作按鈕 -->
-                <div v-if="selectedMessage.actions && selectedMessage.actions.length > 0" class="border-t pt-3">
+                <div v-if="selectedMessage.actions && selectedMessage.actions.length > 0" class="border-t border-sky-100 pt-3">
                     <div class="flex flex-wrap gap-2">
                         <Button v-for="(action, index) in selectedMessage.actions" :key="index"
-                            :label="action.label" :icon="action.icon" @click="handleMessageAction(action)" />
+                            :label="action.label" :icon="action.icon" @click="handleMessageAction(action)" 
+                            class="p-button-outlined p-button-sm" />
                     </div>
                 </div>
             </div>
             <template #footer>
-                <Button label="關閉" icon="pi pi-times" @click="messageDetailVisible = false" outlined />
+                <Button label="關閉" icon="pi pi-times" @click="messageDetailVisible = false" outlined 
+                    class="!border-gray-300 !text-gray-700" />
                 <Button v-if="selectedMessage && !selectedMessage.isRead" 
-                    label="標記為已讀" icon="pi pi-check" @click="markMessageAsRead(selectedMessage)" />
+                    label="標記為已讀" icon="pi pi-check" @click="markMessageAsRead(selectedMessage)" 
+                    class="!bg-green-500 !border-green-500" />
                 <Button v-if="selectedMessage && selectedMessage.canReply" 
-                    label="回覆" icon="pi pi-reply" @click="replyToMessage" />
+                    label="回覆" icon="pi pi-reply" @click="replyToMessage" 
+                    class="!bg-sky-500 !border-sky-500" />
             </template>
         </Dialog>
         
         <!-- 回覆訊息對話框 -->
-        <Dialog v-model:visible="replyDialogVisible" header="回覆訊息" :modal="true" :style="{ width: '40vw' }">
+        <Dialog v-model:visible="replyDialogVisible" header="回覆訊息" :modal="true" :style="{ width: '40vw' }"
+            :contentStyle="{ 'background-color': '#f8fafc' }">
             <div class="flex flex-col gap-4 p-3">
-                <div class="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
-                    <span class="font-medium">回覆給:</span>
-                    <span>{{ selectedMessage?.sender }}</span>
+                <div class="flex items-center gap-2 p-3 bg-sky-50 rounded-md border border-sky-100">
+                    <span class="font-medium text-sky-700">回覆給:</span>
+                    <div class="flex items-center gap-2">
+                        <Avatar :image="selectedMessage?.senderAvatar" :label="selectedMessage?.sender.charAt(0)" 
+                            shape="circle" size="small" class="!bg-sky-100 !text-sky-700" />
+                        <span>{{ selectedMessage?.sender }}</span>
+                    </div>
                 </div>
                 
                 <div class="flex flex-col gap-2">
-                    <label for="replyContent" class="font-medium">訊息內容</label>
-                    <Textarea id="replyContent" v-model="replyContent" rows="5" class="w-full" />
+                    <label for="replyContent" class="font-medium text-sky-700">訊息內容</label>
+                    <Textarea id="replyContent" v-model="replyContent" rows="5" class="w-full border-sky-200 focus:border-sky-500" 
+                        placeholder="請輸入回覆內容..." />
                 </div>
             </div>
             <template #footer>
-                <Button label="取消" icon="pi pi-times" @click="replyDialogVisible = false" outlined />
-                <Button label="發送" icon="pi pi-send" @click="sendReply" :loading="sendingReply" />
+                <Button label="取消" icon="pi pi-times" @click="replyDialogVisible = false" outlined 
+                    class="!border-gray-300 !text-gray-700" />
+                <Button label="發送" icon="pi pi-send" @click="sendReply" :loading="sendingReply" 
+                    class="!bg-sky-500 !border-sky-500" />
             </template>
         </Dialog>
         
         <!-- 確認刪除對話框 -->
-        <ConfirmDialog></ConfirmDialog>
+        <ConfirmDialog>
+            <template #message="{ message }">
+                <div class="flex items-start gap-3 p-3">
+                    <i class="pi pi-exclamation-triangle text-yellow-500 text-xl mt-1"></i>
+                    <div>
+                        <h3 class="font-bold text-gray-800 mb-2">確認刪除</h3>
+                        <p class="text-gray-600">{{ message }}</p>
+                    </div>
+                </div>
+            </template>
+        </ConfirmDialog>
     </div>
 </template>
 
@@ -184,6 +226,7 @@ import Avatar from 'primevue/avatar';
 import ConfirmDialog from 'primevue/confirmdialog';
 import Tag from 'primevue/tag';
 import ButtonGroup from 'primevue/buttongroup';
+import InputText from 'primevue/inputtext';
 import { MessageType } from '@/enums/Message';
 import type { Message } from '@/types/message';
 import { showSuccess, showError, showInfo, initToast } from '@/utils/toastHelper';
@@ -582,8 +625,24 @@ onMounted(() => {
 <style scoped>
 @reference "tailwindcss";
 
+:deep(.p-datatable-wrapper) {
+    @apply flex-1 h-full overflow-auto;
+}
+
 :deep(.p-datatable > .p-datatable-table-container) {
     flex: 1;
+}
+
+:deep(.p-datatable-tbody > tr:hover) {
+    @apply bg-sky-50/50;
+}
+
+:deep(.p-datatable-sm .p-datatable-thead > tr > th) {
+    @apply py-2 px-3 text-sm font-semibold;
+}
+
+:deep(.p-datatable-sm .p-datatable-tbody > tr > td) {
+    @apply py-2 px-3 text-sm;
 }
 
 :deep(.p-button.p-button-text:not(.p-disabled):hover) {
@@ -594,5 +653,9 @@ onMounted(() => {
 :deep(.p-button.p-button-text:not(.p-disabled).active) {
     background: rgba(var(--primary-color-rgb), 0.16);
     color: var(--primary-color);
+}
+
+:deep(.p-avatar) {
+    @apply flex items-center justify-center;
 }
 </style> 

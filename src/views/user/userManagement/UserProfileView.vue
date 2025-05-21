@@ -1,52 +1,118 @@
 <template>
-    <div class="flex-1 flex  overflow-auto">
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden min-h-7/12 grow flex flex-col">
-            <!-- 頂部個人信息區 -->
-            <nav class="bg-gradient-to-r from-blue-500 to-blue-300 p-6 ">
-                <div class="flex flex-col md:flex-row gap-8">
-                    <!-- 大頭照 -->
-                    <div class="flex items-center justify-center">
-                        <Avatar :label="userStore.profile?.name?.charAt(0)" size="xlarge" shape="circle"
-                            class="!bg-green-100 !text-green-800" />
-                        <Button icon="pi pi-camera" class="absolute bottom-0 right-0 p-1 !w-8 !h-8" rounded text
-                            @click="handlePhotoUpload" />
-                    </div>
+    <div class="flex-1 flex overflow-y-auto">
+        <div class="rounded-lg shadow-lg min-h-7/12 grow flex flex-col">
+            <!-- 頂部個人信息區 - 藍色簡潔主題 -->
+            <nav class="p-6 ">
+                <div class="relative z-10 md:px-10">
+                    <!-- 用戶基本信息與等級 -->
+                    <div class="flex flex-col md:flex-row gap-6">
+                        <!-- 左側：頭像和基本信息 -->
+                        <div class="flex flex-col md:flex-row items-center gap-6 md:w-1/2">
+                            <!-- 頭像區域 -->
+                            <div class="relative flex-shrink-0">
+                                <div class="w-24 h-24 md:w-28 md:h-28 rounded-full border-4 border-white shadow-md overflow-hidden flex items-center justify-center bg-white relative">
+                                    <Avatar :label="userStore.profile?.name?.charAt(0)" size="xlarge" shape="circle"
+                                        class="!w-full !h-full !bg-blue-100 !text-blue-700" />
+                                    <div class="absolute -bottom-1 -right-1 bg-blue-400 rounded-full p-1.5 cursor-pointer shadow-md"
+                                        @click="handlePhotoUpload">
+                                        <i class="pi pi-camera text-xs"></i>
+                                    </div>
+                                </div>
+                                
+                                <!-- 等級徽章 -->
+                                <div class="absolute -bottom-3 -right-3 text-3xl" 
+                                    v-tooltip.top="levelNames[userStore.userLevel]">
+                                    {{ levelEmojis[userStore.userLevel] }}
+                                </div>
+                            </div>
 
-                    <!-- 個人基本信息 -->
-                    <div class="flex flex-col gap-2 text-center md:text-left">
-                        <p class="text-2xl font-bold text-gray-100">{{ userStore.profile?.name }}</p>
-                        <p class="text-gray-100">{{ userStore.profile?.email }}</p>
-                        <div class="flex flex-wrap justify-center md:justify-start gap-2">
-                            <Chip :label="`點數: ${userStore.points}`" class=" !text-blue-600" />
+                            <!-- 基本信息 -->
+                            <div class="flex flex-col gap-1 text-center md:text-left">
+                                <h2 class="text-3xl font-bold">{{ userStore.profile?.name || '用戶名稱' }}</h2>
+                                <p class="text-gray-700">{{ userStore.profile?.email || 'email@example.com' }}</p>
+                                
+                                <!-- 點數顯示 -->
+                                <div class="flex flex-wrap justify-center md:justify-start gap-2 mt-2">
+                                    <Chip :label="`點數: ${userStore.points}`"
+                                        class="!bg-white !text-blue-700 !font-bold" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 右側：等級與進度展示 -->
+                        <div class="md:w-1/2 mt-4 md:mt-0">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="flex flex-col">
+                                        <span class="text-sm">PUDT 等級：</span>
+                                        <span class="text- text-blue-600">{{ levelNames[userStore.userLevel] }}</span>
+                                        <span class="text-2xl text-blue-600">{{ levelRoles[userStore.userLevel] }}</span>
+                                    </div>
+                                </div>
+                                <div class="bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full text-center">
+                                    <span class="font-bold">{{ userStore.completedCoursesCount }} 堂</span>
+                                </div>
+                            </div>
+                            
+                            <!-- 等級進度條 -->
+                            <div class="mt-3">
+                                <div v-if="userStore.levelProgress.nextLevel" class="flex justify-between text-sm mb-2">
+                                    <span class="text-gray-800">當前：{{ levelNames[userStore.userLevel] }}</span>
+                                    <span class="text-gray-800">
+                                        距離 {{ levelNames[userStore.levelProgress.nextLevel] }} 
+                                        <span class="font-bold">還差 {{ userStore.levelProgress.remainingCourses }} 堂</span>
+                                    </span>
+                                </div>
+                                <div v-else class="text-sm mb-2 text-center text-gray-800">
+                                    <span>恭喜！您已達到最高等級 {{ levelNames[userStore.userLevel] }}</span>
+                                </div>
+                                
+                                <div class="w-full bg-blue-700/30 rounded-full h-3 overflow-hidden">
+                                    <div class="h-full bg-white rounded-full transition-all duration-500"
+                                        :style="{ width: `${userStore.levelProgress.progress}%` }"></div>
+                                </div>
+                                
+                                <!-- 進度百分比顯示 -->
+                                <div class="text-right mt-1">
+                                    <span class="text-xs text-gray-800">{{ userStore.levelProgress.progress }}% 完成</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </nav>
 
             <div class="flex flex-col flex-1 sm:overflow-hidden md:flex-row">
-                <!-- 左側菜單 -->
-                <div class="w-full md:w-1/4 border-r border-gray-200">
-                    <ul class="py-2 text-gray-700">
+                <!-- 左側菜單 - 藍色主題 -->
+                <div class="w-full md:w-64 bg-white border-r border-gray-100 flex-shrink-0">
+                    <div class="p-3 border-b border-gray-100 bg-blue-50">
+                        <h3 class="font-medium text-blue-700 flex items-center">
+                            <i class="pi pi-user mr-2"></i>會員中心
+                        </h3>
+                    </div>
+                    <ul class="py-1">
                         <li v-for="(menuItem, index) in menuItems" :key="index">
                             <RouterLink :to="menuItem.path" custom v-slot="{ navigate, isActive }">
                                 <div @click="navigate"
                                     :class="['p-3 cursor-pointer flex items-center transition-colors duration-200',
-                                        isActive ? 'bg-blue-50 text-blue-600 border-l-4 border-blue-500' : 'hover:bg-blue-100']">
-                                    <i :class="['pi mr-2', menuItem.icon]"></i>
+                                        isActive 
+                                            ? 'bg-blue-50 text-blue-600 border-l-4 border-blue-500 font-medium' 
+                                            : 'hover:bg-blue-50/50 text-gray-700']">
+                                    <i :class="['pi mr-3 text-lg', menuItem.icon]"></i>
                                     {{ menuItem.label }}
                                 </div>
                             </RouterLink>
                         </li>
-                        <li class="p-3 cursor-pointer flex items-center text-red-500 hover:bg-gray-50"
+                        <li class="p-3 cursor-pointer flex items-center text-red-600 hover:bg-red-50"
                             @click="handleLogout">
-                            <i class="pi pi-sign-out mr-2"></i>
+                            <i class="pi pi-sign-out mr-3 text-lg"></i>
                             登出
                         </li>
                     </ul>
                 </div>
 
                 <!-- 右側內容 - 使用路由顯示 -->
-                <section class="w-full md:w-3/4 p-6 flex flex-1">
+                <section class="w-full p-6 overflow-auto bg-white">
                     <RouterView v-slot="{ Component }">
                         <transition name="fade" mode="out-in">
                             <component :is="Component" />
@@ -55,8 +121,10 @@
                 </section>
             </div>
         </div>
+        
         <Toast />
         <ConfirmDialog class="max-w-lg w-full" />
+        
         <!-- 頭像上傳對話框 -->
         <Dialog v-model:visible="showPhotoDialog" header="更新頭像" :style="{ width: '450px' }">
             <div class="flex flex-col items-center gap-4">
@@ -94,6 +162,13 @@ import { useRouter, useRoute } from 'vue-router';
 import { showSuccess, showError, initToast } from '@/utils/toastHelper';
 import { CardType } from '@/enums/Cards';
 import { OrderStatus } from '@/enums/PurchaseStatus';
+import { UserLevel } from '@/enums/UserLevel';
+import {
+    levelNames,
+    levelEmojis,
+    levelDescriptions,
+    levelRoles
+} from '@/utils/userLevelUtils';
 
 const toast = useToast();
 const showPhotoDialog = ref(false);
@@ -117,7 +192,7 @@ onMounted(() => {
     purchaseStore.fetchHistory();
 })
 
-// 菜單項目
+// 菜單項目 - 更新圖示以匹配植物主題
 const menuItems = [
     { id: 'profile', label: '會員資料管理', icon: 'pi-user', path: '/profile/management' },
     { id: 'favorite', label: '收藏課程', icon: 'pi-heart', path: '/profile/favorite' },
@@ -322,3 +397,15 @@ provide('purchaseData', {
     })
 });
 </script>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
+</style>

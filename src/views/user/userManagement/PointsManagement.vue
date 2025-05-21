@@ -1,9 +1,9 @@
 <template>
     <div class="flex flex-col flex-1">
-        <h2 class="text-2xl font-bold mb-6">點數錢包</h2>
+        <h2 class="text-2xl font-bold mb-6 text-sky-700">點數錢包</h2>
 
         <!-- 點數總覽卡片 -->
-        <div class="bg-gradient-to-r from-blue-500 to-blue-300 rounded-lg shadow-lg p-6 mb-6">
+        <div class="bg-gradient-to-r from-sky-500 to-sky-600 rounded-lg shadow-md p-6 mb-6">
             <div class="flex flex-col md:flex-row justify-between items-center gap-6">
                 <div class="text-center md:text-left">
                     <h3 class="text-white text-lg font-medium mb-1">目前可用點數</h3>
@@ -20,63 +20,151 @@
             </div>
         </div>
 
-        <!-- 快速儲值選項 -->
-        <div class="card p-4 shadow-sm rounded-lg mb-6">
-            <h3 class="text-lg font-semibold mb-4">快速儲值</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                <div v-for="card in pointsCards" :key="card.id" 
-                    class="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-                    :class="{ 'border-primary-500 bg-primary-50': selectedCard === card.id }"
-                    @click="selectCard(card.id)">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <h4 class="font-medium text-lg">{{ card.name }}</h4>
-                            <div class="text-sm text-gray-500">{{ card.description }}</div>
+        <!-- PUDT 課卡儲值方案 -->
+        <div class="mb-8">
+            <h3 class="text-lg font-bold mb-4 text-sky-700 flex items-center">
+                <i class="pi pi-ticket mr-2"></i>PUDT 課卡儲值方案
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- 新手卡 -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden border border-sky-100 hover:shadow-lg transition-all">
+                    <div class="bg-sky-50 p-4 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 text-4xl opacity-10 transform rotate-12">🌱</div>
+                        <h4 class="text-lg font-bold text-sky-700">新手卡</h4>
+                        <div class="text-sm text-sky-600">輕量探索</div>
+                        <div class="mt-2 flex items-end">
+                            <span class="text-3xl font-bold text-sky-700">15</span>
+                            <span class="ml-1 text-sky-600">點數</span>
                         </div>
-                        <div class="text-right">
-                            <div class="text-lg font-bold text-primary-600">{{ card.points }} 點</div>
-                            <div class="text-sm">NT$ {{ card.price }}</div>
+                        <div class="mt-1 text-xs text-sky-500">NT$ 1,500</div>
+                    </div>
+                    <div class="p-4">
+                        <p class="text-sm text-gray-600 mb-4">適合偶而上課的你，輕鬆探索各種課程</p>
+                        <div class="text-xs text-gray-500 mb-3 flex items-center">
+                            <i class="pi pi-users mr-1"></i>
+                            <span>適合對象：偶爾體驗、初次使用者</span>
+                        </div>
+                        <div class="flex justify-end">
+                            <Button label="購買課卡" icon="pi pi-shopping-cart" 
+                                class="p-button-sm"
+                                @click="purchaseCard(1)" />
                         </div>
                     </div>
-                    <div class="mt-3 flex justify-end">
-                        <Button label="購買" icon="pi pi-shopping-cart" 
-                            :class="{ 'p-button-outlined': selectedCard !== card.id }"
-                            @click.stop="purchaseCard(card.id)" />
+                </div>
+                
+                <!-- 標準卡 -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden border border-sky-100 hover:shadow-lg transition-all">
+                    <div class="bg-sky-100 p-4 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 text-4xl opacity-10 transform rotate-12">🍃</div>
+                        <h4 class="text-lg font-bold text-sky-700">標準卡</h4>
+                        <div class="text-sm text-sky-600">穩定學習</div>
+                        <div class="mt-2 flex items-end">
+                            <span class="text-3xl font-bold text-sky-700">30</span>
+                            <span class="ml-1 text-sky-600">點數</span>
+                        </div>
+                        <div class="mt-1 text-xs text-sky-500">NT$ 2,800</div>
+                    </div>
+                    <div class="p-4">
+                        <p class="text-sm text-gray-600 mb-4">每週一堂，打造穩定的學習節奏 💪</p>
+                        <div class="text-xs text-gray-500 mb-3 flex items-center">
+                            <i class="pi pi-users mr-1"></i>
+                            <span>適合對象：每週固定學習者</span>
+                        </div>
+                        <div class="flex justify-end">
+                            <Button label="購買課卡" icon="pi pi-shopping-cart" 
+                                class="p-button-sm"
+                                @click="purchaseCard(2)" />
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 進階卡 -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden border border-sky-200 hover:shadow-lg transition-all">
+                    <div class="bg-sky-200 p-4 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 text-4xl opacity-10 transform rotate-12">🌼</div>
+                        <h4 class="text-lg font-bold text-sky-700">進階卡</h4>
+                        <div class="text-sm text-sky-600">持續進修</div>
+                        <div class="mt-2 flex items-end">
+                            <span class="text-3xl font-bold text-sky-700">60</span>
+                            <span class="ml-1 text-sky-600">點數</span>
+                        </div>
+                        <div class="mt-1 text-xs text-sky-500">NT$ 5,400</div>
+                    </div>
+                    <div class="p-4">
+                        <p class="text-sm text-gray-600 mb-4">每週 2–3 堂課的你，持續累積實力 🔥</p>
+                        <div class="text-xs text-gray-500 mb-3 flex items-center">
+                            <i class="pi pi-users mr-1"></i>
+                            <span>適合對象：一週多堂、持續進修者</span>
+                        </div>
+                        <div class="flex justify-end">
+                            <Button label="購買課卡" icon="pi pi-shopping-cart" 
+                                class="p-button-sm"
+                                @click="purchaseCard(3)" />
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 無限卡 -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden border border-sky-300 hover:shadow-lg transition-all">
+                    <div class="bg-gradient-to-r from-sky-300 to-sky-400 p-4 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 text-4xl opacity-10 transform rotate-12">🌲</div>
+                        <div class="absolute top-2 left-2 text-xs bg-yellow-400 text-sky-800 px-2 py-0.5 rounded-full font-bold">最划算</div>
+                        <h4 class="text-lg font-bold text-white">無限卡</h4>
+                        <div class="text-sm text-white">高效學習</div>
+                        <div class="mt-2 flex items-end">
+                            <span class="text-3xl font-bold text-white">100</span>
+                            <span class="ml-1 text-white">點數</span>
+                        </div>
+                        <div class="mt-1 text-xs text-sky-100">NT$ 8,000</div>
+                    </div>
+                    <div class="p-4">
+                        <p class="text-sm text-gray-600 mb-4">高效學習、自由預約，享受最划算的成長方案 ✨</p>
+                        <div class="text-xs text-gray-500 mb-3 flex items-center">
+                            <i class="pi pi-users mr-1"></i>
+                            <span>適合對象：重度學習者／密集預約者</span>
+                        </div>
+                        <div class="flex justify-end">
+                            <Button label="購買課卡" icon="pi pi-shopping-cart" 
+                                class="p-button-sm"
+                                @click="purchaseCard(4)" />
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- 交易記錄 -->
-        <div class="card p-4 shadow-sm rounded-lg flex-1">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold">最近交易記錄</h3>
-                <div class="flex gap-2">
-                    <Select v-model="filter.month" :options="monthOptions" optionLabel="label" optionValue="value" placeholder="月份" />
-                    <Select v-model="filter.type" :options="typeOptions" optionLabel="label" optionValue="value" placeholder="類型" />
+        <div class="bg-white rounded-lg shadow-md border border-gray-100 p-4 flex-1">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+                <h3 class="text-lg font-bold text-sky-700 flex items-center">
+                    <i class="pi pi-history mr-2"></i>最近交易記錄
+                </h3>
+                <div class="flex flex-wrap gap-2">
+                    <Select v-model="filter.month" :options="monthOptions" optionLabel="label" optionValue="value" placeholder="月份" class="w-24" />
+                    <Select v-model="filter.type" :options="typeOptions" optionLabel="label" optionValue="value" placeholder="類型" class="w-28" />
                 </div>
             </div>
             <DataTable :value="filteredPointsHistory" stripedRows responsiveLayout="stack" :paginator="true" :rows="5"
-                class="p-datatable-sm" emptyMessage="無交易記錄">
-                <Column field="date" header="日期">
+                class="p-datatable-sm" emptyMessage="無交易記錄" :rowHover="true">
+                <Column field="date" header="日期" headerClass="text-sky-700 bg-sky-50" bodyClass="text-gray-700">
                     <template #body="{ data }">
                         {{ formatDate(data.date) }}
                     </template>
                 </Column>
-                <Column field="type" header="類型">
+                <Column field="type" header="類型" headerClass="text-sky-700 bg-sky-50" bodyClass="text-gray-700">
                     <template #body="{ data }">
                         <Tag :severity="getTypeSeverity(data.type)" :value="getTypeLabel(data.type)" />
                     </template>
                 </Column>
-                <Column field="description" header="說明" />
-                <Column field="points" header="點數">
+                <Column field="description" header="說明" headerClass="text-sky-700 bg-sky-50" bodyClass="text-gray-700" />
+                <Column field="points" header="點數" headerClass="text-sky-700 bg-sky-50" bodyClass="text-gray-700">
                     <template #body="{ data }">
-                        <span :class="isPositiveType(data.type) ? 'text-green-600' : 'text-red-600'">
+                        <span :class="isPositiveType(data.type) ? 'text-green-600 font-medium' : 'text-red-600 font-medium'">
                             {{ isPositiveType(data.type) ? '+' : '-' }}{{ data.points }}
                         </span>
                     </template>
                 </Column>
-                <Column field="balance" header="餘額" />
+                <Column field="balance" header="餘額" headerClass="text-sky-700 bg-sky-50" bodyClass="text-gray-700 font-medium" />
             </DataTable>
         </div>
 
@@ -378,8 +466,8 @@ const getTypeSeverity = (type: string): string => {
 <style scoped>
 @reference "tailwindcss";
 
-.card {
-    @apply bg-white border border-gray-100;
+:deep(.p-datatable-header) {
+    @apply bg-sky-50 text-sky-800;
 }
 
 :deep(.p-datatable > .p-datatable-table-container) {
@@ -387,10 +475,14 @@ const getTypeSeverity = (type: string): string => {
 }
 
 :deep(.p-datatable-sm .p-datatable-thead > tr > th) {
-    @apply py-2 px-3 text-sm;
+    @apply py-2 px-3 text-sm font-semibold;
 }
 
 :deep(.p-datatable-sm .p-datatable-tbody > tr > td) {
     @apply py-2 px-3 text-sm;
+}
+
+:deep(.p-datatable-sm .p-datatable-tbody > tr:hover) {
+    @apply bg-sky-50/50;
 }
 </style>
