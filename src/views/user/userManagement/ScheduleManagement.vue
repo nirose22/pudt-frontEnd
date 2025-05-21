@@ -1,65 +1,74 @@
 <template>
     <div class="flex flex-col flex-1 gap-4">
         <!-- 卡片容器 -->
-        <div class="card h-full flex flex-col gap-3">
+        <div class=" bg-white rounded-lg h-full flex flex-col gap-4">
             <DateRangeFilter v-model:startDate="startDate" v-model:endDate="endDate" :defaultRangeDays="7"
-                :showControls="false" @change="handleDateRangeChange" />
+                :showControls="false" @change="handleDateRangeChange" class="border-b border-sky-100 pb-3" />
+            
             <!-- 課程列表（按日期分組） -->
-            <div v-if="bookingsInRange.length" class="flex-1 flex flex-col gap-1 overflow-auto">
+            <div v-if="bookingsInRange.length" class="flex-1 flex flex-col gap-3 overflow-auto">
                 <div v-for="date in Object.keys(bookingsByDate)" :key="date" class="flex flex-col gap-1">
                     <!-- 使用 DataView 展示当天课程 -->
                     <DataView :value="bookingsByDate[date]" :layout="layout" :rows="bookingsByDate[date].length">
                         <template #header>
-                            <p class="text-sm font-medium text-gray-600">{{ formatDateHeader(date) }}</p>
+                            <p class="text-sm font-medium bg-sky-50 text-sky-700 py-2 px-3 rounded-md">
+                                {{ formatDateHeader(date) }}
+                            </p>
                         </template>
+                        
                         <!-- 列表视图 -->
                         <template #list="slotProps">
                             <div v-for="(booking, index) in slotProps.items" :key="index">
-                                <div class="flex p-3 gap-4 shadow-smrounded-lg hover:bg-blue-50 transition-colors mb-2 cursor-pointer"
+                                <div class="flex p-3 gap-4 border border-sky-100 rounded-lg shadow-sm hover:bg-sky-50 transition-colors mb-2 cursor-pointer"
                                     @click="showBookingDetail(booking)">
                                     <div v-if="booking.instructor?.avatar" class="flex-shrink-0">
                                         <img :src="booking.instructor.avatar" alt="教練照片"
-                                            class="w-12 h-12 rounded-full object-cover shadow-sm" />
+                                            class="w-12 h-12 rounded-full object-cover shadow-sm border border-sky-100" />
                                     </div>
                                     <div class="flex-1 flex flex-col">
-                                        <div class="text-base font-medium text-sky-600">{{ booking.courseTitle }}
+                                        <div class="text-base font-medium text-sky-700">{{ booking.courseTitle }}
                                         </div>
                                         <div class="flex items-center text-sm text-gray-600 mb-1">
-                                            <i class="pi pi-clock icon-class"></i>
+                                            <i class="pi pi-clock text-sky-500 mr-1"></i>
                                             <span>{{ booking.time }}</span>
                                         </div>
                                         <div class="flex items-center text-sm text-gray-600 mb-1">
-                                            <i class="pi pi-map-marker icon-class"></i>
+                                            <i class="pi pi-map-marker text-sky-500 mr-1"></i>
                                             <span>{{ booking.location }}</span>
                                         </div>
                                         <div class="flex items-center text-sm text-gray-600">
-                                            <i class="pi pi-user icon-class"></i>
+                                            <i class="pi pi-user text-sky-500 mr-1"></i>
                                             <span>{{ booking.instructor?.name }}</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </template>
+                        
                         <template #empty>
-                            <div class="text-center p-4 bg-gray-50 rounded">
-                                <i class="pi pi-calendar-times text-4xl text-gray-400 mb-2"></i>
-                                <p class="text-gray-500">這一天沒有課程預約</p>
+                            <div class="text-center p-4 bg-sky-50 rounded-lg border border-sky-100">
+                                <i class="pi pi-calendar-times text-4xl text-sky-200 mb-2"></i>
+                                <p class="text-sky-600">這一天沒有課程預約</p>
                             </div>
                         </template>
                     </DataView>
                 </div>
             </div>
-            <div v-else class="content-center block text-center p-6 bg-gray-50 flex-1">
-                <i class="pi pi-calendar-times text-4xl text-gray-400 mb-2"></i>
-                <p class="text-gray-500">您目前沒有任何預約</p>
+            
+            <div v-else class="content-center block text-center p-8 bg-sky-50 flex-1 rounded-lg border border-sky-100">
+                <i class="pi pi-calendar-times text-6xl text-sky-200 mb-4"></i>
+                <p class="text-sky-600 text-lg mb-2">您目前沒有任何預約</p>
+                <p class="text-gray-500 mb-4">選擇課程並預約參加吧！</p>
+                <Button label="瀏覽課程" icon="pi pi-search" @click="router.push('/courses')" class="!bg-sky-500 !border-sky-500" />
             </div>
+            
             <Dialog v-model:visible="showDetailDialog" header="課程詳情" :modal="true" :closable="true"
-                :style="{ width: '500px' }">
+                :style="{ width: '500px' }" :contentStyle="{ 'background-color': '#f8fafc' }">
                 <div v-if="selectedBooking" class="space-y-4">
-                    <div class="p-3 rounded-lg bg-gray-50">
+                    <div class="p-4 rounded-lg bg-white border border-sky-100">
                         <div class="flex justify-between mb-2">
                             <span class="text-gray-600">課程名稱：</span>
-                            <span class="font-medium">{{ selectedBooking.courseTitle }}</span>
+                            <span class="font-medium text-sky-700">{{ selectedBooking.courseTitle }}</span>
                         </div>
                         <div class="flex justify-between mb-2">
                             <span class="text-gray-600">日期：</span>
@@ -79,14 +88,14 @@
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">點數：</span>
-                            <span class="font-bold text-primary-600">{{ selectedBooking.points }}</span>
+                            <span class="font-bold text-sky-600">{{ selectedBooking.points }}</span>
                         </div>
                     </div>
                 </div>
                 <template #footer>
                     <Button label="取消預約" icon="pi pi-times" severity="danger" outlined
                         @click="selectedBooking && cancelBooking(selectedBooking)" class="mr-2" />
-                    <Button label="關閉" @click="showDetailDialog = false" />
+                    <Button label="關閉" @click="showDetailDialog = false" class="!bg-sky-500 !border-sky-500" />
                 </template>
             </Dialog>
         </div>
@@ -94,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, provide } from 'vue';
 import DateRangeFilter from '@/components/common/DateRangeFilter.vue';
 import { useBookingStore } from '@/stores/bookingStore';
 import { inRange, byDate, formatDateString } from '@/utils/date';
@@ -105,8 +114,9 @@ import { useConfirm } from 'primevue/useconfirm';
 import { showSuccess, showError, initToast } from '@/utils/toastHelper';
 import Dialog from 'primevue/dialog';
 import { useToast } from 'primevue/usetoast';
+import { useRouter } from 'vue-router';
 
-
+const router = useRouter();
 const bookingStore = useBookingStore();
 const confirm = useConfirm();
 const layout = ref('list');
@@ -219,15 +229,23 @@ const formatDateHeader = (dateString: string) => {
 <style scoped>
 @reference "tailwindcss";
 
-.card {
-    @apply p-4 shadow-sm bg-gray-50;
-}
-
 .icon-class {
-    @apply text-sm text-blue-400 mr-1;
+    @apply text-sm text-sky-500 mr-1;
 }
 
-.date-header {
-    @apply py-2 px-4 bg-yellow-50 rounded-lg mb-2;
+:deep(.p-dataview-header) {
+    @apply bg-transparent border-0 p-0 mb-2;
+}
+
+:deep(.p-dialog-content) {
+    @apply p-4;
+}
+
+:deep(.p-dialog-header) {
+    @apply bg-sky-50 text-sky-700;
+}
+
+:deep(.p-dialog-footer) {
+    @apply bg-gray-50;
 }
 </style>

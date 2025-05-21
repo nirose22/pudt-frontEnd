@@ -1,16 +1,20 @@
 <template>
     <div class="flex flex-col flex-1">
-        <h2 class="text-2xl font-bold mb-6">會員資料管理</h2>
+        <h2 class="text-2xl font-bold mb-6 text-sky-700 flex items-center">
+            <i class="pi pi-user-edit mr-2"></i>會員資料管理
+        </h2>
         <Form v-slot="$form" :initialValues="form" @submit="saveProfile" :resolver="resolver"
             class="flex flex-col flex-1 justify-between">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- 個人基本資料區 -->
-                <div class="card p-4 shadow-sm rounded-lg">
-                    <h3 class="text-lg font-semibold mb-4 pb-2 border-b">個人基本資料</h3>
+                <div class="card p-4 shadow-sm rounded-lg border border-sky-100">
+                    <h3 class="text-lg font-semibold mb-4 pb-2 border-b border-sky-100 text-sky-700">
+                        <i class="pi pi-id-card mr-2"></i>個人基本資料
+                    </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField name="name" class="col-span-1">
                             <div class="form-label">姓名</div>
-                            <InputText class="w-full" />
+                            <InputText class="w-full border-sky-200 focus:border-sky-500" />
                             <Message v-if="$form.name?.invalid" severity="secondary" size="small" variant="simple">
                                 {{ $form.name?.error?.message }}
                             </Message>
@@ -33,18 +37,20 @@
                 </div>
 
                 <!-- 聯絡資訊區 -->
-                <div class="card p-4 shadow-sm rounded-lg">
-                    <h3 class="text-lg font-semibold mb-4 pb-2 border-b">聯絡資訊</h3>
+                <div class="card p-4 shadow-sm rounded-lg border border-sky-100">
+                    <h3 class="text-lg font-semibold mb-4 pb-2 border-b border-sky-100 text-sky-700">
+                        <i class="pi pi-phone mr-2"></i>聯絡資訊
+                    </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField name="email" class="col-span-1">
                             <div class="form-label">電子郵件</div>
-                            <InputText class="w-full" disabled />
+                            <InputText class="w-full bg-gray-50" disabled />
                             <small class="text-gray-500">郵件地址無法修改</small>
                         </FormField>
 
                         <FormField name="phone" class="col-span-1">
                             <div class="form-label">手機號碼</div>
-                            <InputText class="w-full" />
+                            <InputText class="w-full border-sky-200 focus:border-sky-500" />
                             <Message v-if="$form.phone?.invalid" severity="secondary" size="small" variant="simple">
                                 {{ $form.phone?.error?.message }}
                             </Message>
@@ -52,7 +58,7 @@
 
                         <FormField name="address" class="col-span-2">
                             <div class="form-label">地址</div>
-                            <InputText class="w-full" />
+                            <InputText class="w-full border-sky-200 focus:border-sky-500" />
                             <Message v-if="$form.address?.invalid" severity="secondary" size="small" variant="simple">
                                 {{ $form.address?.error?.message }}
                             </Message>
@@ -61,37 +67,39 @@
                 </div>
 
                 <!-- 帳號安全區 -->
-                <div class="card p-4 shadow-sm rounded-lg">
-                    <h3 class="text-lg font-semibold mb-4 pb-2 border-b">帳號安全</h3>
+                <div class="card p-4 shadow-sm rounded-lg border border-sky-100">
+                    <h3 class="text-lg font-semibold mb-4 pb-2 border-b border-sky-100 text-sky-700">
+                        <i class="pi pi-shield mr-2"></i>帳號安全
+                    </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="col-span-1">
                             <div class="form-label">密碼管理</div>
-                            <Button label="修改密碼" icon="pi pi-lock" class="w-full" @click="showPasswordModal = true"
-                                severity="info" />
+                            <Button label="修改密碼" icon="pi pi-lock" class="w-full !bg-sky-500 !border-sky-500" 
+                                @click="showPasswordModal = true" />
                         </div>
 
                         <div class="col-span-1">
                             <div class="form-label">雙重驗證</div>
                             <div class="flex items-center">
                                 <ToggleButton v-model="form.twoFactorEnabled" onLabel="已啟用" offLabel="未啟用"
-                                    class="w-full" />
+                                    class="w-full !bg-sky-500 !text-white" onIcon="pi pi-check" offIcon="pi pi-times" />
                             </div>
                         </div>
 
                         <div class="col-span-2">
                             <div class="form-label">綁定社群帳號</div>
                             <div class="flex flex-wrap gap-3 mt-2">
-                                <Button icon="pi pi-facebook" class="p-button-rounded"
-                                    :class="{ 'p-button-outlined': !form.socialAccounts.facebook }"
+                                <Button icon="pi pi-facebook" class="p-button-rounded !bg-sky-500 !border-sky-500"
+                                    :class="{ 'p-button-outlined !bg-white !text-sky-500': !form.socialAccounts.facebook }"
                                     @click="toggleSocialAccount('facebook')" />
-                                <Button icon="pi pi-google" class="p-button-rounded"
-                                    :class="{ 'p-button-outlined': !form.socialAccounts.google }"
+                                <Button icon="pi pi-google" class="p-button-rounded !bg-sky-500 !border-sky-500"
+                                    :class="{ 'p-button-outlined !bg-white !text-sky-500': !form.socialAccounts.google }"
                                     @click="toggleSocialAccount('google')" />
-                                <Button icon="pi pi-twitter" class="p-button-rounded"
-                                    :class="{ 'p-button-outlined': !form.socialAccounts.twitter }"
+                                <Button icon="pi pi-twitter" class="p-button-rounded !bg-sky-500 !border-sky-500"
+                                    :class="{ 'p-button-outlined !bg-white !text-sky-500': !form.socialAccounts.twitter }"
                                     @click="toggleSocialAccount('twitter')" />
-                                <Button icon="pi pi-instagram" class="p-button-rounded"
-                                    :class="{ 'p-button-outlined': !form.socialAccounts.instagram }"
+                                <Button icon="pi pi-instagram" class="p-button-rounded !bg-sky-500 !border-sky-500"
+                                    :class="{ 'p-button-outlined !bg-white !text-sky-500': !form.socialAccounts.instagram }"
                                     @click="toggleSocialAccount('instagram')" />
                             </div>
                         </div>
@@ -99,24 +107,26 @@
                 </div>
 
                 <!-- 興趣偏好設定 -->
-                <div class="card p-4 shadow-sm rounded-lg">
-                    <h3 class="text-lg font-semibold mb-4 pb-2 border-b flex justify-between items-center">
-                        興趣偏好設定
-                        <Button label="選擇興趣標籤" icon="pi pi-tags" size="small" @click="showInterestsModal = true" />
+                <div class="card p-4 shadow-sm rounded-lg border border-sky-100">
+                    <h3 class="text-lg font-semibold mb-4 pb-2 border-b border-sky-100 flex justify-between items-center text-sky-700">
+                        <span><i class="pi pi-heart mr-2"></i>興趣偏好設定</span>
+                        <Button label="選擇興趣標籤" icon="pi pi-tags" size="small" @click="showInterestsModal = true" 
+                            class="!bg-sky-500 !border-sky-500" />
                     </h3>
                     
                     <!-- 已選興趣標籤預覽區 -->
                     <div v-if="form.interests.subCategories.length > 0" class="mb-4">
                         <div class="form-label flex justify-between">
                             <span>已選擇的興趣標籤</span>
-                            <span class="text-sm text-primary-600 font-medium">
+                            <span class="text-sm text-sky-600 font-medium">
                                 {{ form.interests.subCategories.length }} 個標籤
                             </span>
                         </div>
-                        <div class="flex flex-wrap gap-2 p-3 border rounded-lg bg-gray-50">
+                        <div class="flex flex-wrap gap-2 p-3 border rounded-lg bg-sky-50 border-sky-100">
                             <Chip v-for="subCat in form.interests.subCategories" :key="subCat"
                                 :label="getSubCategoryLabel(subCat)" removable
-                                @remove="removeSubCategory(subCat)" />
+                                @remove="removeSubCategory(subCat)" 
+                                class="!bg-white border border-sky-100" />
                         </div>
                     </div>
                     
@@ -126,59 +136,62 @@
                         <div class="flex flex-wrap gap-2">
                             <Chip v-for="cat in form.interests.categories" :key="cat" 
                                   :label="getMainCategoryLabel(cat)"
-                                  class="bg-primary-100 text-primary-700" />
+                                  class="!bg-sky-100 !text-sky-700" />
                         </div>
                     </div>
                     
-                    <div v-if="form.interests.categories.length === 0" class="text-center p-4 border rounded-lg bg-gray-50">
-                        <p class="text-gray-500 mb-2">您尚未選擇任何興趣標籤</p>
+                    <div v-if="form.interests.categories.length === 0" class="text-center p-4 border rounded-lg bg-sky-50 border-sky-100">
+                        <p class="text-gray-600 mb-2">您尚未選擇任何興趣標籤</p>
                         <p class="text-gray-500 text-sm mb-4">設定您的興趣標籤可以獲得更精準的個人化推薦</p>
-                        <Button label="選擇興趣標籤" icon="pi pi-plus" @click="showInterestsModal = true" />
+                        <Button label="選擇興趣標籤" icon="pi pi-plus" @click="showInterestsModal = true" 
+                            class="!bg-sky-500 !border-sky-500" />
                     </div>
                 </div>
 
                 <!-- 通知設定 -->
-                <div class="card p-4 shadow-sm rounded-lg col-span-1 lg:col-span-2">
-                    <h3 class="text-lg font-semibold mb-4 pb-2 border-b">通知設定</h3>
+                <div class="card p-4 shadow-sm rounded-lg col-span-1 lg:col-span-2 border border-sky-100">
+                    <h3 class="text-lg font-semibold mb-4 pb-2 border-b border-sky-100 text-sky-700">
+                        <i class="pi pi-bell mr-2"></i>通知設定
+                    </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div class="flex items-center justify-between p-3 border rounded-lg">
+                        <div class="flex items-center justify-between p-3 border rounded-lg border-sky-100 bg-white hover:bg-sky-50 transition-colors">
                             <div>
-                                <h4 class="font-medium">電子郵件通知</h4>
+                                <h4 class="font-medium text-sky-700">電子郵件通知</h4>
                                 <p class="text-sm text-gray-500">接收系統重要通知</p>
                             </div>
-                            <InputSwitch v-model="form.notifications.email" />
+                            <InputSwitch v-model="form.notifications.email" class="!bg-sky-500" />
                         </div>
 
-                        <div class="flex items-center justify-between p-3 border rounded-lg">
+                        <div class="flex items-center justify-between p-3 border rounded-lg border-sky-100 bg-white hover:bg-sky-50 transition-colors">
                             <div>
-                                <h4 class="font-medium">推播通知</h4>
+                                <h4 class="font-medium text-sky-700">推播通知</h4>
                                 <p class="text-sm text-gray-500">即時接收最新消息</p>
                             </div>
-                            <InputSwitch v-model="form.notifications.push" />
+                            <InputSwitch v-model="form.notifications.push" class="!bg-sky-500" />
                         </div>
 
-                        <div class="flex items-center justify-between p-3 border rounded-lg">
+                        <div class="flex items-center justify-between p-3 border rounded-lg border-sky-100 bg-white hover:bg-sky-50 transition-colors">
                             <div>
-                                <h4 class="font-medium">活動提醒</h4>
+                                <h4 class="font-medium text-sky-700">活動提醒</h4>
                                 <p class="text-sm text-gray-500">課程與活動開始前提醒</p>
                             </div>
-                            <InputSwitch v-model="form.notifications.activity" />
+                            <InputSwitch v-model="form.notifications.activity" class="!bg-sky-500" />
                         </div>
 
-                        <div class="flex items-center justify-between p-3 border rounded-lg">
+                        <div class="flex items-center justify-between p-3 border rounded-lg border-sky-100 bg-white hover:bg-sky-50 transition-colors">
                             <div>
-                                <h4 class="font-medium">優惠資訊</h4>
+                                <h4 class="font-medium text-sky-700">優惠資訊</h4>
                                 <p class="text-sm text-gray-500">最新優惠與促銷通知</p>
                             </div>
-                            <InputSwitch v-model="form.notifications.promotion" />
+                            <InputSwitch v-model="form.notifications.promotion" class="!bg-sky-500" />
                         </div>
 
-                        <div class="flex items-center justify-between p-3 border rounded-lg">
+                        <div class="flex items-center justify-between p-3 border rounded-lg border-sky-100 bg-white hover:bg-sky-50 transition-colors">
                             <div>
-                                <h4 class="font-medium">新課程通知</h4>
+                                <h4 class="font-medium text-sky-700">新課程通知</h4>
                                 <p class="text-sm text-gray-500">新課程上架時通知</p>
                             </div>
-                            <InputSwitch v-model="form.notifications.newCourse" />
+                            <InputSwitch v-model="form.notifications.newCourse" class="!bg-sky-500" />
                         </div>
                     </div>
                 </div>
@@ -186,20 +199,20 @@
 
             <div class="mt-8 flex justify-end">
                 <Button label="取消" icon="pi pi-times" class="p-button-text mr-2" @click="resetForm" size="large" />
-                <Button label="儲存修改" icon="pi pi-check" type="submit" size="large" />
+                <Button label="儲存修改" icon="pi pi-check" type="submit" size="large" class="!bg-sky-500 !border-sky-500" />
             </div>
         </Form>
 
         <!-- 密碼修改對話框 -->
         <Dialog v-model:visible="showPasswordModal" header="修改密碼" :modal="true" :draggable="false" class="w-xl"
-            :resizable="false">
+            :resizable="false" :contentStyle="{ 'background-color': '#f8fafc' }">
             <div class="space-y-4 p-4">
                 <Form v-slot="$form" :initialValues="passwordForm" @submit="submitPasswordChange"
                     :resolver="passwordResolver">
                     <div class="flex flex-col gap-4">
                         <FormField name="password">
                             <div class="form-label">新密碼</div>
-                            <InputText type="password" placeholder="新密碼" class="w-full" />
+                            <InputText type="password" placeholder="新密碼" class="w-full border-sky-200 focus:border-sky-500" />
                             <Message v-if="$form.password?.invalid" severity="secondary" size="small" variant="simple">
                                 {{ $form.password?.error?.message }}
                             </Message>
@@ -207,7 +220,7 @@
 
                         <FormField name="confirmPassword">
                             <div class="form-label">確認新密碼</div>
-                            <InputText type="password" placeholder="確認新密碼" class="w-full" />
+                            <InputText type="password" placeholder="確認新密碼" class="w-full border-sky-200 focus:border-sky-500" />
                             <Message v-if="$form.confirmPassword?.invalid" severity="secondary" size="small"
                                 variant="simple">
                                 {{ $form.confirmPassword?.error?.message }}
@@ -217,7 +230,7 @@
                     <div class="mt-10 flex justify-end">
                         <Button label="取消" icon="pi pi-times" class="p-button-text mr-2"
                             @click="showPasswordModal = false" />
-                        <Button label="儲存修改" icon="pi pi-check" type="submit" />
+                        <Button label="儲存修改" icon="pi pi-check" type="submit" class="!bg-sky-500 !border-sky-500" />
                     </div>
                 </Form>
             </div>
@@ -225,13 +238,14 @@
 
         <!-- 興趣標籤選擇對話框 -->
         <Dialog v-model:visible="showInterestsModal" header="選擇您的興趣標籤" :modal="true" :closable="true"
-            class="w-full md:w-4/5 lg:w-3/4" :draggable="false" :resizable="false">
+            class="w-full md:w-4/5 lg:w-3/4" :draggable="false" :resizable="false" 
+            :contentStyle="{ 'background-color': '#f8fafc' }">
             <div class="p-4">
                 <!-- 統計和提示信息 -->
-                <div class="bg-primary-50 p-3 rounded-lg mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div class="bg-sky-50 p-3 rounded-lg mb-4 border border-sky-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div>
-                        <p class="font-medium">已選擇 <span class="text-primary-700">{{ form.interests.categories.length }}</span> 個類別，
-                        <span class="text-primary-700">{{ form.interests.subCategories.length }}</span> 個標籤</p>
+                        <p class="font-medium">已選擇 <span class="text-sky-700">{{ form.interests.categories.length }}</span> 個類別，
+                        <span class="text-sky-700">{{ form.interests.subCategories.length }}</span> 個標籤</p>
                         <p class="text-sm text-gray-600">選擇您喜歡的類別和標籤，系統將為您推薦相關課程</p>
                     </div>
                     <Button v-if="form.interests.categories.length > 0 || form.interests.subCategories.length > 0"
@@ -240,18 +254,18 @@
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <!-- 左側：主分類選擇區 -->
-                    <div class="col-span-1 border rounded-lg p-3">
-                        <h4 class="text-lg font-medium mb-3 pb-2 border-b">興趣類別</h4>
+                    <div class="col-span-1 border rounded-lg p-3 border-sky-100">
+                        <h4 class="text-lg font-medium mb-3 pb-2 border-b border-sky-100 text-sky-700">興趣類別</h4>
                         <div class="flex flex-wrap gap-2">
                             <Chip v-for="cat in mainCategoryOptions" :key="cat.value" :label="cat.label"
-                                :class="{ 'chip-selected': form.interests.categories.includes(cat.value) }"
+                                :class="{ 'chip-selected': form.interests.categories.includes(cat.value), 'hover:!bg-sky-100': !form.interests.categories.includes(cat.value) }"
                                 @click="toggleMainCategory(cat.value)" />
                         </div>
                     </div>
 
                     <!-- 中間：子分類選擇區 -->
-                    <div class="lg:col-span-2 border rounded-lg p-3">
-                        <h4 class="text-lg font-medium mb-3 pb-2 border-b">詳細興趣標籤</h4>
+                    <div class="lg:col-span-2 border rounded-lg p-3 border-sky-100">
+                        <h4 class="text-lg font-medium mb-3 pb-2 border-b border-sky-100 text-sky-700">詳細興趣標籤</h4>
                         
                         <div v-if="form.interests.categories.length === 0" class="text-center p-4">
                             <p class="text-gray-500">請先從左側選擇興趣類別</p>
@@ -267,15 +281,15 @@
                                 <div class="flex flex-wrap gap-2 p-2">
                                     <Chip v-for="subCat in getSubCategoriesForMainCategory(mainCat)" :key="subCat.value"
                                         :label="subCat.label"
-                                        :class="{ 'chip-selected': form.interests.subCategories.includes(subCat.value) }"
+                                        :class="{ 'chip-selected': form.interests.subCategories.includes(subCat.value), 'hover:!bg-sky-100': !form.interests.subCategories.includes(subCat.value) }"
                                         @click="toggleSubCategory(subCat.value)" />
                                 </div>
                                 
                                 <div class="mt-2 flex justify-between">
                                     <Button label="全選" icon="pi pi-check-circle" size="small" text
-                                        @click="selectAllSubCategories(mainCat)" />
+                                        @click="selectAllSubCategories(mainCat)" class="!text-sky-600" />
                                     <Button label="取消全選" icon="pi pi-times-circle" size="small" text
-                                        @click="deselectAllSubCategories(mainCat)" />
+                                        @click="deselectAllSubCategories(mainCat)" class="!text-sky-600" />
                                 </div>
                             </AccordionPanel>
                         </Accordion>
@@ -290,7 +304,7 @@
                     </small>
                     <div>
                         <Button label="取消" icon="pi pi-times" class="p-button-text" @click="showInterestsModal = false" />
-                        <Button label="確認" icon="pi pi-check" @click="confirmInterests" />
+                        <Button label="確認" icon="pi pi-check" @click="confirmInterests" class="!bg-sky-500 !border-sky-500" />
                     </div>
                 </div>
             </template>
@@ -693,7 +707,7 @@ const saveProfile = (values: any) => {
 }
 
 .card {
-    @apply bg-white border border-gray-100;
+    @apply bg-white;
 }
 
 :deep(.p-chip) {
@@ -701,7 +715,7 @@ const saveProfile = (values: any) => {
 }
 
 .chip-selected {
-    @apply bg-blue-500 text-white;
+    @apply bg-sky-500 text-white;
 }
 
 :deep(.p-chip.chip-selected .p-chip-text) {
@@ -722,5 +736,37 @@ const saveProfile = (values: any) => {
 
 :deep(.interest-accordion .p-accordion-content) {
     @apply p-3;
+}
+
+:deep(.p-accordion-header-link) {
+    @apply border-sky-100;
+}
+
+:deep(.p-accordion-header-link:focus) {
+    @apply shadow-none ring-sky-200;
+}
+
+:deep(.p-accordion-header-link.p-highlight) {
+    @apply bg-sky-50 border-sky-200;
+}
+
+:deep(.p-inputswitch.p-inputswitch-checked .p-inputswitch-slider) {
+    @apply bg-sky-500 border-sky-500;
+}
+
+:deep(.p-togglebutton.p-highlight) {
+    @apply bg-sky-500 border-sky-500 text-white;
+}
+
+:deep(.p-inputtext:enabled:focus) {
+    @apply border-sky-500 shadow-none ring-1 ring-sky-200;
+}
+
+:deep(.p-dropdown:not(.p-disabled).p-focus) {
+    @apply border-sky-500 shadow-none ring-1 ring-sky-200;
+}
+
+:deep(.p-datepicker:not(.p-disabled):focus) {
+    @apply border-sky-500 shadow-none ring-1 ring-sky-200;
 }
 </style>

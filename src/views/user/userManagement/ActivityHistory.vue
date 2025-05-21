@@ -1,47 +1,49 @@
 <template>
     <div class="flex flex-col flex-1 gap-4">
-        <h2 class="text-2xl font-bold">活動記錄</h2>
+        <h2 class="text-2xl font-bold text-sky-700 flex items-center">
+            <i class="pi pi-calendar-check mr-2"></i>活動記錄
+        </h2>
 
         <!-- 活動統計卡片 -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-2">
-            <div class="card p-4 shadow-sm rounded-lg border-l-4 border-blue-500">
+            <div class="card p-4 shadow-sm rounded-lg border-l-4 border-sky-500 bg-white border border-sky-100">
                 <div class="flex justify-between items-center">
                     <div>
                         <div class="text-sm text-gray-500">總課程數</div>
-                        <div class="text-2xl font-bold">{{ activityStats.totalCourses }}</div>
+                        <div class="text-2xl font-bold text-sky-700">{{ activityStats.totalCourses }}</div>
                     </div>
-                    <div class="bg-blue-100 p-3 rounded-full">
-                        <i class="pi pi-book text-blue-500 text-xl"></i>
+                    <div class="bg-sky-100 p-3 rounded-full">
+                        <i class="pi pi-book text-sky-500 text-xl"></i>
                     </div>
                 </div>
             </div>
-            <div class="card p-4 shadow-sm rounded-lg border-l-4 border-green-500">
+            <div class="card p-4 shadow-sm rounded-lg border-l-4 border-green-500 bg-white border border-sky-100">
                 <div class="flex justify-between items-center">
                     <div>
                         <div class="text-sm text-gray-500">完成課程</div>
-                        <div class="text-2xl font-bold">{{ activityStats.completedCourses }}</div>
+                        <div class="text-2xl font-bold text-green-600">{{ activityStats.completedCourses }}</div>
                     </div>
                     <div class="bg-green-100 p-3 rounded-full">
                         <i class="pi pi-check-circle text-green-500 text-xl"></i>
                     </div>
                 </div>
             </div>
-            <div class="card p-4 shadow-sm rounded-lg border-l-4 border-red-500">
+            <div class="card p-4 shadow-sm rounded-lg border-l-4 border-red-500 bg-white border border-sky-100">
                 <div class="flex justify-between items-center">
                     <div>
                         <div class="text-sm text-gray-500">缺席次數</div>
-                        <div class="text-2xl font-bold">{{ activityStats.absenceCourses }}</div>
+                        <div class="text-2xl font-bold text-red-600">{{ activityStats.absenceCourses }}</div>
                     </div>
                     <div class="bg-red-100 p-3 rounded-full">
                         <i class="pi pi-times-circle text-red-500 text-xl"></i>
                     </div>
                 </div>
             </div>
-            <div class="card p-4 shadow-sm rounded-lg border-l-4 border-purple-500">
+            <div class="card p-4 shadow-sm rounded-lg border-l-4 border-purple-500 bg-white border border-sky-100">
                 <div class="flex justify-between items-center">
                     <div>
                         <div class="text-sm text-gray-500">課程評價</div>
-                        <div class="text-2xl font-bold">{{ activityStats.averageRating }}
+                        <div class="text-2xl font-bold text-purple-600">{{ activityStats.averageRating }}
                             <span class="text-sm text-gray-500">/ 5</span>
                         </div>
                     </div>
@@ -52,43 +54,49 @@
             </div>
         </div>
 
-        <!-- 筛选部分 -->
-        <div class="card h-full flex flex-col gap-4">
-            <!-- 過濾器區域 -->
-            <div class="flex flex-wrap gap-3 items-end">
+        <!-- 簡化篩選部分和標籤頁 -->
+        <div class="card bg-white rounded-lg shadow-sm border border-sky-100 p-4 h-full flex flex-col gap-4">
+            <!-- 簡化過濾器區域 -->
+            <div class="flex flex-wrap gap-3 items-end bg-sky-50 p-3 rounded-lg border border-sky-100">
                 <!-- 日期範圍篩選 -->
                 <div class="flex-grow md:w-auto md:flex-grow-0">
+                    <label class="block text-sm mb-1 text-sky-700 font-medium">日期範圍</label>
                     <DateRangeFilter v-model:startDate="startDate" v-model:endDate="endDate"
-                        @change="handleDateRangeChange" @apply="applyFilters" @reset="resetFilters" />
+                        @change="handleDateRangeChange" class="w-full"  :show-controls="false"/>
                 </div>
 
                 <!-- 狀態篩選 -->
                 <div class="w-full md:w-auto">
-                    <label class="block text-sm mb-1">狀態</label>
+                    <label class="block text-sm mb-1 text-sky-700 font-medium">狀態</label>
                     <Select v-model="filters.status" :options="statusOptions" optionLabel="label" optionValue="value"
-                        placeholder="選擇狀態" class="w-full md:w-40" />
+                        placeholder="選擇狀態" class="w-full md:w-40" @change="applyFilters" size="small" />
                 </div>
 
                 <!-- 搜尋 -->
-                <IconField>
-                    <InputIcon class="pi pi-search" />
-                    <InputText v-model="filters.search" placeholder="搜尋課程名稱..." />
-                </IconField>
-
-                <!-- 應用按鈕 -->
                 <div class="w-full md:w-auto">
-                    <Button label="應用篩選" icon="pi pi-filter" @click="applyFilters" />
-                    <Button label="重置" icon="pi pi-refresh" outlined class="ml-2" @click="resetAllFilters" />
+                    <label class="block text-sm mb-1 text-sky-700 font-medium">關鍵字搜尋</label>
+                    <IconField class="w-full">
+                        <InputIcon class="pi pi-search text-sky-400" />
+                        <InputText v-model="filters.search" placeholder="搜尋課程名稱..." 
+                            class="w-full border-sky-200 focus:border-sky-500"
+                            @input="debounceSearch"  size="small" />
+                    </IconField>
+                </div>
+
+                <!-- 重置按鈕 -->
+                <div class="w-full md:w-auto flex items-end">
+                    <Button label="重置篩選" icon="pi pi-refresh" outlined 
+                        @click="resetAllFilters" class="!border-sky-500 !text-sky-500 hover:!bg-sky-50" />
                 </div>
             </div>
 
             <!-- 標籤頁 -->
-            <Tabs v-model:activeIndex="activeTabIndex" class="flex-1 flex flex-col" :value="tabItems[0].label">
+            <Tabs v-model:activeIndex="activeTabIndex" class="flex-1 flex flex-col activity-tabs" tabindex="0">
                 <TabList>
-                    <Tab v-for="tab in tabItems" :key="tab.label" :value="tab.label">
+                    <Tab v-for="tab in tabItems" :key="tab.label" :value="tab.label" class="text-sky-700">
                         <i :class="tab.icon + ' mr-2'"></i>
                         {{ tab.label }}
-                        <Badge v-if="tab.count" :value="tab.count" class="ml-2" />
+                        <Badge v-if="tab.count" :value="tab.count" class="ml-2 bg-sky-100 text-sky-700" />
                     </Tab>
                 </TabList>
                 <TabPanels>
@@ -96,37 +104,37 @@
                         <!-- 預約紀錄面板 -->
                         <DataTable :value="filteredCourseHistory" stripedRows paginator :rows="10"
                             responsiveLayout="stack" :loading="loading" class="!flex-1 flex flex-col">
-                            <Column field="courseTitle" header="課程名稱" sortable />
-                            <Column field="date" header="日期" sortable>
+                            <Column field="courseTitle" header="課程名稱" sortable headerClass="bg-sky-50 text-sky-700" />
+                            <Column field="date" header="日期" sortable headerClass="bg-sky-50 text-sky-700">
                                 <template #body="{ data }">
                                     {{ formatDateString(data.date) }}
                                 </template>
                             </Column>
-                            <Column field="time" header="時間" />
-                            <Column field="instructor.name" header="講師" />
-                            <Column field="courseType" header="課程類型" />
-                            <Column field="points" header="消費點數" />
-                            <Column field="status" header="狀態">
+                            <Column field="time" header="時間" headerClass="bg-sky-50 text-sky-700" />
+                            <Column field="instructor.name" header="講師" headerClass="bg-sky-50 text-sky-700" />
+                            <Column field="courseType" header="課程類型" headerClass="bg-sky-50 text-sky-700" />
+                            <Column field="points" header="消費點數" headerClass="bg-sky-50 text-sky-700" />
+                            <Column field="status" header="狀態" headerClass="bg-sky-50 text-sky-700">
                                 <template #body="{ data }">
                                     <Tag :severity="getStatusSeverity(data.status)"
                                         :value="getCourseStatus(data.status)" />
                                 </template>
                             </Column>
-                            <Column field="action" header="操作">
+                            <Column field="action" header="操作" headerClass="bg-sky-50 text-sky-700">
                                 <template #body="{ data }">
                                     <div class="flex gap-1">
                                         <Button icon="pi pi-eye" text rounded aria-label="查看詳情"
-                                            @click="viewCourseDetail(data)" />
+                                            @click="viewCourseDetail(data)" class="text-sky-500 hover:bg-sky-50" />
                                         <Button v-if="canRate(data)" icon="pi pi-star" text rounded aria-label="評價課程"
-                                            @click="openRatingDialog(data)" />
+                                            @click="openRatingDialog(data)" class="text-yellow-500 hover:bg-yellow-50" />
                                     </div>
                                 </template>
                             </Column>
 
                             <template #empty>
-                                <div class="text-center p-6 bg-gray-50 rounded-lg">
-                                    <i class="pi pi-calendar-times text-4xl text-gray-400 mb-2"></i>
-                                    <p class="text-gray-500">尚無課程紀錄</p>
+                                <div class="text-center p-6 bg-sky-50 rounded-lg border border-sky-100">
+                                    <i class="pi pi-calendar-times text-4xl text-sky-200 mb-2"></i>
+                                    <p class="text-sky-600">尚無課程紀錄</p>
                                 </div>
                             </template>
                         </DataTable>
@@ -135,21 +143,21 @@
                         <!-- 缺席紀錄面板 -->
                         <DataTable :value="filteredAbsenceRecords" stripedRows paginator :rows="10"
                             responsiveLayout="stack" :loading="loading" class="!flex-1 flex flex-col">
-                            <Column field="courseTitle" header="課程名稱" sortable />
-                            <Column field="date" header="日期" sortable>
+                            <Column field="courseTitle" header="課程名稱" sortable headerClass="bg-sky-50 text-sky-700" />
+                            <Column field="date" header="日期" sortable headerClass="bg-sky-50 text-sky-700">
                                 <template #body="{ data }">
                                     {{ formatDateString(data.date) }}
                                 </template>
                             </Column>
-                            <Column field="time" header="時間" />
-                            <Column field="courseType" header="課程類型" />
-                            <Column field="points" header="扣除點數" />
-                            <Column field="reason" header="缺席原因" />
+                            <Column field="time" header="時間" headerClass="bg-sky-50 text-sky-700" />
+                            <Column field="courseType" header="課程類型" headerClass="bg-sky-50 text-sky-700" />
+                            <Column field="points" header="扣除點數" headerClass="bg-sky-50 text-sky-700" />
+                            <Column field="reason" header="缺席原因" headerClass="bg-sky-50 text-sky-700" />
 
                             <template #empty>
-                                <div class="text-center p-6 bg-gray-50 rounded-lg">
-                                    <i class="pi pi-calendar-times text-4xl text-gray-400 mb-2"></i>
-                                    <p class="text-gray-500">無缺席紀錄</p>
+                                <div class="text-center p-6 bg-sky-50 rounded-lg border border-sky-100">
+                                    <i class="pi pi-calendar-times text-4xl text-sky-200 mb-2"></i>
+                                    <p class="text-sky-600">無缺席紀錄</p>
                                 </div>
                             </template>
                         </DataTable>
@@ -158,145 +166,46 @@
                         <!-- 評價紀錄面板 -->
                         <DataTable :value="filteredRatingHistory" stripedRows paginator :rows="10"
                             responsiveLayout="stack" :loading="loading" class="!flex-1 flex flex-col">
-                            <Column field="courseTitle" header="課程名稱" sortable />
-                            <Column field="date" header="日期" sortable>
+                            <Column field="courseTitle" header="課程名稱" sortable headerClass="bg-sky-50 text-sky-700" />
+                            <Column field="date" header="日期" sortable headerClass="bg-sky-50 text-sky-700">
                                 <template #body="{ data }">
                                     {{ formatDateString(data.date) }}
                                 </template>
                             </Column>
-                            <Column field="instructor.name" header="講師" />
-                            <Column field="rating" header="評分">
+                            <Column field="instructor.name" header="講師" headerClass="bg-sky-50 text-sky-700" />
+                            <Column field="rating" header="評分" headerClass="bg-sky-50 text-sky-700">
                                 <template #body="{ data }">
                                     <Rating v-model="data.rating" :cancel="false" :readonly="true" />
                                 </template>
                             </Column>
-                            <Column field="comment" header="評論">
+                            <Column field="comment" header="評論" headerClass="bg-sky-50 text-sky-700">
                                 <template #body="{ data }">
                                     <div class="max-w-xs truncate">{{ data.comment || '無評論' }}</div>
                                 </template>
                             </Column>
-                            <Column field="action" header="操作">
+                            <Column field="action" header="操作" headerClass="bg-sky-50 text-sky-700">
                                 <template #body="{ data }">
                                     <Button icon="pi pi-pencil" text rounded aria-label="編輯評價"
-                                        @click="openRatingDialog(data, true)" />
+                                        @click="openRatingDialog(data, true)" class="text-sky-500 hover:bg-sky-50" />
                                 </template>
                             </Column>
 
                             <template #empty>
-                                <div class="text-center p-6 bg-gray-50 rounded-lg">
-                                    <i class="pi pi-star text-4xl text-gray-400 mb-2"></i>
-                                    <p class="text-gray-500">尚無評價紀錄</p>
+                                <div class="text-center p-6 bg-sky-50 rounded-lg border border-sky-100">
+                                    <i class="pi pi-star text-4xl text-sky-200 mb-2"></i>
+                                    <p class="text-sky-600">尚無評價紀錄</p>
                                 </div>
                             </template>
                         </DataTable>
                     </TabPanel>
                 </TabPanels>
             </Tabs>
-
-            <!-- 课程详情对话框 -->
-            <Dialog v-model:visible="showDetailDialog" header="課程詳情" :modal="true" :closable="true"
-                :style="{ width: '500px' }">
-                <div v-if="selectedCourse" class="space-y-4">
-                    <!-- 课程详情内容 -->
-                    <div class="p-3 border rounded-lg bg-gray-50">
-                        <div class="flex justify-between mb-2">
-                            <span class="text-gray-600">課程名稱：</span>
-                            <span class="font-medium">{{ selectedCourse.courseTitle }}</span>
-                        </div>
-                        <div class="flex justify-between mb-2">
-                            <span class="text-gray-600">日期：</span>
-                            <span>{{ formatDateString(selectedCourse.date) }}</span>
-                        </div>
-                        <div class="flex justify-between mb-2">
-                            <span class="text-gray-600">時間：</span>
-                            <span>{{ selectedCourse.time }}</span>
-                        </div>
-                        <div class="flex justify-between mb-2">
-                            <span class="text-gray-600">講師：</span>
-                            <span>{{ selectedCourse.instructor?.name }}</span>
-                        </div>
-                        <div class="flex justify-between mb-2">
-                            <span class="text-gray-600">課程類型：</span>
-                            <span>{{ selectedCourse.courseType }}</span>
-                        </div>
-                        <div class="flex justify-between mb-2">
-                            <span class="text-gray-600">地點：</span>
-                            <span>{{ selectedCourse.location }}</span>
-                        </div>
-                        <div class="flex justify-between mb-2">
-                            <span class="text-gray-600">點數：</span>
-                            <span class="font-bold text-primary-600">{{ selectedCourse.points }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">狀態：</span>
-                            <Tag :severity="getStatusSeverity(selectedCourse.status)"
-                                :value="getCourseStatus(selectedCourse.status)" />
-                        </div>
-                    </div>
-
-                    <!-- 講師資訊 -->
-                    <div v-if="selectedCourse.instructor" class="p-3 border rounded-lg">
-                        <h3 class="font-medium mb-2">講師資訊</h3>
-                        <div class="flex items-center gap-3">
-                            <Avatar :label="selectedCourse.instructor.name.charAt(0)" shape="circle" size="large" />
-                            <div>
-                                <div class="font-medium">{{ selectedCourse.instructor.name }}</div>
-                                <div class="text-sm text-gray-500">{{ selectedCourse.instructor.title || '資深講師' }}</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 課程評價 -->
-                    <div v-if="selectedCourse.rating" class="p-3 border rounded-lg">
-                        <h3 class="font-medium mb-2">您的評價</h3>
-                        <div class="mb-2">
-                            <Rating v-model="selectedCourse.rating" :cancel="false" :readonly="true" />
-                        </div>
-                        <div class="text-sm italic text-gray-600 bg-gray-50 p-2 rounded">
-                            {{ selectedCourse.comment || '無評論' }}
-                        </div>
-                    </div>
-                </div>
-                <template #footer>
-                    <Button label="關閉" icon="pi pi-times" @click="showDetailDialog = false" outlined />
-                    <Button v-if="selectedCourse && canRate(selectedCourse)" label="評價課程" icon="pi pi-star"
-                        @click="openRatingDialogFromDetail" />
-                </template>
-            </Dialog>
-
-            <!-- 評價對話框 -->
-            <Dialog v-model:visible="showRatingDialog" :header="isEditRating ? '編輯評價' : '評價課程'" :modal="true"
-                :closable="true" :style="{ width: '450px' }">
-                <div v-if="selectedCourse" class="space-y-4">
-                    <div class="mb-3">
-                        <h3 class="font-medium">{{ selectedCourse.courseTitle }}</h3>
-                        <div class="text-sm text-gray-500">{{ formatDateString(selectedCourse.date) }} {{
-                            selectedCourse.time }}
-                        </div>
-                        <div class="text-sm text-gray-500">講師: {{ selectedCourse.instructor?.name }}</div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="block text-sm mb-2">評分</label>
-                        <Rating v-model="ratingForm.rating" :cancel="false" />
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="block text-sm mb-2">評論 (選填)</label>
-                        <Textarea v-model="ratingForm.comment" rows="3" class="w-full" placeholder="分享您對課程的感受..." />
-                    </div>
-                </div>
-                <template #footer>
-                    <Button label="取消" icon="pi pi-times" @click="showRatingDialog = false" outlined />
-                    <Button label="提交評價" icon="pi pi-check" @click="submitRating" />
-                </template>
-            </Dialog>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, inject } from 'vue';
+import { ref, computed, inject, watch } from 'vue';
 import type { PropType } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
@@ -378,6 +287,17 @@ const filters = ref({
     search: '',
     status: '',
 });
+
+// 防抖定時器
+let searchTimeout: number | null = null;
+
+// 防抖函數 - 用於搜尋
+const debounceSearch = () => {
+    if (searchTimeout) clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        applyFilters();
+    }, 300) as unknown as number;
+};
 
 // 評價表單
 const ratingForm = ref({
@@ -498,15 +418,16 @@ const filteredRatingHistory = computed(() => {
     return filtered;
 });
 
-// 處理日期範圍變更
+// 處理日期範圍變更 - 立即應用篩選
 const handleDateRangeChange = (dateRange: { start: Date; end: Date }) => {
     range.value = dateRange;
+    applyFilters();
 };
 
 // 應用篩選器
 const applyFilters = () => {
     loading.value = true;
-    setTimeout(() => loading.value = false, 500);
+    setTimeout(() => loading.value = false, 300);
 };
 
 // 重置篩選器
@@ -515,7 +436,7 @@ const resetFilters = () => {
     startDate.value = undefined;
     endDate.value = undefined;
     loading.value = true;
-    setTimeout(() => loading.value = false, 500);
+    setTimeout(() => loading.value = false, 300);
 };
 
 // 重置所有篩選器
@@ -527,6 +448,11 @@ const resetAllFilters = () => {
     };
     applyFilters();
 };
+
+// 監聽篩選條件變更 - 立即應用篩選
+watch(() => [filters.value.status, filters.value.search], () => {
+    applyFilters();
+}, { deep: true });
 
 // 查看课程详情
 const viewCourseDetail = (course: CourseRecord) => {
@@ -646,7 +572,7 @@ const getStatusSeverity = (status: BookingStatus) => {
 @reference "tailwindcss";
 
 .card {
-    @apply bg-white border border-gray-100 rounded-lg p-4;
+    @apply bg-white border border-sky-100 rounded-lg p-4;
 }
 
 :deep(.p-datatable > .p-datatable-table-container) {
@@ -659,5 +585,49 @@ const getStatusSeverity = (status: BookingStatus) => {
 
 :deep(.p-datatable-sm .p-datatable-tbody > tr > td) {
     @apply py-2 px-3 text-sm;
+}
+
+:deep(.p-datatable-tbody > tr:hover) {
+    @apply bg-sky-50/50;
+}
+
+:deep(.p-dropdown:not(.p-disabled).p-focus) {
+    @apply border-sky-500 shadow-none ring-1 ring-sky-200;
+}
+
+:deep(.p-paginator) {
+    @apply border-t border-sky-100 bg-white;
+}
+
+:deep(.p-paginator .p-paginator-pages .p-paginator-page.p-highlight) {
+    @apply bg-sky-500 text-white;
+}
+
+:deep(.p-button.p-button-outlined) {
+    @apply border-sky-500 text-sky-500;
+}
+
+:deep(.p-button.p-button-outlined:hover) {
+    @apply bg-sky-50;
+}
+
+:deep(.activity-tabs .p-tabview-nav) {
+    @apply border-b border-sky-100;
+}
+
+:deep(.activity-tabs .p-tabview-nav li.p-highlight .p-tabview-nav-link) {
+    @apply text-sky-700 border-b-2 border-sky-500;
+}
+
+:deep(.activity-tabs .p-tabview-nav li .p-tabview-nav-link:not(.p-disabled):focus) {
+    @apply shadow-none ring-sky-200;
+}
+
+:deep(.p-inputtext:enabled:focus) {
+    @apply border-sky-500 shadow-none ring-1 ring-sky-200;
+}
+
+:deep(.p-rating .p-rating-item.p-rating-item-active .p-rating-icon) {
+    @apply text-yellow-500;
 }
 </style>

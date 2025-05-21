@@ -1,36 +1,38 @@
 <template>
     <div class="flex flex-col flex-1 gap-4">
-        <h2 class="text-2xl font-bold">購買紀錄</h2>
+        <h2 class="text-2xl font-bold text-sky-700 flex items-center">
+            <i class="pi pi-shopping-cart mr-2"></i>購買紀錄
+        </h2>
 
         <!-- 消費統計卡片 -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
-            <div class="card p-4 shadow-sm rounded-lg border-l-4 border-blue-500">
+            <div class="card p-4 shadow-sm rounded-lg border-l-4 border-sky-500 bg-white border border-sky-100">
                 <div class="flex justify-between items-center">
                     <div>
                         <div class="text-sm text-gray-500">總消費金額</div>
-                        <div class="text-2xl font-bold">NT$ {{ purchaseStats.totalAmount }}</div>
+                        <div class="text-2xl font-bold text-sky-700">NT$ {{ purchaseStats.totalAmount }}</div>
                     </div>
-                    <div class="bg-blue-100 p-3 rounded-full">
-                        <i class="pi pi-dollar text-blue-500 text-xl"></i>
+                    <div class="bg-sky-100 p-3 rounded-full">
+                        <i class="pi pi-dollar text-sky-500 text-xl"></i>
                     </div>
                 </div>
             </div>
-            <div class="card p-4 shadow-sm rounded-lg border-l-4 border-green-500">
+            <div class="card p-4 shadow-sm rounded-lg border-l-4 border-green-500 bg-white border border-sky-100">
                 <div class="flex justify-between items-center">
                     <div>
                         <div class="text-sm text-gray-500">總購買點數</div>
-                        <div class="text-2xl font-bold">{{ purchaseStats.totalPoints }}</div>
+                        <div class="text-2xl font-bold text-green-600">{{ purchaseStats.totalPoints }}</div>
                     </div>
                     <div class="bg-green-100 p-3 rounded-full">
                         <i class="pi pi-ticket text-green-500 text-xl"></i>
                     </div>
                 </div>
             </div>
-            <div class="card p-4 shadow-sm rounded-lg border-l-4 border-purple-500">
+            <div class="card p-4 shadow-sm rounded-lg border-l-4 border-purple-500 bg-white border border-sky-100">
                 <div class="flex justify-between items-center">
                     <div>
                         <div class="text-sm text-gray-500">購買次數</div>
-                        <div class="text-2xl font-bold">{{ purchaseStats.totalOrders }}</div>
+                        <div class="text-2xl font-bold text-purple-600">{{ purchaseStats.totalOrders }}</div>
                     </div>
                     <div class="bg-purple-100 p-3 rounded-full">
                         <i class="pi pi-shopping-cart text-purple-500 text-xl"></i>
@@ -39,98 +41,110 @@
             </div>
         </div>
 
-        <!-- 筛选选项 -->
-        <div class="card h-full flex flex-col gap-4">
-            <!-- 過濾器區域 -->
-            <div class="flex flex-wrap gap-3 items-end">
-                <!-- 日期範圍篩選 -->
+        <!-- 篩選條件和數據表格 -->
+        <div class="card h-full flex flex-col gap-4 bg-white rounded-lg shadow-sm border border-sky-100 p-4">
+            <!-- 優化的過濾器區域 -->
+            <div class="flex flex-wrap gap-3 items-end bg-sky-50 p-3 rounded-lg border border-sky-100">
+                <!-- 日期範圍篩選 - 改為即時篩選 -->
                 <div class="flex-grow md:w-auto md:flex-grow-0">
-                    <DateRangeFilter v-model:startDate="startDate" v-model:endDate="endDate" @change="handleDateRangeChange"
-                        @apply="applyFilters" @reset="resetFilters" />
+                    <label class="block text-sm mb-1 text-sky-700 font-medium">日期範圍</label>
+                    <DateRangeFilter v-model:startDate="startDate" v-model:endDate="endDate" 
+                        @change="handleDateRangeChange" :show-controls="false"
+                        class="w-full" />
                 </div>
                 
-                <!-- 課卡類型篩選 -->
+                <!-- 課卡類型篩選 - 改為即時篩選 -->
                 <div class="w-full md:w-auto">
-                    <label class="block text-sm mb-1">課卡類型</label>
+                    <label class="block text-sm mb-1 text-sky-700 font-medium">課卡類型</label>
                     <Select v-model="filters.cardType" :options="cardTypeOptions" 
-                        optionLabel="label" optionValue="value" placeholder="選擇課卡類型" class="w-full md:w-40" />
+                        optionLabel="label" optionValue="value" placeholder="選擇課卡類型" 
+                        class="w-full md:w-40" @change="applyFilters"  size="small" />
                 </div>
                 
-                <!-- 狀態篩選 -->
+                <!-- 狀態篩選 - 改為即時篩選 -->
                 <div class="w-full md:w-auto">
-                    <label class="block text-sm mb-1">狀態</label>
+                    <label class="block text-sm mb-1 text-sky-700 font-medium">狀態</label>
                     <Select v-model="filters.status" :options="statusOptions" 
-                        optionLabel="label" optionValue="value" placeholder="選擇狀態" class="w-full md:w-40" />
+                        optionLabel="label" optionValue="value" placeholder="選擇狀態" 
+                        class="w-full md:w-40" @change="applyFilters"  size="small" />
                 </div>
                 
-                <!-- 付款方式篩選 -->
+                <!-- 付款方式篩選 - 改為即時篩選 -->
                 <div class="w-full md:w-auto">
-                    <label class="block text-sm mb-1">付款方式</label>
+                    <label class="block text-sm mb-1 text-sky-700 font-medium">付款方式</label>
                     <Select v-model="filters.paymentMethod" :options="paymentMethodOptions" 
-                        optionLabel="label" optionValue="value" placeholder="選擇付款方式" class="w-full md:w-40" />
+                        optionLabel="label" optionValue="value" placeholder="選擇付款方式" 
+                        class="w-full md:w-40" @change="applyFilters"  size="small" />
                 </div>
                 
-                <!-- 搜尋 -->
-                <IconField>
-                    <InputIcon class="pi pi-search" />
-                    <InputText v-model="filters.search" placeholder="搜尋訂單編號..." />
-                </IconField>
-                
-                <!-- 應用按鈕 -->
+                <!-- 搜尋 - 調整為防抖立即查詢 -->
                 <div class="w-full md:w-auto">
-                    <Button label="應用篩選" icon="pi pi-filter" @click="applyFilters" />
-                    <Button label="重置" icon="pi pi-refresh" outlined class="ml-2" @click="resetAllFilters" />
+                    <label class="block text-sm mb-1 text-sky-700 font-medium">關鍵字搜尋</label>
+                    <IconField class="w-full">
+                        <InputIcon class="pi pi-search text-sky-400" />
+                        <InputText v-model="filters.search" placeholder="搜尋訂單編號..." 
+                            class="w-full border-sky-200 focus:border-sky-500"
+                            @input="debounceSearch"  size="small" />
+                    </IconField>
+                </div>
+                
+                <!-- 只保留重置按鈕 -->
+                <div class="w-full md:w-auto flex items-end">
+                    <Button label="重置篩選" icon="pi pi-refresh" outlined 
+                        @click="resetAllFilters" class="!border-sky-500 !text-sky-500 hover:!bg-sky-50" />
                 </div>
             </div>
 
             <!-- 數據表格 -->
             <div class="flex flex-col flex-1 overflow-hidden">
                 <DataTable :value="filteredPurchaseHistory" stripedRows paginator :rows="10" responsiveLayout="stack"
-                    :loading="loading"
+                    :loading="loading" 
                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
                     class="!flex-1 flex flex-col p-datatable-sm">
-                    <Column field="id" header="訂單編號" sortable />
-                    <Column field="cardType" header="課卡名稱" sortable>
+                    <Column field="id" header="訂單編號" sortable headerClass="bg-sky-50 text-sky-700" />
+                    <Column field="cardType" header="課卡名稱" sortable headerClass="bg-sky-50 text-sky-700">
                             <template #body="{ data }">
                                 {{ getCardType(data.cardType) }}
                             </template>
                         </Column>
-                    <Column field="points" header="點數" sortable />
-                    <Column field="amount" header="金額" sortable>
+                    <Column field="points" header="點數" sortable headerClass="bg-sky-50 text-sky-700" />
+                    <Column field="amount" header="金額" sortable headerClass="bg-sky-50 text-sky-700">
                             <template #body="{ data }">
                                 NT$ {{ data.amount }}
                             </template>
                         </Column>
-                    <Column field="date" header="購買日期" sortable>
+                    <Column field="date" header="購買日期" sortable headerClass="bg-sky-50 text-sky-700">
                             <template #body="{ data }">
                                 {{ formatDateString(data.date) }}
                             </template>
                         </Column>
-                    <Column field="paymentMethod" header="付款方式" sortable>
+                    <Column field="paymentMethod" header="付款方式" sortable headerClass="bg-sky-50 text-sky-700">
                         <template #body="{ data }">
                             <Tag :severity="getPaymentSeverity(data.paymentMethod)"
                                 :value="getPaymentMethod(data.paymentMethod)" />
                         </template>
                     </Column>
-                    <Column field="status" header="狀態" sortable>
+                    <Column field="status" header="狀態" sortable headerClass="bg-sky-50 text-sky-700">
                         <template #body="{ data }">
                             <Tag :severity="getStatusSeverity(data.status)" :value="getStatusLabel(data.status)" />
                         </template>
                     </Column>
-                    <Column field="action" header="操作">
+                    <Column field="action" header="操作" headerClass="bg-sky-50 text-sky-700">
                             <template #body="{ data }">
                             <div class="flex gap-1">
-                                <Button icon="pi pi-eye" text rounded aria-label="查看詳情" @click="viewPurchaseDetail(data)" />
+                                <Button icon="pi pi-eye" text rounded aria-label="查看詳情" 
+                                    @click="viewPurchaseDetail(data)" class="text-sky-500 hover:bg-sky-50" />
                                 <Button icon="pi pi-file-pdf" text rounded aria-label="下載發票" 
-                                    :disabled="!data.invoiceAvailable" @click="downloadInvoice(data)" />
+                                    :disabled="!data.invoiceAvailable" @click="downloadInvoice(data)" 
+                                    class="text-sky-500 hover:bg-sky-50" />
                             </div>
                             </template>
                         </Column>
 
                     <template #empty>
-                        <div class="text-center p-6 bg-gray-50 rounded-lg">
-                            <i class="pi pi-shopping-bag text-4xl text-gray-400 mb-2"></i>
-                            <p class="text-gray-500">尚無購買紀錄</p>
+                        <div class="text-center p-6 bg-sky-50 rounded-lg border border-sky-100">
+                            <i class="pi pi-shopping-bag text-4xl text-sky-200 mb-2"></i>
+                            <p class="text-sky-600">尚無購買紀錄</p>
                         </div>
                     </template>
                     </DataTable>
@@ -315,7 +329,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, inject } from 'vue';
+import { ref, computed, inject, watch } from 'vue';
 import type { PropType } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
@@ -332,6 +346,8 @@ import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
+import Button from 'primevue/button';
+
 // 定义inject数据接口
 interface PurchaseDataInject {
     purchaseHistory: { value: ExtendedPurchaseItem[] };
@@ -361,6 +377,17 @@ const filters = ref({
     status: null as OrderStatus | null,
     paymentMethod: null as PaymentMethod | null
 });
+
+// 防抖定時器
+let searchTimeout: number | null = null;
+
+// 防抖函數 - 用於搜尋
+const debounceSearch = () => {
+    if (searchTimeout) clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        applyFilters();
+    }, 300) as unknown as number;
+};
 
 // 課卡類型選項
 const cardTypeOptions = Object.entries(CardTypeLabel).map(([value, label]) => ({
@@ -440,37 +467,39 @@ const filteredPurchaseHistory = computed(() => {
     return filtered;
 });
 
-// 處理日期範圍變更
+// 處理日期範圍變更 - 立即應用篩選
 const handleDateRangeChange = (dateRange: { start: Date; end: Date }) => {
     range.value = dateRange;
+    applyFilters();
 };
 
 // 應用篩選器
 const applyFilters = () => {
     loading.value = true;
-    setTimeout(() => loading.value = false, 500);
-};
-
-// 重置篩選器
-const resetFilters = () => {
-    range.value = null;
-    startDate.value = undefined;
-    endDate.value = undefined;
-    loading.value = true;
-    setTimeout(() => loading.value = false, 500);
+    setTimeout(() => loading.value = false, 300);
 };
 
 // 重置所有篩選器
 const resetAllFilters = () => {
-    resetFilters();
+    range.value = null;
+    startDate.value = undefined;
+    endDate.value = undefined;
+    
     filters.value = {
         search: '',
         cardType: null,
         status: null,
         paymentMethod: null
     };
-    applyFilters();
+    
+    loading.value = true;
+    setTimeout(() => loading.value = false, 300);
 };
+
+// 監聽篩選條件變更 - 立即應用篩選
+watch(() => [filters.value.cardType, filters.value.status, filters.value.paymentMethod], () => {
+    applyFilters();
+}, { deep: true });
 
 // 查看购买详情
 const viewPurchaseDetail = (purchase: ExtendedPurchaseItem) => {
@@ -593,7 +622,7 @@ const getStatusSeverity = (status: OrderStatus) => {
  @reference "tailwindcss";
 
 .card {
-    @apply bg-white border border-gray-100 rounded-lg p-4;
+    @apply bg-white;
 }
 
 :deep(.p-datatable > .p-datatable-table-container) {
@@ -606,5 +635,41 @@ const getStatusSeverity = (status: OrderStatus) => {
 
 :deep(.p-datatable-sm .p-datatable-tbody > tr > td) {
     @apply py-2 px-3 text-sm;
+}
+
+:deep(.p-datatable-tbody > tr:hover) {
+    @apply bg-sky-50/50;
+}
+
+:deep(.p-dropdown:not(.p-disabled).p-focus) {
+    @apply border-sky-500 shadow-none ring-1 ring-sky-200;
+}
+
+:deep(.p-paginator) {
+    @apply border-t border-sky-100 bg-white;
+}
+
+:deep(.p-paginator .p-paginator-pages .p-paginator-page.p-highlight) {
+    @apply bg-sky-500 text-white;
+}
+
+:deep(.p-datepicker:not(.p-disabled):focus) {
+    @apply border-sky-500 shadow-none ring-1 ring-sky-200;
+}
+
+:deep(.p-inputtext:enabled:focus) {
+    @apply border-sky-500 shadow-none ring-1 ring-sky-200;
+}
+
+:deep(.p-inputtext) {
+    @apply border-sky-200;
+}
+
+:deep(.p-button.p-button-outlined) {
+    @apply border-sky-500 text-sky-500;
+}
+
+:deep(.p-button.p-button-outlined:hover) {
+    @apply bg-sky-50;
 }
 </style>

@@ -8,85 +8,81 @@
             <!-- 頂部操作區 -->
             <div class="flex flex-wrap justify-between items-center gap-3 p-3 border-b border-gray-100 bg-sky-50">
                 <div class="flex gap-2">
-                    <Button icon="pi pi-refresh" outlined aria-label="刷新" @click="refreshMessages"
-                        class="!border-sky-500 !text-sky-500 hover:!bg-sky-50" />
-                    <Button icon="pi pi-trash" outlined severity="danger" aria-label="刪除" 
-                        :disabled="selectedMessages.length === 0" @click="confirmDeleteMessages" />
-                    <Button icon="pi pi-envelope" outlined 
-                        class="!border-green-500 !text-green-500 hover:!bg-green-50"
-                        :disabled="selectedMessages.length === 0" @click="markAsRead" />
-                    <Button icon="pi pi-envelope-open" outlined 
-                        class="!border-yellow-500 !text-yellow-500 hover:!bg-yellow-50"
-                        :disabled="selectedMessages.length === 0" @click="markAsUnread" />
+                    <ButtonGroup>
+                        <Button icon="pi pi-refresh" aria-label="刷新" @click="refreshMessages" outlined
+                            class="hover:!bg-sky-300 !bg-sky-200" v-tooltip.top="'刷新消息列表'" />
+                        <Button icon="pi pi-trash" aria-label="刪除" outlined :disabled="selectedMessages.length === 0"
+                            @click="confirmDeleteMessages" class=" hover:!bg-sky-50"
+                            v-tooltip.top="'刪除所選消息'" />
+                        <Button icon="pi pi-eye" :disabled="selectedMessages.length === 0" @click="markAsRead"
+                            outlined class=" hover:!bg-sky-50" v-tooltip.top="'標記為已讀'" />
+                    </ButtonGroup>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="text-sm bg-sky-100 text-sky-600 px-2 py-1 rounded-full font-medium">
                         {{ unreadCount }} 封未讀
                     </span>
-                    <div class="relative">
-                        <i class="pi pi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                        <InputText v-model="filters.search" placeholder="搜尋訊息..." 
-                            class="w-full md:w-auto pl-8 border-sky-200 focus:border-sky-500" />
-                    </div>
+                    <IconField class="w-full">
+                        <InputIcon class="pi pi-search text-sky-400" />
+                        <InputText v-model="filters.search" placeholder="搜尋訊息..."
+                            class="w-full border-sky-200 focus:border-sky-500" size="small" />
+                    </IconField>
                 </div>
             </div>
 
             <!-- 分類標籤列 -->
             <div class="flex flex-wrap gap-2 px-4 pb-2 overflow-x-auto">
-                <Button v-for="category in categories" :key="category.value"
-                    :label="category.label" 
+                <Button v-for="category in categories" :key="category.value" :label="category.label"
                     :badge="category.count > 0 ? category.count.toString() : undefined"
-                    :badgeClass="'bg-sky-100 text-sky-600'"
-                    :outlined="filters.category !== category.value"
-                    :class="{'p-button-text': true, 'bg-sky-50 !border-b-2 !border-sky-500': filters.category === category.value}"
+                    :badgeClass="'bg-sky-100 text-sky-600'" :outlined="filters.category !== category.value"
+                    :class="{ 'p-button-text': true, 'bg-sky-50 !border-b-2 !border-sky-500': filters.category === category.value }"
                     @click="filters.category = category.value" />
             </div>
 
             <!-- 訊息列表 -->
-            <DataTable v-model:selection="selectedMessages" :value="filteredMessages" 
-                stripedRows selectionMode="multiple" dataKey="id" 
-                :loading="loading" class="flex-1" paginator :rows="10"
-                :rowsPerPageOptions="[5, 10, 20]" 
+            <DataTable v-model:selection="selectedMessages" :value="filteredMessages" stripedRows
+                selectionMode="multiple" dataKey="id" :loading="loading" class="flex-1" paginator :rows="10"
+                :rowsPerPageOptions="[5, 10, 20]"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-                :rowHover="true"
-                emptyMessage="無訊息"
-                responsiveLayout="stack">
-                
-                <Column selectionMode="multiple" headerStyle="width: 3rem" headerClass="bg-sky-50 text-sky-700"></Column>
-                
+                :rowHover="true" emptyMessage="無訊息" responsiveLayout="stack" @row-dblclick="(event) => openMessage(event.data)">
+
+                <Column selectionMode="multiple" headerStyle="width: 3rem" headerClass="bg-sky-50 text-sky-700">
+                </Column>
+
                 <Column field="isRead" header="狀態" style="width: 4rem" headerClass="bg-sky-50 text-sky-700">
                     <template #body="{ data }">
                         <div class="flex justify-center">
-                            <i :class="['pi', data.isRead ? 'pi-envelope-open text-gray-400' : 'pi-envelope text-sky-500']"></i>
+                            <i
+                                :class="['pi', data.isRead ? 'pi-envelope-open text-gray-400' : 'pi-envelope text-sky-500']"></i>
                         </div>
                     </template>
                 </Column>
-                
+
                 <Column field="type" header="類型" style="width: 6rem" headerClass="bg-sky-50 text-sky-700">
                     <template #body="{ data }">
                         <Tag :value="getMessageTypeLabel(data.type)" :severity="getMessageTypeSeverity(data.type)" />
                     </template>
                 </Column>
-                
+
                 <Column field="sender" header="發送者" headerClass="bg-sky-50 text-sky-700">
                     <template #body="{ data }">
                         <div class="flex items-center gap-2">
-                            <Avatar :image="data.senderAvatar" :label="data.sender.charAt(0)" 
-                                shape="circle" size="small" class="!bg-sky-100 !text-sky-700" />
+                            <Avatar :image="data.senderAvatar" :label="data.sender.charAt(0)" shape="circle"
+                                size="small" class="!bg-sky-100 !text-sky-700" />
                             <span>{{ data.sender }}</span>
                         </div>
                     </template>
                 </Column>
-                
+
                 <Column field="title" header="標題" headerClass="bg-sky-50 text-sky-700">
                     <template #body="{ data }">
-                        <div class="cursor-pointer hover:text-sky-600" @click="openMessage(data)"
-                            :class="{'font-bold': !data.isRead}">
+                        <div class="cursor-pointer hover:text-sky-600"
+                            :class="{ 'font-bold': !data.isRead }">
                             {{ data.title }}
                         </div>
                     </template>
                 </Column>
-                
+
                 <Column field="createdAt" header="時間" sortable headerClass="bg-sky-50 text-sky-700">
                     <template #body="{ data }">
                         <div class="text-sm text-gray-600">
@@ -94,18 +90,18 @@
                         </div>
                     </template>
                 </Column>
-                
+
                 <Column style="width: 5rem" headerClass="bg-sky-50 text-sky-700">
                     <template #body="{ data }">
                         <div class="flex gap-1">
-                            <Button icon="pi pi-eye" text rounded aria-label="查看" 
-                                class="text-sky-500 hover:bg-sky-50" @click="openMessage(data)" />
-                            <Button icon="pi pi-trash" text rounded severity="danger" 
-                                aria-label="刪除" @click="confirmDeleteMessage(data)" />
+                            <Button icon="pi pi-eye" text rounded aria-label="查看" class="text-sky-500 hover:bg-sky-50"
+                                @click="openMessage(data)" />
+                            <Button icon="pi pi-trash" text rounded severity="danger" aria-label="刪除"
+                                @click="confirmDeleteMessage(data)" />
                         </div>
                     </template>
                 </Column>
-                
+
                 <template #empty>
                     <div class="text-center p-8 bg-sky-50/50 rounded-lg">
                         <i class="pi pi-inbox text-5xl text-sky-200 mb-3"></i>
@@ -116,29 +112,29 @@
         </div>
 
         <!-- 訊息詳情對話框 -->
-        <Dialog v-model:visible="messageDetailVisible" :header="selectedMessage?.title || '訊息詳情'" 
-            :modal="true" :closable="true" :style="{ width: '50vw' }"
-            :contentStyle="{ 'background-color': '#f8fafc' }">
+        <Dialog v-model:visible="messageDetailVisible" :header="selectedMessage?.title || '訊息詳情'" :modal="true"
+            :closable="true" :style="{ width: '50vw' }" :contentStyle="{ 'background-color': '#f8fafc' }">
             <div v-if="selectedMessage" class="space-y-4">
                 <div class="flex justify-between items-center border-b border-sky-100 pb-3">
                     <div class="flex items-center gap-3">
-                        <Avatar :image="selectedMessage.senderAvatar" :label="selectedMessage.sender.charAt(0)" 
+                        <Avatar :image="selectedMessage.senderAvatar" :label="selectedMessage.sender.charAt(0)"
                             shape="circle" size="large" class="!bg-sky-100 !text-sky-700" />
                         <div>
                             <div class="font-medium text-sky-700">{{ selectedMessage.sender }}</div>
                             <div class="text-sm text-gray-500">{{ formatMessageDate(selectedMessage.createdAt) }}</div>
                         </div>
                     </div>
-                    <Tag :value="getMessageTypeLabel(selectedMessage.type)" 
+                    <Tag :value="getMessageTypeLabel(selectedMessage.type)"
                         :severity="getMessageTypeSeverity(selectedMessage.type)" />
                 </div>
-                
+
                 <div class="py-4 bg-white p-4 rounded-lg shadow-sm border border-gray-100">
                     <div class="whitespace-pre-wrap text-gray-700">{{ selectedMessage.content }}</div>
                 </div>
-                
+
                 <!-- 附件區 -->
-                <div v-if="selectedMessage.attachments && selectedMessage.attachments.length > 0" class="border-t border-sky-100 pt-3">
+                <div v-if="selectedMessage.attachments && selectedMessage.attachments.length > 0"
+                    class="border-t border-sky-100 pt-3">
                     <h3 class="font-medium mb-2 text-sky-700">附件</h3>
                     <div class="flex flex-wrap gap-2">
                         <div v-for="(attachment, index) in selectedMessage.attachments" :key="index"
@@ -149,28 +145,27 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- 相關操作按鈕 -->
-                <div v-if="selectedMessage.actions && selectedMessage.actions.length > 0" class="border-t border-sky-100 pt-3">
+                <div v-if="selectedMessage.actions && selectedMessage.actions.length > 0"
+                    class="border-t border-sky-100 pt-3">
                     <div class="flex flex-wrap gap-2">
-                        <Button v-for="(action, index) in selectedMessage.actions" :key="index"
-                            :label="action.label" :icon="action.icon" @click="handleMessageAction(action)" 
+                        <Button v-for="(action, index) in selectedMessage.actions" :key="index" :label="action.label"
+                            :icon="action.icon" @click="handleMessageAction(action)"
                             class="p-button-outlined p-button-sm" />
                     </div>
                 </div>
             </div>
             <template #footer>
-                <Button label="關閉" icon="pi pi-times" @click="messageDetailVisible = false" outlined 
+                <Button label="關閉" icon="pi pi-times" @click="messageDetailVisible = false" outlined
                     class="!border-gray-300 !text-gray-700" />
-                <Button v-if="selectedMessage && !selectedMessage.isRead" 
-                    label="標記為已讀" icon="pi pi-check" @click="markMessageAsRead(selectedMessage)" 
-                    class="!bg-green-500 !border-green-500" />
-                <Button v-if="selectedMessage && selectedMessage.canReply" 
-                    label="回覆" icon="pi pi-reply" @click="replyToMessage" 
-                    class="!bg-sky-500 !border-sky-500" />
+                <Button v-if="selectedMessage && !selectedMessage.isRead" label="標記為已讀" icon="pi pi-check"
+                    @click="markMessageAsRead(selectedMessage)" class="!bg-green-500 !border-green-500" />
+                <Button v-if="selectedMessage && selectedMessage.canReply" label="回覆" icon="pi pi-reply"
+                    @click="replyToMessage" class="!bg-sky-500 !border-sky-500" />
             </template>
         </Dialog>
-        
+
         <!-- 回覆訊息對話框 -->
         <Dialog v-model:visible="replyDialogVisible" header="回覆訊息" :modal="true" :style="{ width: '40vw' }"
             :contentStyle="{ 'background-color': '#f8fafc' }">
@@ -178,26 +173,26 @@
                 <div class="flex items-center gap-2 p-3 bg-sky-50 rounded-md border border-sky-100">
                     <span class="font-medium text-sky-700">回覆給:</span>
                     <div class="flex items-center gap-2">
-                        <Avatar :image="selectedMessage?.senderAvatar" :label="selectedMessage?.sender.charAt(0)" 
+                        <Avatar :image="selectedMessage?.senderAvatar" :label="selectedMessage?.sender.charAt(0)"
                             shape="circle" size="small" class="!bg-sky-100 !text-sky-700" />
                         <span>{{ selectedMessage?.sender }}</span>
                     </div>
                 </div>
-                
+
                 <div class="flex flex-col gap-2">
                     <label for="replyContent" class="font-medium text-sky-700">訊息內容</label>
-                    <Textarea id="replyContent" v-model="replyContent" rows="5" class="w-full border-sky-200 focus:border-sky-500" 
-                        placeholder="請輸入回覆內容..." />
+                    <Textarea id="replyContent" v-model="replyContent" rows="5"
+                        class="w-full border-sky-200 focus:border-sky-500" placeholder="請輸入回覆內容..." />
                 </div>
             </div>
             <template #footer>
-                <Button label="取消" icon="pi pi-times" @click="replyDialogVisible = false" outlined 
+                <Button label="取消" icon="pi pi-times" @click="replyDialogVisible = false" outlined
                     class="!border-gray-300 !text-gray-700" />
-                <Button label="發送" icon="pi pi-send" @click="sendReply" :loading="sendingReply" 
+                <Button label="發送" icon="pi pi-send" @click="sendReply" :loading="sendingReply"
                     class="!bg-sky-500 !border-sky-500" />
             </template>
         </Dialog>
-        
+
         <!-- 確認刪除對話框 -->
         <ConfirmDialog>
             <template #message="{ message }">
@@ -230,6 +225,9 @@ import InputText from 'primevue/inputtext';
 import { MessageType } from '@/enums/Message';
 import type { Message } from '@/types/message';
 import { showSuccess, showError, showInfo, initToast } from '@/utils/toastHelper';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
+import type Row from 'primevue/row';
 
 
 const toast = useToast();
@@ -271,18 +269,18 @@ const filteredMessages = computed(() => {
         if (filters.value.category === 'unread' && message.isRead) {
             return false;
         }
-        
+
         if (filters.value.category !== 'all' && filters.value.category !== 'unread' && message.type !== filters.value.category) {
             return false;
         }
-        
+
         // 搜尋篩選
-        if (filters.value.search && !message.title.toLowerCase().includes(filters.value.search.toLowerCase()) && 
+        if (filters.value.search && !message.title.toLowerCase().includes(filters.value.search.toLowerCase()) &&
             !message.content.toLowerCase().includes(filters.value.search.toLowerCase()) &&
             !message.sender.toLowerCase().includes(filters.value.search.toLowerCase())) {
             return false;
         }
-        
+
         return true;
     });
 });
@@ -324,7 +322,7 @@ function formatMessageDate(date: Date): string {
     const now = new Date();
     const messageDate = new Date(date);
     const diffDays = Math.floor((now.getTime() - messageDate.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) {
         return `今天 ${messageDate.getHours().toString().padStart(2, '0')}:${messageDate.getMinutes().toString().padStart(2, '0')}`;
     } else if (diffDays === 1) {
@@ -349,9 +347,11 @@ function formatFileSize(bytes: number): string {
 
 // 開啟訊息詳情
 function openMessage(message: Message): void {
+    console.log(message);
+
     selectedMessage.value = message;
     messageDetailVisible.value = true;
-    
+
     // 如果訊息未讀，標記為已讀
     if (!message.isRead) {
         markMessageAsRead(message);
@@ -386,17 +386,6 @@ function markAsRead(): void {
     selectedMessages.value = [];
 }
 
-// 標記選中訊息為未讀
-function markAsUnread(): void {
-    selectedMessages.value.forEach(message => {
-        const index = messages.value.findIndex(m => m.id === message.id);
-        if (index !== -1) {
-            messages.value[index].isRead = false;
-        }
-    });
-    showSuccess(`已將 ${selectedMessages.value.length} 則訊息標記為未讀`, '成功');
-    selectedMessages.value = [];
-}
 
 // 確認刪除單個訊息
 function confirmDeleteMessage(message: Message): void {
@@ -450,17 +439,17 @@ function sendReply(): void {
         showError('請輸入回覆內容', '錯誤');
         return;
     }
-    
+
     sendingReply.value = true;
-    
+
     // 模擬發送回覆
     setTimeout(() => {
         sendingReply.value = false;
         replyDialogVisible.value = false;
         messageDetailVisible.value = false;
-        
+
         showSuccess('回覆已發送', '成功');
-        
+
         // 添加一條新訊息（模擬回覆）
         const newMessage: Message = {
             id: Math.max(...messages.value.map(m => m.id)) + 1,
@@ -472,7 +461,7 @@ function sendReply(): void {
             isRead: true,
             canReply: false
         };
-        
+
         messages.value.unshift(newMessage);
     }, 1000);
 }
@@ -480,7 +469,7 @@ function sendReply(): void {
 // 處理訊息操作
 function handleMessageAction(action: any): void {
     showInfo(`執行操作: ${action.label}`, '操作');
-    
+
     // 根據不同的操作類型執行不同的操作
     switch (action.action) {
         case 'view_course':
@@ -500,7 +489,7 @@ function handleMessageAction(action: any): void {
 // 刷新訊息
 function refreshMessages(): void {
     loading.value = true;
-    
+
     // 模擬加載數據
     setTimeout(() => {
         loadMessages();
@@ -658,4 +647,4 @@ onMounted(() => {
 :deep(.p-avatar) {
     @apply flex items-center justify-center;
 }
-</style> 
+</style>

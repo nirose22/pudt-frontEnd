@@ -47,7 +47,7 @@ const role = authStore.role;
 const keyword = ref('');
 const menuPt = ref({
     header: {
-        class: '!text-yellow-600 !text-xl'
+        class: '!text-sky-600 !text-xl'
     },
     mask: {
         class: '!bg-gray-500/10'

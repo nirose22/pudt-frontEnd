@@ -1,17 +1,21 @@
 <template>
     <div class="flex flex-col flex-1 overflow-y-auto">
-        <h2 class="text-2xl font-bold mb-6">預約行程管理</h2>
+        <h2 class="text-2xl font-bold mb-6 text-sky-700 flex items-center">
+            <i class="pi pi-calendar-plus mr-2"></i>預約行程管理
+        </h2>
 
         <!-- 即將到來的預約 -->
         <div v-if="upcomingBookings.length > 0" class="mb-6">
-            <h3 class="text-lg font-semibold mb-3">即將到來的預約</h3>
+            <h3 class="text-lg font-semibold mb-3 text-sky-700 flex items-center">
+                <i class="pi pi-clock mr-2"></i>即將到來的預約
+            </h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div v-for="booking in upcomingBookings" :key="booking.id" 
-                    class="card p-4 shadow-sm rounded-lg border-l-4"
+                    class="card p-4 shadow-sm rounded-lg border-l-4 border border-sky-100 hover:shadow-md transition-shadow"
                     :class="getUpcomingBorderClass(booking)">
                     <div class="flex justify-between items-start">
                         <div>
-                            <h4 class="font-medium text-lg">{{ booking.courseTitle }}</h4>
+                            <h4 class="font-medium text-lg text-sky-700">{{ booking.courseTitle }}</h4>
                             <div class="text-sm text-gray-500 mt-1">{{ formatDateString(booking.createdAt.toISOString()) }} {{ booking.time }}</div>
                             <div class="text-sm text-gray-500">{{ booking.merchantName || booking.location }}</div>
                         </div>
@@ -19,10 +23,12 @@
                             :severity="getTimeLeftSeverity(booking.createdAt, booking.time || '')" />
                     </div>
                     <div class="mt-3 flex justify-end gap-2">
-                        <Button icon="pi pi-map-marker" text rounded aria-label="查看地圖" @click="showLocationMap(booking)" />
-                        <Button icon="pi pi-eye" text rounded aria-label="查看詳情" @click="viewBookingDetail(booking)" />
-                        <Button icon="pi pi-times" class="p-button-danger" text rounded aria-label="取消預約"
-                            @click="confirmCancelBooking(booking.id)" />
+                        <Button icon="pi pi-map-marker" text rounded aria-label="查看地圖" 
+                            @click="showLocationMap(booking)" class="text-sky-500 hover:bg-sky-50" />
+                        <Button icon="pi pi-eye" text rounded aria-label="查看詳情" 
+                            @click="viewBookingDetail(booking)" class="text-sky-500 hover:bg-sky-50" />
+                        <Button icon="pi pi-times" text rounded aria-label="取消預約"
+                            @click="confirmCancelBooking(booking.id)" class="text-red-500 hover:bg-red-50" />
                     </div>
                 </div>
             </div>
@@ -31,15 +37,20 @@
         <!-- 視圖切換按鈕 -->
         <div class="flex justify-between items-center mb-4">
             <ButtonGroup class="h-10">
-                <Button :class="{ 'p-button-outlined': viewMode !== 'list' }" icon="pi pi-list" label="列表"
-                    @click="viewMode = 'list'" />
-                <Button :class="{ 'p-button-outlined': viewMode !== 'calendar' }" icon="pi pi-calendar" label="日曆"
-                    @click="viewMode = 'calendar'" />
+                <Button :class="{ 'p-button-outlined !border-sky-500 !text-sky-500': viewMode !== 'list', '!bg-sky-500 !border-sky-500': viewMode === 'list' }" 
+                    icon="pi pi-list" label="列表" @click="viewMode = 'list'" 
+                    v-tooltip.top="'切換至列表視圖'" />
+                <Button :class="{ 'p-button-outlined !border-sky-500 !text-sky-500': viewMode !== 'calendar', '!bg-sky-500 !border-sky-500': viewMode === 'calendar' }" 
+                    icon="pi pi-calendar" label="日曆" @click="viewMode = 'calendar'" 
+                    v-tooltip.top="'切換至日曆視圖'" />
             </ButtonGroup>
             
             <div class="flex gap-2">
-                <Button icon="pi pi-sync" label="同步至行事曆" outlined @click="showCalendarSyncDialog = true" />
-                <Select v-model="filter.status" :options="statusOptions" optionLabel="label" optionValue="value" placeholder="狀態" />
+                <Button icon="pi pi-sync" label="同步至行事曆" outlined 
+                    @click="showCalendarSyncDialog = true" class="!border-sky-500 !text-sky-500 hover:!bg-sky-50" 
+                    v-tooltip.left="'將預約同步到您的行事曆'" />
+                <Select v-model="filter.status" :options="statusOptions" optionLabel="label" optionValue="value" 
+                    placeholder="狀態" class="border-sky-200 focus:border-sky-500" />
             </div>
         </div>
 
@@ -47,38 +58,39 @@
         <div v-if="viewMode === 'list'" class="flex flex-col flex-1 overflow-hidden">
             <DataTable :value="filteredBookings" stripedRows responsiveLayout="stack" paginator :rows="10" 
                 class="p-datatable-sm" emptyMessage="無預約記錄">
-                <Column field="courseTitle" header="課程名稱" />
-                <Column field="createdAt" header="日期">
+                <Column field="courseTitle" header="課程名稱" headerClass="bg-sky-50 text-sky-700" />
+                <Column field="createdAt" header="日期" headerClass="bg-sky-50 text-sky-700">
                     <template #body="{ data }">
                         {{ formatDateString(data.createdAt.toISOString()) }}
                     </template>
                 </Column>
-                <Column field="time" header="時間" />
-                <Column field="location" header="地點" />
-                <Column field="instructor.name" header="講師" />
-                <Column field="status" header="狀態">
+                <Column field="time" header="時間" headerClass="bg-sky-50 text-sky-700" />
+                <Column field="location" header="地點" headerClass="bg-sky-50 text-sky-700" />
+                <Column field="instructor.name" header="講師" headerClass="bg-sky-50 text-sky-700" />
+                <Column field="status" header="狀態" headerClass="bg-sky-50 text-sky-700">
                     <template #body="{ data }">
                         <Tag :severity="getStatusSeverity(data.status)" :value="getStatusLabel(data.status)" />
                     </template>
                 </Column>
-                <Column header="操作">
+                <Column header="操作" headerClass="bg-sky-50 text-sky-700">
                     <template #body="{ data }">
                         <div class="flex gap-1">
-                            <Button icon="pi pi-eye" text rounded aria-label="查看詳情" @click="viewBookingDetail(data)" />
-                            <Button v-if="canCancel(data)" icon="pi pi-times" class="p-button-danger" text rounded aria-label="取消預約"
-                                @click="confirmCancelBooking(data.id)" />
+                            <Button icon="pi pi-eye" text rounded aria-label="查看詳情" 
+                                @click="viewBookingDetail(data)" class="text-sky-500 hover:bg-sky-50" />
+                            <Button v-if="canCancel(data)" icon="pi pi-times" text rounded aria-label="取消預約"
+                                @click="confirmCancelBooking(data.id)" class="text-red-500 hover:bg-red-50" />
                         </div>
                     </template>
                 </Column>
             </DataTable>
-            <div v-if="filteredBookings.length === 0" class="content-center block text-center p-6 bg-gray-50 flex-1">
-                <i class="pi pi-calendar-times text-4xl text-gray-400 mb-2"></i>
-                <p class="text-gray-500">您目前沒有任何預約</p>
+            <div v-if="filteredBookings.length === 0" class="content-center block text-center p-6 bg-sky-50 flex-1 rounded-lg border border-sky-100">
+                <i class="pi pi-calendar-times text-4xl text-sky-200 mb-2"></i>
+                <p class="text-sky-600">您目前沒有任何預約</p>
             </div>
         </div>
 
         <!-- 日曆視圖 -->
-        <div v-else-if="viewMode === 'calendar'" class="flex-1 rounded-lg">
+        <div v-else-if="viewMode === 'calendar'" class="flex-1 rounded-lg border border-sky-100 p-2">
             <FullCalendar :options="calendarOptions" class="w-full h-full">
                 <template v-slot:eventContent='arg'>
                     <div class="fc-content rounded-md p-1 whitespace-normal cursor-pointer">
@@ -90,13 +102,14 @@
         </div>
 
         <!-- 預約詳情對話框 -->
-        <Dialog v-model:visible="showDetailDialog" :header="selectedBooking?.courseTitle || '預約詳情'" :modal="true" :closable="true"
-            :style="{ width: '500px' }">
+        <Dialog v-model:visible="showDetailDialog" :header="selectedBooking?.courseTitle || '預約詳情'" 
+            :modal="true" :closable="true" :style="{ width: '500px' }" 
+            :contentStyle="{ 'background-color': '#f8fafc' }">
             <div v-if="selectedBooking" class="space-y-4">
-                <div class="p-3 border rounded-lg bg-gray-50">
+                <div class="p-3 border rounded-lg bg-white border-sky-100">
                     <div class="flex justify-between mb-2">
                         <span class="text-gray-600">課程名稱：</span>
-                        <span class="font-medium">{{ selectedBooking.courseTitle }}</span>
+                        <span class="font-medium text-sky-700">{{ selectedBooking.courseTitle }}</span>
                     </div>
                     <div class="flex justify-between mb-2">
                         <span class="text-gray-600">日期：</span>
@@ -116,7 +129,7 @@
                     </div>
                     <div class="flex justify-between mb-2">
                         <span class="text-gray-600">點數：</span>
-                        <span class="font-bold text-primary-600">{{ selectedBooking.points }}</span>
+                        <span class="font-bold text-sky-600">{{ selectedBooking.points }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-gray-600">狀態：</span>
@@ -125,10 +138,11 @@
                 </div>
                 
                 <!-- 講師資訊 -->
-                <div v-if="selectedBooking.instructor" class="p-3 border rounded-lg">
-                    <h3 class="font-medium mb-2">講師資訊</h3>
+                <div v-if="selectedBooking.instructor" class="p-3 border rounded-lg border-sky-100 bg-white">
+                    <h3 class="font-medium mb-2 text-sky-700">講師資訊</h3>
                     <div class="flex items-center gap-3">
-                        <Avatar :label="selectedBooking.instructor.name.charAt(0)" shape="circle" size="large" />
+                        <Avatar :label="selectedBooking.instructor.name.charAt(0)" 
+                            shape="circle" size="large" class="!bg-sky-100 !text-sky-700" />
                         <div>
                             <div class="font-medium">{{ selectedBooking.instructor.name }}</div>
                         </div>
@@ -136,11 +150,11 @@
                 </div>
                 
                 <!-- 地圖 -->
-                <div v-if="selectedBooking.location" class="p-3 border rounded-lg">
-                    <h3 class="font-medium mb-2">上課地點</h3>
-                    <div class="h-40 bg-gray-200 flex items-center justify-center">
-                        <i class="pi pi-map-marker text-4xl text-gray-400"></i>
-                        <span class="ml-2">{{ selectedBooking.location }}</span>
+                <div v-if="selectedBooking.location" class="p-3 border rounded-lg border-sky-100 bg-white">
+                    <h3 class="font-medium mb-2 text-sky-700">上課地點</h3>
+                    <div class="h-40 bg-sky-50 flex items-center justify-center border border-sky-100 rounded-lg">
+                        <i class="pi pi-map-marker text-4xl text-sky-300"></i>
+                        <span class="ml-2 text-sky-600">{{ selectedBooking.location }}</span>
                     </div>
                     <div class="mt-2 text-sm text-gray-500">
                         請提前 15 分鐘到達上課地點
@@ -148,12 +162,12 @@
                 </div>
                 
                 <!-- 注意事項 -->
-                <div class="p-3 border rounded-lg bg-blue-50">
-                    <h3 class="font-medium mb-2 flex items-center">
-                        <i class="pi pi-info-circle mr-2 text-blue-500"></i>
+                <div class="p-3 border rounded-lg bg-sky-50 border-sky-100">
+                    <h3 class="font-medium mb-2 flex items-center text-sky-700">
+                        <i class="pi pi-info-circle mr-2 text-sky-500"></i>
                         課程注意事項
                     </h3>
-                    <ul class="list-disc pl-5 text-sm">
+                    <ul class="list-disc pl-5 text-sm text-gray-600">
                         <li>請提前 15 分鐘到達教室</li>
                         <li>請攜帶個人用品（如瑜珈墊、毛巾等）</li>
                         <li>如需取消預約，請至少提前 24 小時</li>
@@ -162,15 +176,18 @@
                 </div>
             </div>
             <template #footer>
-                <Button label="關閉" icon="pi pi-times" @click="showDetailDialog = false" outlined />
+                <Button label="關閉" icon="pi pi-times" @click="showDetailDialog = false" 
+                    outlined class="!border-gray-300 !text-gray-700" />
                 <Button v-if="selectedBooking && canCancel(selectedBooking)" label="取消預約" icon="pi pi-times" 
-                    class="p-button-danger" @click="confirmCancelSelectedBooking" />
-                <Button label="加入行事曆" icon="pi pi-calendar-plus" @click="addToCalendar" />
+                    severity="danger" @click="confirmCancelSelectedBooking" />
+                <Button label="加入行事曆" icon="pi pi-calendar-plus" @click="addToCalendar" 
+                    class="!bg-sky-500 !border-sky-500" />
             </template>
         </Dialog>
         
         <!-- 取消預約確認對話框 -->
-        <Dialog v-model:visible="showCancelDialog" header="取消預約" :style="{ width: '450px' }">
+        <Dialog v-model:visible="showCancelDialog" header="取消預約" :style="{ width: '450px' }"
+            :contentStyle="{ 'background-color': '#f8fafc' }">
             <div class="p-4">
                 <div class="flex items-center gap-3 mb-4">
                     <i class="pi pi-exclamation-triangle text-3xl text-yellow-500"></i>
@@ -185,41 +202,50 @@
             </div>
             <template #footer>
                 <Button label="返回" icon="pi pi-arrow-left" class="p-button-text" @click="showCancelDialog = false" />
-                <Button label="確認取消預約" icon="pi pi-check" class="p-button-danger" @click="cancelBooking()" />
+                <Button label="確認取消預約" icon="pi pi-check" severity="danger" @click="cancelBooking()" />
             </template>
         </Dialog>
         
         <!-- 行事曆同步對話框 -->
-        <Dialog v-model:visible="showCalendarSyncDialog" header="同步至行事曆" :style="{ width: '450px' }">
+        <Dialog v-model:visible="showCalendarSyncDialog" header="同步至行事曆" :style="{ width: '450px' }"
+            :contentStyle="{ 'background-color': '#f8fafc' }">
             <div class="p-4">
                 <p class="mb-4">選擇您要同步的行事曆平台：</p>
                 <div class="grid grid-cols-1 gap-3">
-                    <Button label="Google 行事曆" icon="pi pi-google" class="p-button-raised p-button-info" @click="syncToCalendar('google')" />
-                    <Button label="Apple 行事曆" icon="pi pi-apple" class="p-button-raised" @click="syncToCalendar('apple')" />
-                    <Button label="Outlook 行事曆" icon="pi pi-microsoft" class="p-button-raised p-button-help" @click="syncToCalendar('outlook')" />
-                    <Button label="下載 .ics 檔案" icon="pi pi-download" class="p-button-raised p-button-secondary" @click="downloadIcsFile()" />
+                    <Button label="Google 行事曆" icon="pi pi-google" 
+                        class="p-button-raised !bg-sky-500 !border-sky-500" @click="syncToCalendar('google')" />
+                    <Button label="Apple 行事曆" icon="pi pi-apple" 
+                        class="p-button-raised !bg-sky-600 !border-sky-600" @click="syncToCalendar('apple')" />
+                    <Button label="Outlook 行事曆" icon="pi pi-microsoft" 
+                        class="p-button-raised !bg-sky-700 !border-sky-700" @click="syncToCalendar('outlook')" />
+                    <Button label="下載 .ics 檔案" icon="pi pi-download" 
+                        class="p-button-raised !bg-gray-600 !border-gray-600" @click="downloadIcsFile()" />
                 </div>
             </div>
             <template #footer>
-                <Button label="關閉" icon="pi pi-times" @click="showCalendarSyncDialog = false" outlined />
+                <Button label="關閉" icon="pi pi-times" @click="showCalendarSyncDialog = false" 
+                    outlined class="!border-gray-300 !text-gray-700" />
             </template>
         </Dialog>
         
         <!-- 地點地圖對話框 -->
-        <Dialog v-model:visible="showMapDialog" header="課程地點" :style="{ width: '600px' }">
+        <Dialog v-model:visible="showMapDialog" header="課程地點" :style="{ width: '600px' }"
+            :contentStyle="{ 'background-color': '#f8fafc' }">
             <div class="p-4">
-                <div class="h-64 bg-gray-200 flex items-center justify-center mb-3">
-                    <i class="pi pi-map-marker text-4xl text-gray-400"></i>
-                    <span class="ml-2">{{ selectedBooking?.location }}</span>
+                <div class="h-64 bg-sky-50 flex items-center justify-center mb-3 border border-sky-100 rounded-lg">
+                    <i class="pi pi-map-marker text-4xl text-sky-300"></i>
+                    <span class="ml-2 text-sky-600">{{ selectedBooking?.location }}</span>
                 </div>
                 <div class="text-sm">
-                    <p class="font-medium">{{ selectedBooking?.location }}</p>
+                    <p class="font-medium text-sky-700">{{ selectedBooking?.location }}</p>
                     <p class="text-gray-600 mt-1">課程將於 {{ formatDateString((selectedBooking?.createdAt || new Date()).toISOString()) }} {{ selectedBooking?.time }} 開始</p>
                 </div>
             </div>
             <template #footer>
-                <Button label="關閉" icon="pi pi-times" @click="showMapDialog = false" outlined />
-                <Button label="導航" icon="pi pi-directions" @click="openNavigation" />
+                <Button label="關閉" icon="pi pi-times" @click="showMapDialog = false" 
+                    outlined class="!border-gray-300 !text-gray-700" />
+                <Button label="導航" icon="pi pi-directions" @click="openNavigation" 
+                    class="!bg-sky-500 !border-sky-500" />
             </template>
         </Dialog>
     </div>
@@ -561,7 +587,7 @@ watch(() => filter.value, () => {
 @reference "tailwindcss";
  
 .card {
-    @apply bg-white border border-gray-100;
+    @apply bg-white;
 }
 
 :deep(a.fc-event) {
@@ -569,7 +595,7 @@ watch(() => filter.value, () => {
 }
 
 :deep(.fc-event):hover {
-    @apply bg-blue-200;
+    @apply bg-sky-200;
 }
 
 :deep(.p-datatable-sm .p-datatable-thead > tr > th) {
@@ -578,5 +604,73 @@ watch(() => filter.value, () => {
 
 :deep(.p-datatable-sm .p-datatable-tbody > tr > td) {
     @apply py-2 px-3 text-sm;
+}
+
+:deep(.p-datatable-tbody > tr:hover) {
+    @apply bg-sky-50/50;
+}
+
+:deep(.p-dropdown:not(.p-disabled).p-focus) {
+    @apply border-sky-500 shadow-none ring-1 ring-sky-200;
+}
+
+:deep(.p-paginator) {
+    @apply border-t border-sky-100 bg-white;
+}
+
+:deep(.p-paginator .p-paginator-pages .p-paginator-page.p-highlight) {
+    @apply bg-sky-500 text-white;
+}
+
+:deep(.p-dialog-header) {
+    @apply bg-sky-50 text-sky-700;
+}
+
+:deep(.p-dialog-footer) {
+    @apply bg-gray-50;
+}
+
+:deep(.p-button.p-button-outlined) {
+    @apply border-sky-500 text-sky-500;
+}
+
+:deep(.p-button.p-button-outlined:hover) {
+    @apply bg-sky-50;
+}
+
+:deep(.fc .fc-button-primary) {
+    @apply bg-sky-500 border-sky-500;
+}
+
+:deep(.fc .fc-button-primary:hover) {
+    @apply bg-sky-600 border-sky-600;
+}
+
+:deep(.fc .fc-button-primary.fc-button-active) {
+    @apply bg-sky-700 border-sky-700;
+}
+
+:deep(.fc .fc-button-primary:disabled) {
+    @apply bg-sky-300 border-sky-300;
+}
+
+:deep(.fc-theme-standard .fc-scrollgrid) {
+    @apply border-sky-200;
+}
+
+:deep(.fc-theme-standard th) {
+    @apply border-sky-200 bg-sky-50 text-sky-700;
+}
+
+:deep(.fc-theme-standard td) {
+    @apply border-sky-100;
+}
+
+:deep(.fc-daygrid-day.fc-day-today) {
+    @apply bg-sky-50;
+}
+
+:deep(.fc-event.bg-blue-100) {
+    @apply bg-sky-100 border-sky-500;
 }
 </style>

@@ -10,10 +10,10 @@
                         <div class="flex flex-col md:flex-row items-center gap-6 md:w-1/2">
                             <!-- 頭像區域 -->
                             <div class="relative flex-shrink-0">
-                                <div class="w-24 h-24 md:w-28 md:h-28 rounded-full border-4 border-white shadow-md overflow-hidden flex items-center justify-center bg-white relative">
+                                <div class="w-24 h-24 md:w-28 md:h-28 rounded-full border-4 border-white shadow-md flex items-center justify-center bg-white relative">
                                     <Avatar :label="userStore.profile?.name?.charAt(0)" size="xlarge" shape="circle"
                                         class="!w-full !h-full !bg-blue-100 !text-blue-700" />
-                                    <div class="absolute -bottom-1 -right-1 bg-blue-400 rounded-full p-1.5 cursor-pointer shadow-md"
+                                    <div class="absolute -bottom-3 -left-3 bg-gray-100 w-10 h-10 rounded-full cursor-pointer shadow-md z-10 flex items-center justify-center"
                                         @click="handlePhotoUpload">
                                         <i class="pi pi-camera text-xs"></i>
                                     </div>
@@ -50,7 +50,7 @@
                                     </div>
                                 </div>
                                 <div class="bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full text-center">
-                                    <span class="font-bold">{{ userStore.completedCoursesCount }} 堂</span>
+                                    <span class="font-bold text-2xl">{{ userStore.completedCoursesCount }} 堂</span>
                                 </div>
                             </div>
                             

@@ -1,17 +1,19 @@
 <template>
 	<div class="flex flex-col flex-1 gap-4">
-		<div class="bg-white rounded-lg shadow p-4 mb-4">
+		<div class="bg-white rounded-lg shadow p-4 mb-4 border border-sky-100">
 			<div class="flex flex-wrap justify-between items-center mb-4">
-				<h2 class="text-2xl font-bold">我的收藏課程</h2>
+				<h2 class="text-2xl font-bold text-sky-700 flex items-center">
+					<i class="pi pi-heart mr-2"></i>我的收藏課程
+				</h2>
 				<div v-if="!loading && favoriteCourses.length > 0" class="flex items-center gap-4">
-					<div class="text-gray-600">共 {{ favoriteCourses.length }} 門收藏課程</div>
+					<div class="text-sky-600 bg-sky-50 px-3 py-1 rounded-full font-medium text-sm">共 {{ favoriteCourses.length }} 門收藏課程</div>
 					<div class="p-dataview-layout-options">
 						<ButtonGroup>
 							<Button
-								:class="{ 'p-button-text': layout !== 'grid', 'p-button-outlined': layout === 'grid' }"
+								:class="{ 'p-button-text !text-sky-400': layout !== 'grid', 'p-button-outlined !border-sky-500 !text-sky-500': layout === 'grid' }"
 								icon="pi pi-th-large" aria-label="網格模式" @click="layout = 'grid'" />
 							<Button
-								:class="{ 'p-button-text': layout !== 'list', 'p-button-outlined': layout === 'list' }"
+								:class="{ 'p-button-text !text-sky-400': layout !== 'list', 'p-button-outlined !border-sky-500 !text-sky-500': layout === 'list' }"
 								icon="pi pi-list" aria-label="列表模式" @click="layout = 'list'" />
 						</ButtonGroup>
 					</div>
@@ -20,15 +22,15 @@
 
 			<!-- 加载状态 -->
 			<div v-if="loading" class="flex justify-center p-6">
-				<ProgressSpinner />
+				<ProgressSpinner strokeWidth="4" class="!text-sky-500" />
 			</div>
 
 			<!-- 空状态 -->
-			<div v-else-if="favoriteCourses.length === 0" class="text-center p-12 bg-gray-50 rounded-lg">
-				<i class="pi pi-heart-fill text-4xl text-gray-300 mb-4"></i>
-				<h3 class="text-xl font-semibold text-gray-500 mb-2">尚未收藏任何課程</h3>
-				<p class="text-gray-400 mb-6">瀏覽課程並點擊心形圖標將它們添加到收藏</p>
-				<Button label="瀏覽課程" icon="pi pi-search" @click="router.push('/courses')" />
+			<div v-else-if="favoriteCourses.length === 0" class="text-center p-12 bg-sky-50 rounded-lg border border-sky-100">
+				<i class="pi pi-heart-fill text-4xl text-sky-200 mb-4"></i>
+				<h3 class="text-xl font-semibold text-sky-600 mb-2">尚未收藏任何課程</h3>
+				<p class="text-gray-500 mb-6">瀏覽課程並點擊心形圖標將它們添加到收藏</p>
+				<Button label="瀏覽課程" icon="pi pi-search" @click="router.push('/courses')" class="!bg-sky-500 !border-sky-500" />
 			</div>
 
 			<!-- 使用 DataView 组件统一管理课程列表 -->
@@ -39,7 +41,7 @@
 				<template #list>
 					<div class="flex flex-col gap-4 p-2">
 						<div v-for="course in favoriteCourses" :key="course.id"
-							class="flex flex-col sm:flex-row rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow border bg-white relative"
+							class="flex flex-col sm:flex-row rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-sky-100 bg-white relative"
 							:class="{ 'opacity-70': isLoading(course.id) }">
 							<div class="sm:w-48 h-48 sm:h-auto bg-gray-200 relative overflow-hidden">
 								<img v-if="course.coverUrl" :src="course.coverUrl" :alt="course.title"
@@ -49,33 +51,34 @@
 								<!-- 加载状态覆盖层 -->
 								<div v-if="isLoading(course.id)"
 									class="absolute inset-0 bg-gray-800 bg-opacity-40 flex items-center justify-center">
-									<ProgressSpinner style="width:40px;height:40px" strokeWidth="4" />
+									<ProgressSpinner style="width:40px;height:40px" strokeWidth="4" class="!text-sky-300" />
 								</div>
 							</div>
 							<div class="flex-grow p-4 flex flex-col">
 								<div class="flex justify-between items-start">
 									<div>
-										<h3 class="text-lg font-semibold">{{ course.title }}</h3>
+										<h3 class="text-lg font-semibold text-sky-700">{{ course.title }}</h3>
 										<div class="text-sm text-gray-600 mb-1">
-											<i class="pi pi-map-marker mr-1"></i>
+											<i class="pi pi-map-marker mr-1 text-sky-500"></i>
 											<span>{{ course.region || '未指定地區' }}</span>
 										</div>
 									</div>
 									<div class="flex gap-2">
 										<Button icon="pi pi-heart-fill" text rounded aria-label="取消收藏"
-											class="text-red-500" @click.stop="removeFavorite(course.id)" />
+											class="text-red-500 hover:bg-red-50" @click.stop="removeFavorite(course.id)" />
 										<Button icon="pi pi-share-alt" text rounded aria-label="分享"
-											@click.stop="shareCourse(course)" />
+											class="text-sky-500 hover:bg-sky-50" @click.stop="shareCourse(course)" />
 									</div>
 								</div>
 								<div class="mt-2 flex-grow">
 									<p class="text-sm text-gray-600 line-clamp-2">{{ course.description }}</p>
 								</div>
 								<div class="mt-4 flex justify-between items-center">
-									<span class="border rounded-md px-2 py-1 text-xs text-primary-600 font-medium">{{
+									<span class="border border-sky-200 bg-sky-50 rounded-md px-2 py-1 text-xs text-sky-600 font-medium">{{
 										course.points }} 點數</span>
 									<Button label="查看詳情" @click.stop="viewCourseDetails(course.id)"
-										:loading="isLoading(course.id)" :disabled="isLoading(course.id)" />
+										:loading="isLoading(course.id)" :disabled="isLoading(course.id)" 
+										class="!bg-sky-500 !border-sky-500" />
 								</div>
 							</div>
 						</div>
@@ -86,19 +89,24 @@
 				<template #grid>
 					<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-2">
 						<div v-for="course in favoriteCourses" :key="course.id"
-							class="course-card-container transition-all duration-200 hover:shadow-md relative">
+							class="course-card-container transition-all duration-200 hover:shadow-md relative border border-sky-100 rounded-lg">
 							<CourseCard :course="mapCourseToDTO(course)" @click="viewCourseDetails(course.id)"
 								:loading="isLoading(course.id)" :disabled="isLoading(course.id)" />
 							<div class="absolute top-2 right-2 flex gap-1 z-10">
 								<Button icon="pi pi-heart-fill" text rounded aria-label="取消收藏"
-									class="bg-white bg-opacity-70 text-red-500 hover:bg-white hover:bg-opacity-100"
+									class="bg-white bg-opacity-70 text-red-500 hover:bg-white hover:bg-opacity-100 hover:bg-red-50"
 									@click.stop="removeFavorite(course.id)" />
 								<Button icon="pi pi-share-alt" text rounded aria-label="分享"
-									class="bg-white bg-opacity-70 hover:bg-white hover:bg-opacity-100"
+									class="bg-white bg-opacity-70 text-sky-500 hover:bg-white hover:bg-opacity-100 hover:bg-sky-50"
 									@click.stop="shareCourse(course)" />
 							</div>
 						</div>
 					</div>
+				</template>
+				
+				<!-- 分頁組件樣式覆寫 -->
+				<template #paginatorstart>
+					<div class="text-sm text-sky-600">顯示 {{ favoriteCourses.length > 0 ? 1 : 0 }}-{{ Math.min(9, favoriteCourses.length) }} 共 {{ favoriteCourses.length }} 課程</div>
 				</template>
 			</DataView>
 		</div>
@@ -278,5 +286,30 @@ const shareCourse = (course: any) => {
 .course-card-container:hover {
 	transform: translateY(-4px);
 	transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+:deep(.p-datatable-header),
+:deep(.p-dataview-header) {
+	@apply bg-sky-50 text-sky-700 border-sky-100;
+}
+
+:deep(.p-paginator) {
+	@apply border-t border-sky-100 bg-white;
+}
+
+:deep(.p-paginator .p-paginator-pages .p-paginator-page.p-highlight) {
+	@apply bg-sky-500 text-white;
+}
+
+:deep(.p-button.p-highlight) {
+	@apply bg-sky-50 text-sky-600 border-sky-200;
+}
+
+:deep(.p-progressspinner-circle) {
+	@apply text-sky-500;
+}
+
+:deep(.p-dataview-content) {
+	@apply border-0;
 }
 </style>
