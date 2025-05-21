@@ -12,14 +12,4 @@ export * from './point'
 export * from './message'
 export * from './purchase'
 
-/**
- * API 响应通用接口
- */
-export interface ApiResponse<T = any> {
-  success: boolean;
-  data?: T;
-  message?: string;
-  error?: any;
-}
-
-export interface Result<T = any> extends ApiResponse<T> {} 
+// 注意：ApiResponse 和 Result 接口现已统一定义在 ./result 中 

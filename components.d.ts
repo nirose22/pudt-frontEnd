@@ -11,7 +11,6 @@ declare module 'vue' {
     AsyncCarousel: typeof import('./src/components/common/AsyncCarousel.vue')['default']
     AsyncState: typeof import('./src/components/common/AsyncState.vue')['default']
     BaseLogo: typeof import('./src/components/layout/BaseLogo.vue')['default']
-    CourseBookingDlg: typeof import('./src/components/course/courseBookingDlg.vue')['default']
     CourseCard: typeof import('./src/components/modal/CourseCard.vue')['default']
     CourseCarousel: typeof import('./src/components/modal/CourseCarousel.vue')['default']
     DateRangeFilter: typeof import('./src/components/common/DateRangeFilter.vue')['default']

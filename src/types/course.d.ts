@@ -1,18 +1,6 @@
 import { RegionCode } from '@/enums/RegionCode'
 import { Merchant } from './merchant'
-import { CourseStatus } from '@/enums/CourseStatus'
-
-// 定義課程分類相關枚舉
-export enum CourseMainCategory {
-  SPORT = 'SPORT',           // 運動健身
-  COOKING = 'COOKING',       // 烹飪美食
-  ART = 'ART',               // 藝術創作
-  LANGUAGE = 'LANGUAGE',     // 語言學習
-  PROFESSIONAL = 'PROFESSIONAL' // 專業技能
-}
-
-// 定義子分類的命名模式，可用於驗證
-export type SubCategoryCode = `${CourseMainCategory}_${string}`;
+import { CourseStatus } from '@/enums/Course'
 
 /* ---------- 課程基礎類型 ---------- */
 export interface BaseCourse {
@@ -91,6 +79,12 @@ export interface BaseDTO {
 export interface CourseDTO extends Course, BaseDTO {
   image: CourseImage
 }
+
+/**
+ * 商家端使用的課程DTO，如將来需要增加商家端特有的属性，可在此处添加
+ * 目前与 Course 类型相同
+ */
+export type CourseForMerchantDTO = Course;
 
 /* 課程詳情數據傳輸對象 */
 export interface CourseDetailDTO extends CourseDTO {

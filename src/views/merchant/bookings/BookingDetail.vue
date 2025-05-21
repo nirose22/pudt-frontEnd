@@ -221,6 +221,7 @@ import Checkbox from 'primevue/checkbox';
 import Avatar from 'primevue/avatar';
 import Timeline from 'primevue/timeline';
 import ConfirmDialog from 'primevue/confirmdialog';
+import { formatDate, formatTime, formatDateTime } from '@/utils/date';
 
 // 預約數據類型
 interface Booking {
@@ -353,21 +354,6 @@ function getHistoryIconBgClass(status: string): string {
 // 獲取姓名縮寫
 function getInitials(name: string): string {
     return name.charAt(0).toUpperCase();
-}
-
-// 格式化日期
-function formatDate(date: Date): string {
-    return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
-}
-
-// 格式化時間
-function formatTime(date: Date): string {
-    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-}
-
-// 格式化日期時間
-function formatDateTime(date: Date): string {
-    return `${formatDate(date)} ${formatTime(date)}`;
 }
 
 // 返回上一頁

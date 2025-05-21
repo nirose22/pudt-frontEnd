@@ -25,7 +25,8 @@
             :rowsPerPageOptions="[5, 10, 20]"
             paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
             :loading="loading" stripedRows responsiveLayout="stack" breakpoint="960px"
-            :globalFilterFields="['title', 'status', 'price', 'availableSlots', 'totalSlots', 'startDate']">
+            :globalFilterFields="['title', 'status', 'price', 'availableSlots', 'totalSlots', 'startDate']"
+            @row-dblclick="handleRowDblClick">
 
             <!-- 表頭 -->
             <template #header>
@@ -42,13 +43,13 @@
             <!-- 選擇列 -->
             <Column selectionMode="multiple" headerStyle="width: 3rem" />
 
-            <!-- 課程圖片 -->
+            <!-- 課程圖片
             <Column field="image" header="圖片" style="width: 100px">
                 <template #body="slotProps">
                     <img :src="slotProps.data.image" :alt="slotProps.data.title"
                         class="w-16 h-16 object-cover rounded-md" />
                 </template>
-            </Column>
+            </Column> -->
 
             <!-- 課程標題 -->
             <Column field="title" header="課程名稱" sortable>
@@ -432,6 +433,11 @@ function deleteSelectedCourses(): void {
 // 導航到指定頁面
 function navigateTo(path: string): void {
     router.push(path);
+}
+
+// 雙擊行處理
+function handleRowDblClick(event: any): void {
+    editCourse(event.data);
 }
 
 // 初始化

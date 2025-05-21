@@ -206,12 +206,10 @@
 
 <script setup lang="ts">
 import { ref, computed, inject, watch } from 'vue';
-import type { PropType } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
-import Dialog from 'primevue/dialog';
 import Tabs from 'primevue/tabs';
 import TabList from 'primevue/tablist';
 import Tab from 'primevue/tab';
@@ -223,11 +221,8 @@ import { BookingStatus, BookingStatusLabel } from '@/enums/BookingStatus';
 import { useToast } from 'primevue/usetoast';
 import Badge from 'primevue/badge';
 import Rating from 'primevue/rating';
-import Textarea from 'primevue/textarea';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
-import MultiSelect from 'primevue/multiselect';
-import Avatar from 'primevue/avatar';
 import type { AbsenceRecord } from '@/types/activity';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';

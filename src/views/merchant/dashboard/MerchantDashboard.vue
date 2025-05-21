@@ -158,6 +158,7 @@ import Badge from 'primevue/badge';
 import Tag from 'primevue/tag';
 import Button from 'primevue/button';
 import { useToast } from 'primevue/usetoast';
+import { formatDateTime } from '@/utils/date';
 
 const router = useRouter();
 const toast = useToast();
@@ -253,7 +254,7 @@ const pendingBookings = ref([
 
 // 格式化日期
 function formatDate(date: Date): string {
-    return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    return formatDateTime(date);
 }
 
 // 獲取狀態標籤

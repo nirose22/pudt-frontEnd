@@ -9,7 +9,7 @@
         <Button label="儲存" icon="pi pi-save" @click="saveCourse" :loading="saving" />
       </div>
     </div>
-
+    
     <!-- 表單區域 -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- 左側表單 -->
@@ -24,14 +24,15 @@
                 <InputText id="title" v-model="course.title" class="w-full" :class="{ 'p-invalid': errors.title }" />
                 <small v-if="errors.title" class="p-error">{{ errors.title }}</small>
               </div>
-
+              
               <!-- 課程分類 -->
               <div>
                 <label for="mainCategory" class="block mb-1 font-medium">主分類 <span class="text-red-500">*</span></label>
-                <Select id="mainCategory" v-model="selectedMainCategory" :options="mainCategories" optionLabel="name"
-                  optionValue="code" placeholder="選擇主分類" class="w-full" :class="{ 'p-invalid': errors.categories }" />
+                <Select id="mainCategory" v-model="selectedMainCategory" :options="mainCategories"
+                  optionLabel="name" optionValue="code" placeholder="選擇主分類" class="w-full"
+                  :class="{ 'p-invalid': errors.categories }" />
               </div>
-
+              
               <div>
                 <label for="subCategory" class="block mb-1 font-medium">子分類 <span class="text-red-500">*</span></label>
                 <MultiSelect id="subCategory" v-model="selectedSubCategories" :options="filteredSubCategories"
@@ -39,44 +40,43 @@
                   :class="{ 'p-invalid': errors.categories }" />
                 <small v-if="errors.categories" class="p-error block mt-1">{{ errors.categories }}</small>
               </div>
-
+              
               <!-- 點數價格 -->
               <div>
-                <label for="pointsRequired" class="block mb-1 font-medium">點數價格 <span
-                    class="text-red-500">*</span></label>
+                <label for="pointsRequired" class="block mb-1 font-medium">點數價格 <span class="text-red-500">*</span></label>
                 <InputNumber id="pointsRequired" v-model="course.pointsRequired" class="w-full" :min="0" :max="1000"
                   :class="{ 'p-invalid': errors.pointsRequired }" />
                 <small v-if="errors.pointsRequired" class="p-error">
                   {{ errors.pointsRequired }}
                 </small>
               </div>
-
+              
               <!-- 地區 -->
               <div>
                 <label for="region" class="block mb-1 font-medium">地區 <span class="text-red-500">*</span></label>
-                <Select id="region" v-model="course.region" :options="regions" optionLabel="name" optionValue="code"
-                  placeholder="選擇地區" class="w-full" :class="{ 'p-invalid': errors.region }" />
+                <Select id="region" v-model="course.region" :options="regions"
+                  optionLabel="name" optionValue="code" placeholder="選擇地區" class="w-full"
+                  :class="{ 'p-invalid': errors.region }" />
                 <small v-if="errors.region" class="p-error">{{ errors.region }}</small>
               </div>
             </div>
           </template>
         </Card>
-
+        
         <!-- 課程描述 -->
         <Card class="mb-6">
           <template #title>課程描述</template>
           <template #content>
             <div>
               <label for="description" class="block mb-1 font-medium">課程詳細描述 <span class="text-red-500">*</span></label>
-              <Editor v-model="course.description" editorStyle="height: 250px"
-                :class="{ 'p-invalid': errors.description }" />
+              <Editor v-model="course.description" editorStyle="height: 250px" :class="{ 'p-invalid': errors.description }" />
               <small v-if="errors.description" class="p-error">
                 {{ errors.description }}
               </small>
             </div>
           </template>
         </Card>
-
+        
         <!-- 課程時段 -->
         <Card class="mb-6">
           <template #title>
@@ -91,35 +91,33 @@
               <p class="text-gray-500">尚未設定課程時段</p>
               <Button label="新增時段" icon="pi pi-plus" @click="addTimeSlot" class="mt-2" size="small" />
             </div>
-
+            
             <div v-for="(slot, index) in course.schedule" :key="index" class="mb-4 p-4 border rounded-lg">
               <div class="flex justify-between items-center mb-3">
                 <h4 class="text-lg font-medium">時段 {{ index + 1 }}</h4>
                 <Button icon="pi pi-trash" text severity="danger" @click="removeTimeSlot(index)" />
               </div>
-
+              
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- 日期 -->
                 <div>
                   <label :for="`date-${index}`" class="block mb-1 font-medium">日期</label>
                   <Calendar :id="`date-${index}`" v-model="slot.date" dateFormat="yy/mm/dd" class="w-full" />
                 </div>
-
+                
                 <!-- 時間範圍 -->
                 <div class="flex gap-2 items-center">
                   <div class="flex-grow">
                     <label :for="`startTime-${index}`" class="block mb-1 font-medium">開始時間</label>
-                    <Calendar :id="`startTime-${index}`" v-model="slot.startTime" timeOnly showTime hourFormat="24"
-                      class="w-full" />
+                    <Calendar :id="`startTime-${index}`" v-model="slot.startTime" timeOnly showTime hourFormat="24" class="w-full" />
                   </div>
                   <span class="mt-6">至</span>
                   <div class="flex-grow">
                     <label :for="`endTime-${index}`" class="block mb-1 font-medium">結束時間</label>
-                    <Calendar :id="`endTime-${index}`" v-model="slot.endTime" timeOnly showTime hourFormat="24"
-                      class="w-full" />
+                    <Calendar :id="`endTime-${index}`" v-model="slot.endTime" timeOnly showTime hourFormat="24" class="w-full" />
                   </div>
                 </div>
-
+                
                 <!-- 席位數 -->
                 <div>
                   <label :for="`seats-${index}`" class="block mb-1 font-medium">席位數</label>
@@ -127,12 +125,12 @@
                 </div>
               </div>
             </div>
-
+            
             <small v-if="errors.schedule" class="p-error block mt-2">{{ errors.schedule }}</small>
           </template>
         </Card>
       </div>
-
+      
       <!-- 右側側邊欄 -->
       <div>
         <!-- 發布狀態 -->
@@ -141,26 +139,24 @@
           <template #content>
             <div class="mb-4">
               <label for="status" class="block mb-1 font-medium">狀態</label>
-              <Select id="status" v-model="course.status" :options="statusOptions" optionLabel="label"
-                optionValue="value" class="w-full" />
+              <Select id="status" v-model="course.status" :options="statusOptions"
+                optionLabel="label" optionValue="value" class="w-full" />
             </div>
-
+            
             <div v-if="course.status === 'scheduled'">
               <label for="publishDate" class="block mb-1 font-medium">預定上架時間</label>
-              <Calendar id="publishDate" v-model="course.publishDate" dateFormat="yy/mm/dd" showTime hourFormat="24"
-                class="w-full" />
+              <Calendar id="publishDate" v-model="course.publishDate" dateFormat="yy/mm/dd" showTime hourFormat="24" class="w-full" />
             </div>
           </template>
         </Card>
-
+        
         <!-- 課程圖片 -->
         <Card class="mb-6">
           <template #title>課程圖片</template>
           <template #content>
             <div class="mb-4">
               <label class="block mb-1 font-medium">主圖 <span class="text-red-500">*</span></label>
-              <div
-                class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50 transition-colors"
+              <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50 transition-colors"
                 @click="uploadMainImage">
                 <div v-if="!course.mainImage">
                   <i class="pi pi-image text-3xl text-gray-400 mb-2"></i>
@@ -171,7 +167,7 @@
               </div>
               <small v-if="errors.mainImage" class="p-error">{{ errors.mainImage }}</small>
             </div>
-
+            
             <div>
               <label class="block mb-1 font-medium">其他圖片 (最多 5 張)</label>
               <div class="grid grid-cols-3 gap-2">
@@ -180,9 +176,8 @@
                   <Button icon="pi pi-times" class="absolute top-1 right-1 w-6 h-6 p-0" text severity="danger"
                     @click="removeImage(index)" />
                 </div>
-
-                <div v-if="course.images.length < 5"
-                  class="border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors h-20"
+                
+                <div v-if="course.images.length < 5" class="border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors h-20"
                   @click="uploadImage">
                   <i class="pi pi-plus text-gray-400"></i>
                 </div>
@@ -192,47 +187,45 @@
         </Card>
       </div>
     </div>
-
+    
     <!-- 課程預覽對話框 -->
     <Dialog v-model:visible="showPreview" modal header="課程預覽" :style="{ width: '80vw' }" :maximizable="true">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- 左側圖片 -->
         <div>
-          <img :src="course.mainImage || 'https://via.placeholder.com/400x300?text=課程圖片'" alt="課程圖片"
-            class="w-full rounded-lg shadow-sm" />
-
+          <img :src="course.mainImage || 'https://via.placeholder.com/400x300?text=課程圖片'" alt="課程圖片" class="w-full rounded-lg shadow-sm" />
+          
           <div class="grid grid-cols-5 gap-2 mt-2">
-            <img v-for="(img, index) in course.images" :key="index" :src="img" alt="課程圖片"
-              class="w-full h-16 object-cover rounded-lg cursor-pointer" />
+            <img v-for="(img, index) in course.images" :key="index" :src="img" alt="課程圖片" class="w-full h-16 object-cover rounded-lg cursor-pointer" />
           </div>
         </div>
-
+        
         <!-- 右側內容 -->
         <div class="md:col-span-2">
           <h2 class="text-2xl font-bold mb-2">{{ course.title || '課程標題' }}</h2>
-
+          
           <div class="flex items-center gap-2 mb-4">
             <Tag :severity="getStatusSeverity(course.status)" :value="getStatusLabel(course.status)" />
             <span class="text-gray-500">|</span>
             <span>{{ getRegionName(course.region) }}</span>
           </div>
-
+          
           <div class="bg-blue-50 p-3 rounded-lg mb-4">
             <div class="flex items-center justify-between">
               <div>
                 <div class="text-sm text-gray-600">點數價格</div>
                 <div class="text-2xl font-bold text-blue-600">{{ course.pointsRequired || 0 }} 點</div>
               </div>
-
+              
               <Button label="立即報名" icon="pi pi-calendar-plus" disabled />
             </div>
           </div>
-
+          
           <div class="mb-4">
             <h3 class="text-lg font-semibold mb-2">課程描述</h3>
             <div class="p-3 bg-gray-50 rounded-lg" v-html="course.description || '尚未填寫課程描述'"></div>
           </div>
-
+          
           <div>
             <h3 class="text-lg font-semibold mb-2">可選時段</h3>
             <div v-if="course.schedule.length === 0" class="text-center p-4 bg-gray-50 rounded-lg">
@@ -276,9 +269,7 @@ import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 import Tag from 'primevue/tag';
 import { mockRegions } from '@/service/MockService';
-import type { CourseFormData, CourseScheduleItem } from '@/types/course';
-import { CourseStatus, CourseStatusOptions } from '@/enums/Course';
-import { MainCategory, MainCategoryLabel, SubCategory, SubCategoryLabel } from '@/enums/CourseCategory';
+import type { CourseFormData, CourseScheduleItem, CourseMainCategory, SubCategoryCode } from '@/types/course';
 
 // 通用狀態與工具
 const route = useRoute();
@@ -298,7 +289,7 @@ const course = ref<CourseFormData>({
   description: '',
   mainImage: '',
   images: [],
-  status: CourseStatus.ACTIVE,
+  status: 'draft',
   pointsRequired: 0,
   region: '',
   categories: [],
@@ -323,62 +314,52 @@ const selectedSubCategories = ref<string[]>([]);
 
 // 狀態選項
 const statusOptions = [
-  { label: CourseStatusOptions[CourseStatus.DRAFT], value: CourseStatus.DRAFT },
-  { label: CourseStatusOptions[CourseStatus.ACTIVE], value: CourseStatus.ACTIVE },
-  { label: CourseStatusOptions[CourseStatus.INACTIVE], value: CourseStatus.INACTIVE },
-  { label: CourseStatusOptions[CourseStatus.SCHEDULED], value: CourseStatus.SCHEDULED }
+  { label: '草稿', value: 'draft' },
+  { label: '已上架', value: 'active' },
+  { label: '已下架', value: 'inactive' },
+  { label: '定時上架', value: 'scheduled' }
 ];
 
 // 主分類列表
 const mainCategories = [
-  { name: MainCategoryLabel[MainCategory.SportsFitness], code: MainCategory.SportsFitness },
-  { name: MainCategoryLabel[MainCategory.CookingCuisine], code: MainCategory.CookingCuisine },
-  { name: MainCategoryLabel[MainCategory.ArtDesign], code: MainCategory.ArtDesign },
-  { name: MainCategoryLabel[MainCategory.PerformingArts], code: MainCategory.PerformingArts },
-  { name: MainCategoryLabel[MainCategory.Lifestyle], code: MainCategory.Lifestyle },
-  { name: MainCategoryLabel[MainCategory.TechDigital], code: MainCategory.TechDigital },
-  { name: MainCategoryLabel[MainCategory.OutdoorAdventure], code: MainCategory.OutdoorAdventure }
+  { name: '運動健身', code: 'SPORT' },
+  { name: '烹飪美食', code: 'COOKING' },
+  { name: '藝術創作', code: 'ART' },
+  { name: '語言學習', code: 'LANGUAGE' },
+  { name: '專業技能', code: 'PROFESSIONAL' }
 ];
 
 // 子分類列表
-const subCategories = {
-  [MainCategory.SportsFitness]: [
-    { name: SubCategoryLabel[SubCategory.GroundYoga], code: SubCategory.GroundYoga },
-    { name: SubCategoryLabel[SubCategory.GymTraining], code: SubCategory.GymTraining },
-    { name: SubCategoryLabel[SubCategory.Swimming], code: SubCategory.Swimming },
-    { name: SubCategoryLabel[SubCategory.Skateboarding], code: SubCategory.Skateboarding }
+const subCategories: Record<CourseMainCategory, { name: string; code: SubCategoryCode }[]> = {
+  SPORT: [
+    { name: '瑜珈', code: 'SPORT_YOGA' },
+    { name: '健身', code: 'SPORT_FITNESS' },
+    { name: '舞蹈', code: 'SPORT_DANCE' },
+    { name: '游泳', code: 'SPORT_SWIMMING' }
   ],
-  [MainCategory.CookingCuisine]: [
-    { name: SubCategoryLabel[SubCategory.BakingDessert], code: SubCategory.BakingDessert },
-    { name: SubCategoryLabel[SubCategory.EthnicCuisine], code: SubCategory.EthnicCuisine },
-    { name: SubCategoryLabel[SubCategory.HomeCooking], code: SubCategory.HomeCooking }
+  COOKING: [
+    { name: '中式料理', code: 'COOKING_CHINESE' },
+    { name: '西式料理', code: 'COOKING_WESTERN' },
+    { name: '日式料理', code: 'COOKING_JAPANESE' },
+    { name: '烘焙', code: 'COOKING_BAKING' }
   ],
-  [MainCategory.ArtDesign]: [
-    { name: SubCategoryLabel[SubCategory.Photography], code: SubCategory.Photography },
-    { name: SubCategoryLabel[SubCategory.Illustration], code: SubCategory.Illustration },
-    { name: SubCategoryLabel[SubCategory.Ceramics], code: SubCategory.Ceramics },
-    { name: SubCategoryLabel[SubCategory.FloralDesign], code: SubCategory.FloralDesign }
+  ART: [
+    { name: '繪畫', code: 'ART_PAINTING' },
+    { name: '手工藝', code: 'ART_CRAFT' },
+    { name: '攝影', code: 'ART_PHOTO' },
+    { name: '音樂', code: 'ART_MUSIC' }
   ],
-  [MainCategory.PerformingArts]: [
-    { name: SubCategoryLabel[SubCategory.Dance], code: SubCategory.Dance },
-    { name: SubCategoryLabel[SubCategory.Theatre], code: SubCategory.Theatre },
-    { name: SubCategoryLabel[SubCategory.Instrument], code: SubCategory.Instrument },
-    { name: SubCategoryLabel[SubCategory.Vocal], code: SubCategory.Vocal },
-    { name: SubCategoryLabel[SubCategory.MusicProduction], code: SubCategory.MusicProduction }
+  LANGUAGE: [
+    { name: '英語', code: 'LANGUAGE_ENGLISH' },
+    { name: '日語', code: 'LANGUAGE_JAPANESE' },
+    { name: '韓語', code: 'LANGUAGE_KOREAN' },
+    { name: '法語', code: 'LANGUAGE_FRENCH' }
   ],
-  [MainCategory.Lifestyle]: [
-    { name: SubCategoryLabel[SubCategory.FinanceInvest], code: SubCategory.FinanceInvest },
-    { name: SubCategoryLabel[SubCategory.LanguageLearning], code: SubCategory.LanguageLearning }
-  ],
-  [MainCategory.TechDigital]: [
-    { name: SubCategoryLabel[SubCategory.FrontendDev], code: SubCategory.FrontendDev },
-    { name: SubCategoryLabel[SubCategory.BackendDev], code: SubCategory.BackendDev },
-    { name: SubCategoryLabel[SubCategory.DigitalMarketing], code: SubCategory.DigitalMarketing },
-    { name: SubCategoryLabel[SubCategory.UIUXDesign], code: SubCategory.UIUXDesign },
-    { name: SubCategoryLabel[SubCategory.VideoEditing], code: SubCategory.VideoEditing }
-  ],
-  [MainCategory.OutdoorAdventure]: [
-    { name: SubCategoryLabel[SubCategory.Bouldering], code: SubCategory.Bouldering }
+  PROFESSIONAL: [
+    { name: '程式設計', code: 'PROFESSIONAL_CODING' },
+    { name: '設計', code: 'PROFESSIONAL_DESIGN' },
+    { name: '行銷', code: 'PROFESSIONAL_MARKETING' },
+    { name: '財務', code: 'PROFESSIONAL_FINANCE' }
   ]
 };
 
@@ -406,7 +387,7 @@ const courseSchema = z.object({
 // 根據選擇的主分類過濾子分類
 const filteredSubCategories = computed(() => {
   if (!selectedMainCategory.value) return [];
-  return subCategories[selectedMainCategory.value as MainCategory] || [];
+  return subCategories[selectedMainCategory.value as CourseMainCategory] || [];
 });
 
 // 監聽分類選擇變化，更新課程分類
@@ -433,7 +414,7 @@ function validateForm(data: any): { success: boolean; errors: Record<string, str
     return { success: true, errors: {} };
   } catch (error) {
     const errorMessages: Record<string, string> = {};
-
+    
     if (error instanceof z.ZodError) {
       error.errors.forEach(err => {
         if (err.path.length > 0) {
@@ -442,7 +423,7 @@ function validateForm(data: any): { success: boolean; errors: Record<string, str
         }
       });
     }
-
+    
     return { success: false, errors: errorMessages };
   }
 }
@@ -455,7 +436,6 @@ function getStatusLabel(status: string): string {
     'draft': '草稿',
     'scheduled': '定時上架'
   };
-  
   return statusMap[status] || status;
 }
 
@@ -492,7 +472,7 @@ function formatTime(date: Date): string {
 function addTimeSlot(): void {
   const now = new Date();
   const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
-
+  
   course.value.schedule.push({
     date: new Date(),
     startTime: now,
@@ -530,9 +510,9 @@ function removeImage(index: number): void {
 // 保存課程
 async function saveCourse(): Promise<void> {
   clearErrors();
-
+  
   const validation = validateForm(course.value);
-
+  
   if (!validation.success) {
     // 更新錯誤狀態
     Object.entries(validation.errors).forEach(([field, message]) => {
@@ -540,7 +520,7 @@ async function saveCourse(): Promise<void> {
         errors[field as keyof typeof errors] = message;
       }
     });
-
+    
     toast.add({
       severity: 'error',
       summary: '表單驗證失敗',
@@ -549,13 +529,13 @@ async function saveCourse(): Promise<void> {
     });
     return;
   }
-
+  
   saving.value = true;
-
+  
   try {
     // 模擬 API 請求
     await new Promise(resolve => setTimeout(resolve, 1000));
-
+    
     // 實際應用中應該調用 API 保存課程
     toast.add({
       severity: 'success',
@@ -563,7 +543,7 @@ async function saveCourse(): Promise<void> {
       detail: isEditMode.value ? '課程已更新' : '課程已創建',
       life: 3000
     });
-
+    
     // 返回課程列表頁
     router.push({ name: 'CourseList' });
   } catch (error) {
@@ -587,11 +567,11 @@ function navigateBack(): void {
 // 載入課程數據
 async function loadCourseData(): Promise<void> {
   if (!isEditMode.value) return;
-
+  
   try {
     // 模擬 API 請求
     await new Promise(resolve => setTimeout(resolve, 500));
-
+    
     // 模擬課程數據
     if (courseId.value === 1) {
       course.value = {
@@ -603,7 +583,7 @@ async function loadCourseData(): Promise<void> {
           'https://via.placeholder.com/400x300?text=瑜珈1',
           'https://via.placeholder.com/400x300?text=瑜珈2'
         ],
-        status: CourseStatus.ACTIVE,
+        status: 'active',
         pointsRequired: 25,
         region: 'TPE',
         categories: ['SPORT', 'SPORT_YOGA'],
@@ -625,7 +605,7 @@ async function loadCourseData(): Promise<void> {
           }
         ]
       };
-
+      
       // 設置分類選擇
       selectedMainCategory.value = 'SPORT';
       selectedSubCategories.value = ['SPORT_YOGA'];
@@ -647,4 +627,4 @@ onMounted(() => loadCourseData());
 
 <style scoped>
 /* Add your scoped styles here */
-</style>
+</style> 
