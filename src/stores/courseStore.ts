@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import type { ComputedRef } from 'vue';
 import { CourseService } from '@/service/CourseService';
-import type { Course, CourseDTO, CourseDetailDTO, CourseSession } from '@/types/course';
+import type { Course, CourseDetailDTO, CourseSession } from '@/types/course';
 import type { Booking } from '@/types/booking';
 import type { Result } from '@/types';
 import { BookingStatus } from '@/enums/BookingStatus';
@@ -13,9 +13,9 @@ import { BookingStatus } from '@/enums/BookingStatus';
  */
 export const useCourseStore = defineStore('course', () => {
   // 状态
-  const allCourses = ref<CourseDTO[]>([]);
+  const allCourses = ref<Course[]>([]);
   const myBookings = ref<Booking[]>([]);
-  const favoriteCourses = ref<CourseDTO[]>([]);
+  const favoriteCourses = ref<Course[]>([]);
   const isLoading = ref(false);
   const error = ref<string | null>(null);
   
@@ -25,13 +25,13 @@ export const useCourseStore = defineStore('course', () => {
   const selectedSession = ref<CourseSession | null>(null);
 
   // 计算属性
-  const popularCourses: ComputedRef<CourseDTO[]> = computed(() => {
+  const popularCourses: ComputedRef<Course[]> = computed(() => {
     return [...allCourses.value]
       .sort((a, b) => (b.joinCount || 0) - (a.joinCount || 0))
       .slice(0, 6);
   });
 
-  const latestCourses: ComputedRef<CourseDTO[]> = computed(() => {
+  const latestCourses: ComputedRef<Course[]> = computed(() => {
     return [...allCourses.value]
       .sort((a, b) => {
         const aDate = a.createdAt;
@@ -44,7 +44,7 @@ export const useCourseStore = defineStore('course', () => {
       .slice(0, 6);
   });
 
-  const recommendedCourses: ComputedRef<CourseDTO[]> = computed(() => {
+  const recommendedCourses: ComputedRef<Course[]> = computed(() => {
     return [...allCourses.value]
       .filter(course => course.recommended)
       .slice(0, 6);
@@ -61,7 +61,7 @@ export const useCourseStore = defineStore('course', () => {
    * @param regions 区域筛选
    * @param categories 分类筛选
    */
-  const fetchCourses = async (keyword?: string, regions?: string[], categories?: string[]): Promise<Result<CourseDTO[]>> => {
+  const fetchCourses = async (keyword?: string, regions?: string[], categories?: string[]): Promise<Result<Course[]>> => {
     isLoading.value = true;
     error.value = null;
 
@@ -90,9 +90,9 @@ export const useCourseStore = defineStore('course', () => {
     error.value = null;
 
     try {
-      const { course, timeSlots } = await CourseService.fetchCourseDetail(courseId);
+      const { course, sessions } = await CourseService.fetchCourseDetail(courseId);
       currentCourse.value = course;
-      courseSession.value = timeSlots;
+      courseSession.value = sessions;
       return { success: true, data: course };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '加载课程详情失败';
@@ -104,33 +104,10 @@ export const useCourseStore = defineStore('course', () => {
   };
 
   /**
-   * 获取用户已报名的课程
-   * @param userId 用户ID
-   */
-  const fetchMyBookings = async (userId: number): Promise<Result<Booking[]>> => {
-    isLoading.value = true;
-    error.value = null;
-
-    try {
-      const result = await CourseService.getUserBookings(userId);
-      if (result.success && result.data) {
-        myBookings.value = result.data;
-      }
-      return result;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '获取已报名课程失败';
-      error.value = errorMessage;
-      return { success: false, message: errorMessage };
-    } finally {
-      isLoading.value = false;
-    }
-  };
-
-  /**
    * 获取用户收藏的课程
    * @param userId 用户ID
    */
-  const fetchFavoriteCourses = async (userId: number): Promise<Result<CourseDTO[]>> => {
+  const fetchFavoriteCourses = async (userId: number): Promise<Result<Course[]>> => {
     isLoading.value = true;
     error.value = null;
 
@@ -239,59 +216,6 @@ export const useCourseStore = defineStore('course', () => {
     return favoriteCourses.value.some(c => c.id === courseId);
   };
 
-  /**
-   * 创建课程预订
-   * @param courseId 课程ID
-   * @param sessionId 课程时段ID
-   * @returns 操作结果
-   */
-  const bookCourse = async (courseId: number, sessionId: number): Promise<Result> => {
-    try {
-      if (!selectedSession.value) {
-        return { success: false, message: '请选择课程时段' };
-      }
-      
-      // 这里需要通过userStore获取userId，但在store中我们不直接引用其他store
-      // 由调用方提供userId
-      const result = await CourseService.createBooking(0, sessionId);
-      if (result.success) {
-        // 更新课程时段的剩余座位
-        updateAvailableSeats(sessionId, -1);
-      }
-      return result;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '课程预订失败';
-      return { success: false, message: errorMessage };
-    }
-  };
-  
-  /**
-   * 取消课程预订
-   * @param bookingId 预订ID
-   * @returns 操作结果
-   */
-  const cancelBooking = async (bookingId: number): Promise<Result> => {
-    try {
-      const booking = myBookings.value.find(b => b.id === bookingId);
-      if (!booking) {
-        return { success: false, message: '找不到对应的预订记录' };
-      }
-      
-      const result = await CourseService.cancelBooking(bookingId);
-      if (result.success) {
-        // 更新本地预订状态
-        booking.status = BookingStatus.Canceled;
-        
-        // 如果能找到对应的时间槽，更新座位数
-        const sessionId = booking.sessionId;
-        updateAvailableSeats(sessionId, 1);
-      }
-      return result;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '取消预订失败';
-      return { success: false, message: errorMessage };
-    }
-  };
 
   return {
     // 状态
@@ -313,7 +237,6 @@ export const useCourseStore = defineStore('course', () => {
     // 方法
     fetchCourses,
     loadCourseDetail,
-    fetchMyBookings,
     fetchFavoriteCourses,
     updateAvailableSeats,
     getSessionById,
@@ -321,7 +244,5 @@ export const useCourseStore = defineStore('course', () => {
     addFavoriteCourse,
     removeFavoriteCourse,
     isFavorite,
-    bookCourse,
-    cancelBooking
   };
 }); 

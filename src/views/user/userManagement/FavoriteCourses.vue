@@ -131,7 +131,7 @@ import CourseCard from '@/components/modal/CourseCard.vue';
 import CourseDetail from '@/views/user/course/CourseDetail.vue';
 import DataView from 'primevue/dataview';
 import Toast from 'primevue/toast';
-import type { CourseDTO, CourseImage } from '@/types/course';
+import type { Course } from '@/types/course';
 import { showSuccess, showError, showInfo, initToast } from '@/utils/toastHelper';
 import { generateMockCourses } from '@/service/MockService';
 
@@ -170,16 +170,8 @@ watch(() => userStore.favoriteCourses, (newValue) => {
 	console.log('收藏課程已更新', newValue);
 }, { deep: true });
 
-// 將 Course 物件映射為 CourseDTO 物件
-const mapCourseToDTO = (course: any): CourseDTO => {
-	// 创建一个默认的 CourseImage 对象
-	const courseImage: CourseImage = {
-		id: 0,
-		courseId: course.id,
-		url: course.coverUrl || '/assets/course-placeholder.jpg',
-		alt: course.title
-	};
-
+// 將 Course 物件映射為 Course 物件
+const mapCourseToDTO = (course: any): Course => {
 	return {
 		id: course.id,
 		title: course.title,
@@ -190,8 +182,7 @@ const mapCourseToDTO = (course: any): CourseDTO => {
 		merchantId: course.merchantId || 0,
 		createdAt: course.createdAt || new Date(),
 		joinCount: course.joinCount || 0,
-		recommended: course.recommended || false,
-		image: courseImage
+		recommended: course.recommended || false
 	};
 };
 

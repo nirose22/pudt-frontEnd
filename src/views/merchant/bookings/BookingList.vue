@@ -151,24 +151,18 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
-
-// 預約數據類型
-interface Booking {
-  id: number;
-  customerName: string;
-  customerPhone: string;
-  courseId: number;
-  courseTitle: string;
-  date: Date;
-  startTime: Date;
-  endTime: Date;
-  points: number;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'noshow';
-}
+import type { Booking } from '@/types/booking';
+import { BookingStatus } from '@/enums/BookingStatus';
+import { BookingService } from '@/service/BookingService';
+import { useUserStore } from '@/stores/userStore';
+import { formatDate, formatTime, createRelativeDate } from '@/utils/dateUtils';
+import { getBookingStatusLabel, getBookingStatusSeverity, getBookingStatusColor } from '@/utils/statusUtils';
 
 const router = useRouter();
 const confirm = useConfirm();
 const toast = useToast();
+const userStore = useUserStore();
+const profile = userStore.profile;
 
 // 視圖類型
 const view = ref<'calendar' | 'list'>('list');
@@ -245,7 +239,7 @@ const calendarEvents = computed(() => {
       extendedProps: {
         booking
       },
-      backgroundColor: getStatusColor(booking.status)
+      backgroundColor: getBookingStatusColor(booking.status)
     };
   });
 });
@@ -264,63 +258,17 @@ const calendarOptions = computed(() => ({
     const booking = info.event.extendedProps.booking;
     viewBookingDetail(booking);
   },
-  eventTimeFormat: {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
+  eventTimeFormat: { 
+    hour: "2-digit" as "2-digit", 
+    minute: "2-digit" as "2-digit", 
+    hour12: false 
   },
   locale: 'zh-tw'
 }));
 
-// 獲取狀態標籤
-function getStatusLabel(status: string): string {
-  const statusMap: Record<string, string> = {
-    'pending': '待確認',
-    'confirmed': '已確認',
-    'completed': '已完成',
-    'cancelled': '已取消',
-    'noshow': '未出席'
-  };
-  return statusMap[status] || status;
-}
-
-// 獲取狀態嚴重性
-function getStatusSeverity(status: string): string {
-  const severityMap: Record<string, string> = {
-    'pending': 'warning',
-    'confirmed': 'success',
-    'completed': 'info',
-    'cancelled': 'secondary',
-    'noshow': 'danger'
-  };
-  return severityMap[status] || 'info';
-}
-
-// 獲取狀態顏色 (用於日曆)
-function getStatusColor(status: string): string {
-  const colorMap: Record<string, string> = {
-    'pending': '#F59E0B', // amber-500
-    'confirmed': '#22C55E', // green-500
-    'completed': '#3B82F6', // blue-500
-    'cancelled': '#9CA3AF', // gray-400
-    'noshow': '#EF4444' // red-500
-  };
-  return colorMap[status] || '#3B82F6';
-}
-
 // 獲取姓名縮寫
 function getInitials(name: string): string {
   return name.charAt(0).toUpperCase();
-}
-
-// 格式化日期
-function formatDate(date: Date): string {
-  return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
-}
-
-// 格式化時間
-function formatTime(date: Date): string {
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 }
 
 // 加載預約數據
@@ -330,76 +278,9 @@ async function loadBookings(): Promise<void> {
   try {
     // 模擬 API 請求
     await new Promise(resolve => setTimeout(resolve, 500));
-
-    // 模擬預約數據
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const dayAfterTomorrow = new Date(today);
-    dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
-
-    bookings.value = [
-      {
-        id: 101,
-        customerName: '張小明',
-        customerPhone: '0912-345-678',
-        courseId: 1,
-        courseTitle: '瑜珈初階班',
-        date: today,
-        startTime: new Date(today.setHours(14, 0)),
-        endTime: new Date(today.setHours(16, 0)),
-        points: 25,
-        status: 'pending'
-      },
-      {
-        id: 102,
-        customerName: '李小華',
-        customerPhone: '0923-456-789',
-        courseId: 2,
-        courseTitle: '烹飪課程：義式料理',
-        date: tomorrow,
-        startTime: new Date(tomorrow.setHours(10, 0)),
-        endTime: new Date(tomorrow.setHours(12, 0)),
-        points: 30,
-        status: 'confirmed'
-      },
-      {
-        id: 103,
-        customerName: '王大偉',
-        customerPhone: '0934-567-890',
-        courseId: 3,
-        courseTitle: '水彩畫入門',
-        date: dayAfterTomorrow,
-        startTime: new Date(dayAfterTomorrow.setHours(15, 30)),
-        endTime: new Date(dayAfterTomorrow.setHours(17, 30)),
-        points: 20,
-        status: 'completed'
-      },
-      {
-        id: 104,
-        customerName: '陳美玲',
-        customerPhone: '0945-678-901',
-        courseId: 1,
-        courseTitle: '瑜珈初階班',
-        date: yesterday,
-        startTime: new Date(yesterday.setHours(14, 0)),
-        endTime: new Date(yesterday.setHours(16, 0)),
-        points: 25,
-        status: 'cancelled'
-      },
-      {
-        id: 105,
-        customerName: '林志明',
-        customerPhone: '0956-789-012',
-        courseId: 2,
-        courseTitle: '烹飪課程：義式料理',
-        date: lastWeek,
-        startTime: new Date(lastWeek.setHours(10, 0)),
-        endTime: new Date(lastWeek.setHours(12, 0)),
-        points: 30,
-        status: 'noshow'
-      }
-    ];
+    
+    // 使用 BookingService
+    bookings.value = await BookingService.getUserBookings(profile?.id ?? 0);
   } catch (error) {
     console.error('加載預約失敗:', error);
     toast.add({
@@ -428,7 +309,7 @@ function confirmBooking(booking: Booking): void {
     rejectLabel: '取消',
     accept: () => {
       // 實際應用中應該調用 API 確認預約
-      booking.status = 'confirmed';
+      booking.status = BookingStatus.Confirmed;
 
       toast.add({
         severity: 'success',
@@ -450,7 +331,7 @@ function cancelBooking(booking: Booking): void {
     rejectLabel: '返回',
     accept: () => {
       // 實際應用中應該調用 API 取消預約
-      booking.status = 'cancelled';
+      booking.status = BookingStatus.Cancelled;
 
       toast.add({
         severity: 'info',
@@ -472,7 +353,7 @@ function completeBooking(booking: Booking): void {
     rejectLabel: '取消',
     accept: () => {
       // 實際應用中應該調用 API 完成預約
-      booking.status = 'completed';
+      booking.status = BookingStatus.Completed;
 
       toast.add({
         severity: 'success',
@@ -489,10 +370,7 @@ onMounted(() => {
   loadBookings();
 });
 
-// 輔助變數 - 昨天和上週日期
-const yesterday = new Date();
-yesterday.setDate(yesterday.getDate() - 1);
-
-const lastWeek = new Date();
-lastWeek.setDate(lastWeek.getDate() - 7);
+// 輔助變數 - 使用工具函數
+const yesterday = createRelativeDate(-1);
+const lastWeek = createRelativeDate(-7);
 </script>

@@ -36,3 +36,22 @@ export interface PointsCard {
   description: string
   discount?: string
 }
+
+/**
+ * 點數交易類型，用於商家端點數管理
+ */
+export type PointTransactionType = 'income' | 'settlement' | 'refund';
+export type PointTransactionStatus = 'completed' | 'pending' | 'processing' | 'rejected';
+
+/**
+ * 點數交易記錄，用於商家端點數管理
+ */
+export interface PointTransaction {
+  id: number;
+  date: Date;
+  description: string;
+  orderId?: number;
+  type: PointTransactionType;
+  points: number;
+  status: PointTransactionStatus;
+}

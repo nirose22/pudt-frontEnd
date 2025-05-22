@@ -43,13 +43,13 @@
             <!-- 選擇列 -->
             <Column selectionMode="multiple" headerStyle="width: 3rem" />
 
-            <!-- 課程圖片
-            <Column field="image" header="圖片" style="width: 100px">
+            <!-- 課程圖片-->
+            <Column field="coverUrl" header="圖片" style="width: 100px">
                 <template #body="slotProps">
-                    <img :src="slotProps.data.image" :alt="slotProps.data.title"
+                    <img :src="slotProps.data.coverUrl" :alt="slotProps.data.title"
                         class="w-16 h-16 object-cover rounded-md" />
                 </template>
-            </Column> -->
+            </Column>
 
             <!-- 課程標題 -->
             <Column field="title" header="課程名稱" sortable>
@@ -62,8 +62,8 @@
             <!-- 課程狀態 -->
             <Column field="status" header="狀態" sortable style="width: 120px">
                 <template #body="slotProps">
-                    <Tag :severity="getStatusSeverity(slotProps.data.status)"
-                        :value="getStatusLabel(slotProps.data.status)" />
+                    <Tag :severity="getCourseStatusSeverity(slotProps.data.status)"
+                        :value="getCourseStatusLabel(slotProps.data.status)" />
                 </template>
             </Column>
 
@@ -79,9 +79,9 @@
             </Column>
 
             <!-- 點數價格 -->
-            <Column field="pointsRequired" header="點數" sortable style="width: 100px">
+            <Column field="points" header="點數" sortable style="width: 100px">
                 <template #body="slotProps">
-                    <div class="text-center font-medium">{{ slotProps.data.pointsRequired }}</div>
+                    <div class="text-center font-medium">{{ slotProps.data.points }}</div>
                 </template>
             </Column>
 
@@ -98,7 +98,7 @@
                     <div class="flex gap-1">
                         <Button icon="pi pi-pencil" text rounded @click="editCourse(slotProps.data)" />
                         <Button icon="pi pi-copy" text rounded @click="duplicateCourse(slotProps.data)" />
-                        <Button :icon="slotProps.data.status === 'active' ? 'pi pi-eye-slash' : 'pi pi-eye'" text
+                        <Button :icon="slotProps.data.status === CourseStatus.ACTIVE ? 'pi pi-eye-slash' : 'pi pi-eye'" text
                             rounded @click="toggleCourseStatus(slotProps.data)" />
                         <Button icon="pi pi-trash" severity="danger" text rounded
                             @click="confirmDelete(slotProps.data)" />
@@ -136,19 +136,10 @@ import Select from 'primevue/select';
 import Tag from 'primevue/tag';
 import ProgressBar from 'primevue/progressbar';
 import ConfirmDialog from 'primevue/confirmdialog';
-
-// 模擬課程數據類型
-interface Course {
-    id: number;
-    title: string;
-    description: string;
-    image: string;
-    status: 'draft' | 'active' | 'inactive';
-    pointsRequired: number;
-    bookedSlots: number;
-    totalSlots: number;
-    startDate: Date;
-}
+import { CourseStatus } from '@/enums/Course';
+import type { CourseListItem } from '@/types/course';
+import { formatDate, formatTime } from '@/utils/dateUtils';
+import { getCourseStatusLabel, getCourseStatusSeverity } from '@/utils/statusUtils';
 
 const router = useRouter();
 const confirm = useConfirm();
@@ -164,9 +155,9 @@ const filters = ref({
 // 狀態選項
 const statusOptions = [
     { label: '全部狀態', value: '' },
-    { label: '已上架', value: 'active' },
-    { label: '已下架', value: 'inactive' },
-    { label: '草稿', value: 'draft' }
+    { label: '已上架', value: CourseStatus.ACTIVE },
+    { label: '已下架', value: CourseStatus.INACTIVE },
+    { label: '草稿', value: CourseStatus.DRAFT }
 ];
 
 // 排序選項
@@ -180,8 +171,8 @@ const sortOptions = [
 ];
 
 // 課程數據
-const courses = ref<Course[]>([]);
-const selectedCourses = ref<Course[]>([]);
+const courses = ref<CourseListItem[]>([]);
+const selectedCourses = ref<CourseListItem[]>([]);
 const loading = ref(false);
 
 // 根據篩選條件過濾課程
@@ -212,10 +203,10 @@ const filteredCourses = computed(() => {
                 result.sort((a, b) => a.id - b.id);
                 break;
             case 'points-desc':
-                result.sort((a, b) => b.pointsRequired - a.pointsRequired);
+                result.sort((a, b) => b.points - a.points);
                 break;
             case 'points-asc':
-                result.sort((a, b) => a.pointsRequired - b.pointsRequired);
+                result.sort((a, b) => a.points - b.points);
                 break;
             case 'booking-desc':
                 result.sort((a, b) => (b.bookedSlots / b.totalSlots) - (a.bookedSlots / a.totalSlots));
@@ -226,37 +217,12 @@ const filteredCourses = computed(() => {
     return result;
 });
 
-// 獲取狀態標籤
-function getStatusLabel(status: string): string {
-    const statusMap: Record<string, string> = {
-        'active': '已上架',
-        'inactive': '已下架',
-        'draft': '草稿'
-    };
-    return statusMap[status] || status;
-}
-
-// 獲取狀態嚴重性
-function getStatusSeverity(status: string): string {
-    const severityMap: Record<string, string> = {
-        'active': 'success',
-        'inactive': 'secondary',
-        'draft': 'info'
-    };
-    return severityMap[status] || 'info';
-}
-
 // 獲取預訂進度條樣式
-function getBookingProgressClass(course: Course): string {
+function getBookingProgressClass(course: CourseListItem): string {
     const ratio = course.bookedSlots / course.totalSlots;
     if (ratio >= 0.9) return 'bg-red-500';
     if (ratio >= 0.7) return 'bg-orange-500';
     return 'bg-green-500';
-}
-
-// 格式化日期
-function formatDate(date: Date): string {
-    return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
 }
 
 // 加載課程數據
@@ -273,9 +239,9 @@ async function loadCourses(): Promise<void> {
                 id: 1,
                 title: '瑜珈初階班',
                 description: '適合初學者的瑜珈課程',
-                image: 'https://via.placeholder.com/150?text=Yoga',
-                status: 'active',
-                pointsRequired: 25,
+                coverUrl: 'https://via.placeholder.com/150?text=Yoga',
+                status: CourseStatus.ACTIVE,
+                points: 25,
                 bookedSlots: 8,
                 totalSlots: 10,
                 startDate: new Date(2023, 5, 15)
@@ -284,9 +250,9 @@ async function loadCourses(): Promise<void> {
                 id: 2,
                 title: '烹飪課程：義式料理',
                 description: '學習正宗義大利料理',
-                image: 'https://via.placeholder.com/150?text=Cooking',
-                status: 'active',
-                pointsRequired: 30,
+                coverUrl: 'https://via.placeholder.com/150?text=Cooking',
+                status: CourseStatus.ACTIVE,
+                points: 30,
                 bookedSlots: 5,
                 totalSlots: 12,
                 startDate: new Date(2023, 5, 20)
@@ -295,9 +261,9 @@ async function loadCourses(): Promise<void> {
                 id: 3,
                 title: '水彩畫入門',
                 description: '基礎水彩技巧教學',
-                image: 'https://via.placeholder.com/150?text=Art',
-                status: 'draft',
-                pointsRequired: 20,
+                coverUrl: 'https://via.placeholder.com/150?text=Art',
+                status: CourseStatus.DRAFT,
+                points: 20,
                 bookedSlots: 0,
                 totalSlots: 8,
                 startDate: new Date(2023, 6, 1)
@@ -306,9 +272,9 @@ async function loadCourses(): Promise<void> {
                 id: 4,
                 title: '攝影基礎課程',
                 description: '學習基本攝影技巧',
-                image: 'https://via.placeholder.com/150?text=Photo',
-                status: 'inactive',
-                pointsRequired: 35,
+                coverUrl: 'https://via.placeholder.com/150?text=Photo',
+                status: CourseStatus.INACTIVE,
+                points: 35,
                 bookedSlots: 0,
                 totalSlots: 15,
                 startDate: new Date(2023, 6, 5)
@@ -317,9 +283,9 @@ async function loadCourses(): Promise<void> {
                 id: 5,
                 title: '手工皂製作工作坊',
                 description: '學習製作天然手工皂',
-                image: 'https://via.placeholder.com/150?text=Soap',
-                status: 'active',
-                pointsRequired: 15,
+                coverUrl: 'https://via.placeholder.com/150?text=Soap',
+                status: CourseStatus.ACTIVE,
+                points: 15,
                 bookedSlots: 12,
                 totalSlots: 15,
                 startDate: new Date(2023, 5, 25)
@@ -339,12 +305,12 @@ async function loadCourses(): Promise<void> {
 }
 
 // 編輯課程
-function editCourse(course: Course): void {
+function editCourse(course: CourseListItem): void {
     router.push(`/merchant/courses/edit/${course.id}`);
 }
 
 // 複製課程
-function duplicateCourse(course: Course): void {
+function duplicateCourse(course: CourseListItem): void {
     toast.add({
         severity: 'success',
         summary: '課程已複製',
@@ -356,14 +322,14 @@ function duplicateCourse(course: Course): void {
     const newCourse = { ...course };
     newCourse.id = courses.value.length + 1;
     newCourse.title = `${course.title} (副本)`;
-    newCourse.status = 'draft';
+    newCourse.status = CourseStatus.DRAFT;
     courses.value.unshift(newCourse);
 }
 
 // 切換課程狀態
-function toggleCourseStatus(course: Course): void {
-    const newStatus = course.status === 'active' ? 'inactive' : 'active';
-    const statusText = newStatus === 'active' ? '上架' : '下架';
+function toggleCourseStatus(course: CourseListItem): void {
+    const newStatus = course.status === CourseStatus.ACTIVE ? CourseStatus.INACTIVE : CourseStatus.ACTIVE;
+    const statusText = newStatus === CourseStatus.ACTIVE ? '上架' : '下架';
 
     // 實際應用中應該調用 API 更新課程狀態
     course.status = newStatus;
@@ -377,7 +343,7 @@ function toggleCourseStatus(course: Course): void {
 }
 
 // 確認刪除課程
-function confirmDelete(course: Course): void {
+function confirmDelete(course: CourseListItem): void {
     confirm.require({
         message: `確定要刪除課程 "${course.title}" 嗎？`,
         header: '確認刪除',
@@ -390,7 +356,7 @@ function confirmDelete(course: Course): void {
 }
 
 // 刪除課程
-function deleteCourse(course: Course): void {
+function deleteCourse(course: CourseListItem): void {
     // 實際應用中應該調用 API 刪除課程
     courses.value = courses.value.filter(c => c.id !== course.id);
 

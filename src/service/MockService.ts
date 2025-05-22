@@ -1,4 +1,4 @@
-import type { CourseDTO } from '@/types/course';
+import type { Course } from '@/types/course';
 import { MainCategory, SubCategory } from '@/enums/CourseCategory';
 import { RegionCode } from '@/enums/RegionCode';
 
@@ -12,8 +12,8 @@ export const mockRegions = [
 ];
 
 // 生成模拟课程数据
-export function generateMockCourses(): CourseDTO[] {
-  const mockCourses: CourseDTO[] = [];
+export function generateMockCourses(): Course[] {
+  const mockCourses: Course[] = [];
   
   for (let i = 1; i <= 30; i++) {
     mockCourses.push({
@@ -26,13 +26,7 @@ export function generateMockCourses(): CourseDTO[] {
       region: getRandomRegionCode(),
       joinCount: Math.floor(Math.random() * 100),
       createdAt: generateRandomDate(),
-      recommended: i % 5 === 0,
-      image: {
-        id: i,
-        courseId: i,
-        url: `https://picsum.photos/id/${i + 20}/300/200`,
-        alt: `課程 ${i} 圖片`
-      }
+      recommended: i % 5 === 0
     });
   }
   

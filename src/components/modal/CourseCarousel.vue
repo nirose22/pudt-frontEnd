@@ -29,14 +29,14 @@ import Carousel from 'primevue/carousel';
 import type { CarouselResponsiveOptions } from 'primevue/carousel';
 import ProgressSpinner from 'primevue/progressspinner';
 import CourseCard from '@/components/modal/CourseCard.vue';
-import type { CourseDTO } from '@/types/course';
+import type { Course } from '@/types/course';
 
 const props = defineProps({
     title: {
         type: String,
     },
     items: {
-        type: Array as () => CourseDTO[],
+        type: Array as () => Course[],
         required: true
     },
     loading: {

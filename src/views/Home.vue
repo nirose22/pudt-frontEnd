@@ -68,7 +68,7 @@ import CourseCarousel from '@/components/modal/CourseCarousel.vue';
 import { useUserStore } from '@/stores/userStore';
 import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
-import type { CourseDTO } from '@/types/course';
+import type { Course } from '@/types/course';
 import { CourseService } from '@/service/CourseService';
 import { useBookingStore } from '@/stores/bookingStore';
 import { MainCategory } from '@/enums/CourseCategory';
@@ -92,7 +92,7 @@ onMounted(() => {
 const isCoursesLoading = ref(false);
 const loadingMap = ref<Map<number, boolean>>(new Map());
 const searchQuery = ref('');
-const allCourses = ref<CourseDTO[]>([]);
+const allCourses = ref<Course[]>([]);
 const selectedCourseId = ref<number>(0);
 
 // 標籤頁配置
@@ -220,7 +220,7 @@ function loadMoreCourses() {
     router.push({ name: 'Search' });
 }
 
-async function selectCourse(course: CourseDTO) {
+async function selectCourse(course: Course) {
     const courseId = course.id;
     selectedCourseId.value = courseId;
 

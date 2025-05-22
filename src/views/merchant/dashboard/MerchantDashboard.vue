@@ -158,7 +158,7 @@ import Badge from 'primevue/badge';
 import Tag from 'primevue/tag';
 import Button from 'primevue/button';
 import { useToast } from 'primevue/usetoast';
-import { formatDateTime } from '@/utils/date';
+import { formatDateTime } from '@/utils/dateUtils';
 
 const router = useRouter();
 const toast = useToast();

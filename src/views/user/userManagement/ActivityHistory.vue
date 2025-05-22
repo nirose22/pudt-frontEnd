@@ -216,7 +216,7 @@ import Tab from 'primevue/tab';
 import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
 import DateRangeFilter from '@/components/common/DateRangeFilter.vue';
-import { formatDateString, inRange } from '@/utils/date';
+import { formatDateString, inRange } from '@/utils/dateUtils';
 import { BookingStatus, BookingStatusLabel } from '@/enums/BookingStatus';
 import { useToast } from 'primevue/usetoast';
 import Badge from 'primevue/badge';

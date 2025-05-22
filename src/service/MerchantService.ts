@@ -22,7 +22,8 @@ export const MerchantService = {
             businessHours: '週一至週五 9:00-21:00，週六至週日 10:00-18:00',
             type: '教育培訓',
             website: 'https://example.com',
-            googleMapUrl: 'https://maps.google.com/?q=台北市信義區和平東路一段100號'
+            googleMapUrl: 'https://maps.google.com/?q=台北市信義區和平東路一段100號',
+            createdAt: new Date(),
         });
     }
 }; 

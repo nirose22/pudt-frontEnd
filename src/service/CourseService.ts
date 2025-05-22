@@ -1,9 +1,6 @@
-import type { Course, CourseDTO, CourseDetailDTO, CourseSession } from "@/types/course";
-import type { Booking } from "@/types/booking";
+import type { Course, CourseDetailDTO, CourseSession } from "@/types/course";
 import type { Result } from "@/types";
 import { MerchantService } from "./MerchantService";
-import { BookingStatus } from "@/enums/BookingStatus";
-import { RegionCode } from "@/enums/RegionCode";
 import { generateMockCourses } from "./MockService";
 
 /**
@@ -17,7 +14,7 @@ export const CourseService = {
      * @param categories 分类筛选
      * @returns 课程列表
      */
-    getCourse(keyword?: string, regions?: string[], categories?: string[]): Promise<CourseDTO[]> {
+    getCourse(keyword?: string, regions?: string[], categories?: string[]): Promise<Course[]> {
         // TODO: 构建查询参数并调用后端API
         // API: /api/courses?keyword=xxx&regions=xxx&categories=xxx
         // 在实际应用中，这里应该将参数拼接到请求URL
@@ -32,7 +29,7 @@ export const CourseService = {
      */
     async fetchCourseDetail(courseId: number): Promise<{
         course: CourseDetailDTO;
-        timeSlots: CourseSession[];
+        sessions: CourseSession[];
     }> {
         try {
             // TODO: 实际环境可以改为单一API调用
@@ -56,12 +53,12 @@ export const CourseService = {
                 ...courseData,
                 merchant,
                 sessions: timeSlots,
-                images: [courseData.image],
+                coverUrl: 'https://example.com/image.jpg',
                 joinCount: Math.floor(Math.random() * 20) + 5,
                 recommended: courseData.id % 3 === 0 // 随机设置部分课程为推荐
             };
             
-            return { course: courseDetail, timeSlots };
+            return { course: courseDetail, sessions: timeSlots };
             
         } catch (error) {
             console.error("获取课程详情失败:", error);
@@ -111,41 +108,11 @@ export const CourseService = {
     },
     
     /**
-     * 获取用户的课程预订
-     * @param userId 用户ID
-     * @returns 预订列表
-     */
-    async getUserBookings(userId: number): Promise<Result<Booking[]>> {
-        try {
-            // TODO: API调用
-            // API: /api/users/{userId}/bookings
-            
-            // 模拟数据
-            const bookings: Booking[] = [];
-            for (let i = 1; i <= 5; i++) {
-                bookings.push({
-                    id: i,
-                    userId: userId,
-                    sessionId: i * 10,
-                    points: i * 100,
-                    status: i % 3 === 0 ? BookingStatus.Canceled : BookingStatus.Confirmed,
-                    createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000)
-                });
-            }
-            
-            return { success: true, data: bookings };
-        } catch (error) {
-            console.error("获取用户预订失败:", error);
-            return { success: false, message: "获取用户预订失败" };
-        }
-    },
-    
-    /**
      * 获取用户收藏的课程
      * @param userId 用户ID
      * @returns 收藏的课程列表
      */
-    async getUserFavorites(userId: number): Promise<Result<CourseDTO[]>> {
+    async getUserFavorites(userId: number): Promise<Result<Course[]>> {
         try {
             // TODO: API调用
             // API: /api/users/{userId}/favorites
@@ -198,43 +165,4 @@ export const CourseService = {
             return { success: false, message: "移除收藏失败" };
         }
     },
-    
-    /**
-     * 创建课程预订
-     * @param userId 用户ID
-     * @param sessionId 课程时段ID
-     * @returns 预订结果
-     */
-    async createBooking(userId: number, sessionId: number): Promise<Result> {
-        try {
-            // TODO: API调用
-            // API: POST /api/bookings
-            
-            return { 
-                success: true, 
-                message: "预订成功", 
-                data: { bookingId: Date.now() } 
-            };
-        } catch (error) {
-            console.error("创建预订失败:", error);
-            return { success: false, message: "创建预订失败" };
-        }
-    },
-    
-    /**
-     * 取消课程预订
-     * @param bookingId 预订ID
-     * @returns 取消结果
-     */
-    async cancelBooking(bookingId: number): Promise<Result> {
-        try {
-            // TODO: API调用
-            // API: DELETE /api/bookings/{bookingId}
-            
-            return { success: true, message: "预订已取消" };
-        } catch (error) {
-            console.error("取消预订失败:", error);
-            return { success: false, message: "取消预订失败" };
-        }
-    }
 }

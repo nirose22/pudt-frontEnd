@@ -199,17 +199,7 @@ import InputText from 'primevue/inputtext';
 import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
 import DateRangeFilter from '@/components/common/DateRangeFilter.vue';
-
-// 點數交易類型
-interface PointTransaction {
-  id: number;
-  date: Date;
-  description: string;
-  orderId?: number;
-  type: 'income' | 'settlement' | 'refund';
-  points: number;
-  status: 'completed' | 'pending' | 'processing' | 'rejected';
-}
+import type { PointTransaction, PointTransactionType, PointTransactionStatus } from '@/types/point';
 
 const toast = useToast();
 

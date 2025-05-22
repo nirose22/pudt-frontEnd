@@ -9,16 +9,18 @@ export interface BaseCourse {
   description?: string        // 課程描述
   status?: CourseStatus       // 課程狀態
   publishDate?: Date | null   // 上架時間
+  points: number              // 課程點數
 }
 
 /* ---------- 課程核心 ---------- */
 export interface Course extends BaseCourse {
   merchantId: number          // FK -> Merchant.id
-  points: number              // 課程點數
   coverUrl?: string           // 封面圖片
   region?: RegionCode         // 地區碼
   createdAt: Date             // 創建時間
   categories?: string[]       // 課程分類列表
+  joinCount?: number          // 參與人數
+  recommended?: boolean       // 是否推薦
 }
 
 /* 每張課程附圖（多對一）*/
@@ -37,8 +39,8 @@ export interface CourseCategoryLink {
 
 /* 時間區間接口 */
 export interface TimeRange {
-  start: string               // HH:mm
-  end: string                 // HH:mm
+  start: Date               // HH:mm
+  end: Date                 // HH:mm
 }
 
 /* 單一課程場次 (可多天多時段) */
@@ -50,47 +52,27 @@ export interface CourseSession extends TimeRange {
   seatsLeft: number           // 剩餘席位
 }
 
-/* 課程表單專用的時段結構 */
-export interface CourseScheduleItem {
-  id?: number
-  date: Date
-  startTime: Date
-  endTime: Date
-  totalSeats: number
-}
-
-/* 課程表單數據結構 */
-export interface CourseFormData extends BaseCourse {
-  mainImage: string
-  images: string[]
-  pointsRequired: number
-  region: string
-  categories: string[]
-  schedule: CourseScheduleItem[]
-}
-
-/* 課程DTO基礎類型 */
-export interface BaseDTO {
-  joinCount: number           // 參與人數
-  recommended: boolean        // 是否推薦
-}
-
-/* 課程數據傳輸對象 */
-export interface CourseDTO extends Course, BaseDTO {
-  image: CourseImage
+/* 課程詳情數據傳輸對象 */
+export interface CourseDetailDTO extends Course {
+  merchant?: Merchant
+  sessions: CourseSession[]
+  images: CourseImage[]
+  schedule?: any[] // 臨時添加，後續應該定義具體類型
 }
 
 /**
- * 商家端使用的課程DTO，如將来需要增加商家端特有的属性，可在此处添加
- * 目前与 Course 类型相同
+ * 课程列表项，用于商家端课程列表展示
  */
-export type CourseForMerchantDTO = Course;
-
-/* 課程詳情數據傳輸對象 */
-export interface CourseDetailDTO extends CourseDTO {
-  merchant: Merchant
-  sessions: CourseSession[]
-  images: CourseImage[]
+export interface CourseListItem {
+  id: number;
+  title: string;
+  description: string;
+  coverUrl: string;
+  status: CourseStatus;
+  points: number;
+  bookedSlots: number;
+  totalSlots: number;
+  startDate: Date;
 }
 
 

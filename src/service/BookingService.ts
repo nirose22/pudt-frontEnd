@@ -13,22 +13,32 @@ export const BookingService = {
         try {
             // TODO: 实际环境调用后端API
             // API: GET /api/users/{userId}/bookings
-            
+
             // 模拟数据 - 增加需要显示的字段
+
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const dayAfterTomorrow = new Date(today);
+            dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
+
             const mockBookings: Booking[] = [
                 {
-                    id: 1,
-                    userId: userId,
-                    sessionId: 101,
-                    points: 45,
-                    status: BookingStatus.Canceled,
-                    createdAt: new Date('2025-05-09'),
-                    // 添加显示所需字段
-                    courseTitle: '瑜伽入門班',
-                    date: new Date('2025-05-09'),
-                    time: '9:00 - 11:00',
-                    location: '台北市信義區松仁路100號',
+                    id: 101,
+                    customerId: 201,
+                    customerName: '張小明',
+                    customerPhone: '0912-345-678',
+                    courseId: 1,
+                    courseTitle: '瑜珈初階班',
+                    date: today,
+                    startTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 14, 0),
+                    endTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 16, 0),
+                    points: 25,
+                    status: BookingStatus.Pending,
                     merchantName: '健康生活館',
+                    location: '台北市信義區松仁路100號',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
                     instructor: {
                         id: 201,
                         name: '王老師',
@@ -36,18 +46,21 @@ export const BookingService = {
                     }
                 },
                 {
-                    id: 2,
-                    userId: userId,
-                    sessionId: 102,
-                    points: 60,
-                    status: BookingStatus.Pending,
-                    createdAt: new Date('2025-05-20'),
-                    // 添加显示所需字段
-                    courseTitle: '高強度間歇訓練',
-                    date: new Date('2025-05-20'),
-                    time: '14:00 - 16:00',
+                    id: 102,
+                    customerId: 202,
+                    customerName: '李小華',
+                    customerPhone: '0923-456-789',
+                    courseId: 2,
+                    courseTitle: '烹飪課程：義式料理',
+                    date: tomorrow,
+                    startTime: new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate(), 10, 0),
+                    endTime: new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate(), 12, 0),
+                    points: 30,
+                    status: BookingStatus.Confirmed,
+                    merchantName: '美食烹飪學校',
                     location: '台北市大安區復興南路70號',
-                    merchantName: '強健健身房',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
                     instructor: {
                         id: 202,
                         name: '李教練',
@@ -55,18 +68,21 @@ export const BookingService = {
                     }
                 },
                 {
-                    id: 3,
-                    userId: userId,
-                    sessionId: 103,
-                    points: 35,
-                    status: BookingStatus.Confirmed,
-                    createdAt: new Date('2025-05-30'),
-                    // 添加显示所需字段
-                    courseTitle: '水中有氧',
-                    date: new Date('2025-05-30'),
-                    time: '10:30 - 12:00',
+                    id: 103,
+                    customerId: 203,
+                    customerName: '王大偉',
+                    customerPhone: '0934-567-890',
+                    courseId: 3,
+                    courseTitle: '水彩畫入門',
+                    date: dayAfterTomorrow,
+                    startTime: new Date(dayAfterTomorrow.getFullYear(), dayAfterTomorrow.getMonth(), dayAfterTomorrow.getDate(), 15, 30),
+                    endTime: new Date(dayAfterTomorrow.getFullYear(), dayAfterTomorrow.getMonth(), dayAfterTomorrow.getDate(), 17, 30),
+                    points: 20,
+                    status: BookingStatus.Completed,
+                    merchantName: '藝術工作室',
                     location: '台北市中山區民生東路三段51號',
-                    merchantName: '海洋游泳池',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
                     instructor: {
                         id: 203,
                         name: '張教練',
@@ -74,45 +90,51 @@ export const BookingService = {
                     }
                 },
                 {
-                    id: 4,
-                    userId: userId,
-                    sessionId: 104,
-                    points: 50,
-                    status: BookingStatus.Confirmed,
-                    createdAt: new Date('2025-06-05'),
-                    // 添加显示所需字段
-                    courseTitle: '冥想放鬆課',
-                    date: new Date('2025-06-05'),
-                    time: '19:00 - 20:30',
-                    location: '台北市內湖區內湖路一段285號',
-                    merchantName: '心靈休憩中心',
+                    id: 104,
+                    customerId: 204,
+                    customerName: '陳美玲',
+                    customerPhone: '0945-678-901',
+                    courseId: 1,
+                    courseTitle: '瑜珈初階班',
+                    date: new Date(),
+                    startTime: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate(), 14, 0),
+                    endTime: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate(), 16, 0),
+                    points: 25,
+                    status: BookingStatus.Cancelled,
+                    merchantName: '健康生活館',
+                    location: '台北市信義區松仁路100號',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
                     instructor: {
-                        id: 204,
-                        name: '陳老師',
-                        avatar: 'https://randomuser.me/api/portraits/men/75.jpg'
+                        id: 201,
+                        name: '王老師',
+                        avatar: 'https://randomuser.me/api/portraits/women/44.jpg'
                     }
                 },
                 {
-                    id: 5,
-                    userId: userId,
-                    sessionId: 105,
-                    points: 70,
-                    status: BookingStatus.Confirmed,
-                    createdAt: new Date('2025-06-15'),
-                    // 添加显示所需字段
-                    courseTitle: '拳擊體驗',
-                    date: new Date('2025-06-15'),
-                    time: '18:00 - 20:00',
-                    location: '台北市松山區南京東路四段133號',
-                    merchantName: '格鬥健身俱樂部',
+                    id: 105,
+                    customerId: 205,
+                    customerName: '林志明',
+                    customerPhone: '0956-789-012',
+                    courseId: 2,
+                    courseTitle: '烹飪課程：義式料理',
+                    date: new Date(),
+                    startTime: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate(), 10, 0),
+                    endTime: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate(), 12, 0),
+                    points: 30,
+                    status: BookingStatus.NoShow,
+                    merchantName: '美食烹飪學校',
+                    location: '台北市大安區復興南路70號',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
                     instructor: {
-                        id: 205,
-                        name: '黃教練',
-                        avatar: 'https://randomuser.me/api/portraits/men/41.jpg'
+                        id: 202,
+                        name: '李教練',
+                        avatar: 'https://randomuser.me/api/portraits/men/32.jpg'
                     }
                 }
             ];
-            
+
             return mockBookings;
         } catch (error) {
             console.error('获取用户预约记录失败:', error);
@@ -136,17 +158,17 @@ export const BookingService = {
         try {
             // TODO: 实际环境可以改为单一API调用
             // API: GET /api/bookings/course/{courseId}/detail
-            
+
             // 1. 获取课程详情和时间槽
             const { course, timeSlots } = await CourseService.fetchCourseDetail(courseId);
-            
+
             // 2. 获取用户当前的预约情况，检查时间冲突
             // 实际应用中，这部分应该从后端返回
             const conflictSlots: number[] = [];
-            
+
             // 在此示例中，我们模拟时间冲突检查
             // 实际应用应由后端完成，或在前端逻辑中实现
-            
+
             return {
                 course,
                 timeSlots,
@@ -173,10 +195,10 @@ export const BookingService = {
             // TODO: 实际环境调用后端API
             // API: POST /api/bookings
             // 请求体: { userId, courseId, timeSlotId }
-            
+
             // 模拟创建预约的结果
             const bookingId = Date.now(); // 模拟生成预约ID
-            
+
             return {
                 success: true,
                 message: '预约成功',
@@ -200,7 +222,7 @@ export const BookingService = {
         try {
             // TODO: 实际环境调用后端API
             // API: PUT /api/bookings/{bookingId}/cancel
-            
+
             // 模拟取消预约的结果
             return {
                 success: true,
@@ -229,7 +251,7 @@ export const BookingService = {
         try {
             // TODO: 实际环境调用后端API
             // API: GET /api/bookings/check?userId={userId}&courseId={courseId}&timeSlotId={timeSlotId}
-            
+
             // 模拟检查预约可用性的结果
             return {
                 canBook: true

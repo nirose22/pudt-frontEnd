@@ -31,12 +31,12 @@
 </template>
 
 <script setup lang="ts">
-import type { CourseDTO } from '@/types/course';
+import type { Course } from '@/types/course';
 import Card from 'primevue/card';
 import ProgressSpinner from 'primevue/progressspinner';
 
 defineProps<{
-    course: CourseDTO;
+    course: Course;
     disabled?: boolean;
     loading?: boolean;
 }>();

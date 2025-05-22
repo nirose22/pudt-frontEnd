@@ -192,7 +192,7 @@
 										class="flex flex-col sm:flex-row rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
 										:class="{ 'opacity-70': isLoading(course.courseId) }">
 										<div class="sm:w-48 h-48 sm:h-auto bg-gray-200 relative overflow-hidden">
-											<img :src="course.image.imageSrc" :alt="course.title"
+											<img :src="course.coverUrl" :alt="course.title"
 												class="inset-0 w-full h-full object-cover" />
 											<!-- 添加加载覆盖层 -->
 											<div v-if="isLoading(course.courseId)"
@@ -220,7 +220,7 @@
 											<div class="mt-4 flex justify-between items-center">
 												<span
 													class="border rounded-md px-2 py-1 text-xs text-primary-600 font-medium">{{
-														course.pointsRequired
+														course.points
 													}} 點數</span>
 												<!-- 详情按钮禁用状态 -->
 												<Button label="查看詳情" @click="selectCourse(course)"
@@ -258,7 +258,7 @@ import { useRoute, useRouter } from 'vue-router';
 import CourseCard from '@/components/modal/CourseCard.vue';
 import TabPanel from 'primevue/tabpanel';
 import CourseDetail from '@/views/user/course/CourseDetail.vue';
-import type { CourseDTO, Course, CourseSession } from '@/types/course';
+import type { Course, CourseSession } from '@/types/course';
 import Slider from 'primevue/slider';
 import InputNumber from 'primevue/inputnumber';
 import Checkbox from 'primevue/checkbox';
@@ -367,7 +367,7 @@ const visibleRegions = computed(() => {
 const filteredCourses = computed(() => {
 	if (!availableCourses.value.length) return [];
 
-	return availableCourses.value.filter((course: CourseDTO) => {
+	return availableCourses.value.filter((course: Course) => {
 		// 关键词过滤
 		if (keyword.value && !course.title.toLowerCase().includes(keyword.value.toLowerCase()) &&
 			!course.description?.toLowerCase().includes(keyword.value.toLowerCase())) {
@@ -413,7 +413,7 @@ const filteredCourses = computed(() => {
 		}
 
 		return true;
-	}).sort((a: CourseDTO, b: CourseDTO) => {
+	}).sort((a: Course, b: Course) => {
 		// 排序
 		switch (sortBy.value) {
 			case 'newest':
@@ -481,7 +481,7 @@ onMounted(async () => {
 });
 
 // 视图查看课程详情
-async function selectCourse(course: CourseDTO): Promise<void> {
+async function selectCourse(course: Course): Promise<void> {
 	selectedCourseId.value = course.id;
 
 	// 标记为加载中

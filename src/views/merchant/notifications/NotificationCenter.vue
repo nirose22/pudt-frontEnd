@@ -89,17 +89,7 @@ import Select from 'primevue/select';
 import ConfirmDialog from 'primevue/confirmdialog';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
-// 通知類型
-interface Notification {
-  id: number;
-  title: string;
-  message: string;
-  type: 'booking' | 'system' | 'settlement' | 'promotion';
-  time: Date;
-  read: boolean;
-  link?: string;
-  linkText?: string;
-}
+import type { Notification, NotificationType } from '@/types/message';
 
 const router = useRouter();
 const confirm = useConfirm();

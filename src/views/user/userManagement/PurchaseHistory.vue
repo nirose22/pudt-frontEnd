@@ -337,7 +337,7 @@ import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
 import { useToast } from 'primevue/usetoast';
 import DateRangeFilter from '@/components/common/DateRangeFilter.vue';
-import { formatDateString, inRange } from '@/utils/date';
+import { formatDateString, inRange } from '@/utils/dateUtils';
 import { OrderStatus, PaymentMethod, OrderStatusLabel, PaymentMethodLabel } from '@/enums/PurchaseStatus';
 import { CardType, CardTypeLabel } from '@/enums/Cards';
 import type { PurchaseItem, ExtendedPurchaseItem } from '@/types/purchaseItem';

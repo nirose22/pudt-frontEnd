@@ -341,6 +341,6 @@ export const useUserStore = defineStore('user', () => {
     persist: {
         key: 'user',
         storage: sessionStorage,
-        pick: ['profile', 'points', 'favs', 'interests', 'completedCoursesCount'],
+        pick: ['profile', 'points', 'favs', 'interests'],
     }
 })

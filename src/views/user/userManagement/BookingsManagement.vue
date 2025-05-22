@@ -268,7 +268,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { useToast } from 'primevue/usetoast';
 import { BookingStatus } from '@/enums/BookingStatus';
-import { formatDateString } from '@/utils/date';
+import { formatDateString } from '@/utils/dateUtils';
 import type { CalendarOptions, EventClickArg  } from '@fullcalendar/core';
 import type { Booking } from '@/types/booking';
 

@@ -132,7 +132,7 @@ import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import FileUpload from 'primevue/fileupload';
 import { useToast } from 'primevue/usetoast';
-import { formatDateString } from '@/utils/date';
+import { formatDateString } from '@/utils/dateUtils';
 import { PaymentMethod, PaymentMethodLabel } from '@/enums/PurchaseStatus';
 
 const visible = defineModel<boolean>('visible', { required: true })

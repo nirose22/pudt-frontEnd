@@ -106,7 +106,7 @@
 import { ref, computed, onMounted, provide } from 'vue';
 import DateRangeFilter from '@/components/common/DateRangeFilter.vue';
 import { useBookingStore } from '@/stores/bookingStore';
-import { inRange, byDate, formatDateString } from '@/utils/date';
+import { inRange, byDate, formatDateString } from '@/utils/dateUtils';
 import { BookingStatus } from '@/enums/BookingStatus';
 import DataView from 'primevue/dataview';
 import type { Booking } from '@/types/booking';

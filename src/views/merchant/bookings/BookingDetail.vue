@@ -5,10 +5,10 @@
             <Button icon="pi pi-arrow-left" text @click="navigateBack" label="返回預約列表" />
 
             <div class="flex gap-2">
-                <Button v-if="booking.status === 'pending'" label="確認預約" icon="pi pi-check" @click="confirmBooking" />
-                <Button v-if="['pending', 'confirmed'].includes(booking.status)" label="取消預約" icon="pi pi-times"
+                <Button v-if="booking.status === BookingStatus.Pending" label="確認預約" icon="pi pi-check" @click="confirmBooking" />
+                <Button v-if="[BookingStatus.Pending, BookingStatus.Confirmed].includes(booking.status)" label="取消預約" icon="pi pi-times"
                     severity="danger" outlined @click="cancelBooking" />
-                <Button v-if="booking.status === 'confirmed'" label="完成預約" icon="pi pi-check-circle" severity="success"
+                <Button v-if="booking.status === BookingStatus.Confirmed" label="完成預約" icon="pi pi-check-circle" severity="success"
                     @click="completeBooking" />
             </div>
         </div>
@@ -221,33 +221,9 @@ import Checkbox from 'primevue/checkbox';
 import Avatar from 'primevue/avatar';
 import Timeline from 'primevue/timeline';
 import ConfirmDialog from 'primevue/confirmdialog';
-import { formatDate, formatTime, formatDateTime } from '@/utils/date';
-
-// 預約數據類型
-interface Booking {
-    id: number;
-    courseId: number;
-    courseTitle: string;
-    customerId: number;
-    customerName: string;
-    customerPhone: string;
-    customerEmail: string;
-    bookingCount: number;
-    date: Date;
-    startTime: Date;
-    endTime: Date;
-    points: number;
-    status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'noshow';
-    notes: string;
-    merchantNotes: string;
-    createdAt: Date;
-    updatedAt: Date;
-    history: {
-        status: string;
-        time: Date;
-        note?: string;
-    }[];
-}
+import { formatDate, formatTime, formatDateTime } from '@/utils/dateUtils';
+import type { BookingDetail, BookingHistory } from '@/types/booking';
+import { BookingStatus } from '@/enums/BookingStatus';
 
 const route = useRoute();
 const router = useRouter();
@@ -258,20 +234,21 @@ const toast = useToast();
 const bookingId = computed(() => parseInt(route.params.id as string));
 
 // 預約數據
-const booking = ref<Booking>({
+const booking = ref<BookingDetail>({
     id: 0,
-    courseId: 0,
-    courseTitle: '',
     customerId: 0,
+    sessionId: undefined,
     customerName: '',
     customerPhone: '',
     customerEmail: '',
     bookingCount: 0,
+    courseId: 0,
+    courseTitle: '',
     date: new Date(),
     startTime: new Date(),
     endTime: new Date(),
     points: 0,
-    status: 'pending',
+    status: BookingStatus.Pending,
     notes: '',
     merchantNotes: '',
     createdAt: new Date(),
@@ -371,7 +348,7 @@ function confirmBooking(): void {
         rejectLabel: '取消',
         accept: () => {
             // 實際應用中應該調用 API 確認預約
-            booking.value.status = 'confirmed';
+            booking.value.status = BookingStatus.Confirmed;
             booking.value.updatedAt = new Date();
 
             // 添加歷史記錄
@@ -400,7 +377,7 @@ function cancelBooking(): void {
         rejectLabel: '返回',
         accept: () => {
             // 實際應用中應該調用 API 取消預約
-            booking.value.status = 'cancelled';
+            booking.value.status = BookingStatus.Cancelled;
             booking.value.updatedAt = new Date();
 
             // 添加歷史記錄
@@ -430,7 +407,7 @@ function completeBooking(): void {
         rejectLabel: '取消',
         accept: () => {
             // 實際應用中應該調用 API 完成預約
-            booking.value.status = 'completed';
+            booking.value.status = BookingStatus.Completed;
             booking.value.updatedAt = new Date();
 
             // 添加歷史記錄
@@ -544,18 +521,19 @@ async function loadBooking(): Promise<void> {
 
             booking.value = {
                 id: 101,
-                courseId: 1,
-                courseTitle: '瑜珈初階班',
                 customerId: 201,
+                sessionId: 301,
                 customerName: '張小明',
                 customerPhone: '0912-345-678',
                 customerEmail: 'ming@example.com',
                 bookingCount: 3,
+                courseId: 1,
+                courseTitle: '瑜珈初階班',
                 date: date,
                 startTime: new Date(date.setHours(14, 0)),
                 endTime: new Date(date.setHours(16, 0)),
                 points: 25,
-                status: 'pending',
+                status: BookingStatus.Pending,
                 notes: '我是初學者，希望老師可以多給一些指導。',
                 merchantNotes: '',
                 createdAt: new Date(date.getTime() - 2 * 24 * 60 * 60 * 1000),
@@ -569,7 +547,7 @@ async function loadBooking(): Promise<void> {
             };
 
             // 設置初始商家備註
-            merchantNotes.value = booking.value.merchantNotes;
+            merchantNotes.value = booking.value.merchantNotes || '';
         } else {
             // 如果沒有找到預約，返回列表頁
             toast.add({

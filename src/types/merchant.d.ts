@@ -1,3 +1,5 @@
+import type { MainCategory } from '@/enums/CourseCategory'
+
 /* ────────────────────────────  商  家  ──────────────────────────── */
 export interface Merchant {
   id: number                    /** PK */
@@ -7,7 +9,7 @@ export interface Merchant {
   address: string
   description?: string
   bizHours?: string             /** 營業時間 */
-  category?: string             /** 業態，如 yoga / gym */
+  category?: MainCategory             /** 業態，如 yoga / gym */
   website?: string
   logoUrl?: string
   coverUrl?: string

@@ -42,12 +42,12 @@
 
               <!-- 點數價格 -->
               <div>
-                <label for="pointsRequired" class="block mb-1 font-medium">點數價格 <span
+                <label for="points" class="block mb-1 font-medium">點數價格 <span
                     class="text-red-500">*</span></label>
-                <InputNumber id="pointsRequired" v-model="course.pointsRequired" class="w-full" :min="0" :max="1000"
-                  :class="{ 'p-invalid': errors.pointsRequired }" />
-                <small v-if="errors.pointsRequired" class="p-error">
-                  {{ errors.pointsRequired }}
+                <InputNumber id="points" v-model="course.points" class="w-full" :min="0" :max="1000"
+                  :class="{ 'p-invalid': errors.points }" />
+                <small v-if="errors.points" class="p-error">
+                  {{ errors.points }}
                 </small>
               </div>
 
@@ -86,13 +86,13 @@
             </div>
           </template>
           <template #content>
-            <div v-if="course.schedule.length === 0" class="text-center p-4 bg-gray-50 rounded-lg">
+            <div v-if="course.sessions.length === 0" class="text-center p-4 bg-gray-50 rounded-lg">
               <i class="pi pi-calendar text-3xl text-gray-400 mb-2"></i>
               <p class="text-gray-500">尚未設定課程時段</p>
               <Button label="新增時段" icon="pi pi-plus" @click="addTimeSlot" class="mt-2" size="small" />
             </div>
 
-            <div v-for="(slot, index) in course.schedule" :key="index" class="mb-4 p-4 border rounded-lg">
+            <div v-for="(slot, index) in course.sessions" :key="index" class="mb-4 p-4 border rounded-lg">
               <div class="flex justify-between items-center mb-3">
                 <h4 class="text-lg font-medium">時段 {{ index + 1 }}</h4>
                 <Button icon="pi pi-trash" text severity="danger" @click="removeTimeSlot(index)" />
@@ -109,13 +109,13 @@
                 <div class="flex gap-2 items-center">
                   <div class="flex-grow">
                     <label :for="`startTime-${index}`" class="block mb-1 font-medium">開始時間</label>
-                    <Calendar :id="`startTime-${index}`" v-model="slot.startTime" timeOnly showTime hourFormat="24"
+                    <Calendar :id="`startTime-${index}`" v-model="slot.start" timeOnly showTime hourFormat="24"
                       class="w-full" />
                   </div>
                   <span class="mt-6">至</span>
                   <div class="flex-grow">
                     <label :for="`endTime-${index}`" class="block mb-1 font-medium">結束時間</label>
-                    <Calendar :id="`endTime-${index}`" v-model="slot.endTime" timeOnly showTime hourFormat="24"
+                    <Calendar :id="`endTime-${index}`" v-model="slot.end" timeOnly showTime hourFormat="24"
                       class="w-full" />
                   </div>
                 </div>
@@ -123,12 +123,12 @@
                 <!-- 席位數 -->
                 <div>
                   <label :for="`seats-${index}`" class="block mb-1 font-medium">席位數</label>
-                  <InputNumber :id="`seats-${index}`" v-model="slot.totalSeats" class="w-full" :min="1" :max="100" />
+                  <InputNumber :id="`seats-${index}`" v-model="slot.seats" class="w-full" :min="1" :max="100" />
                 </div>
               </div>
             </div>
 
-            <small v-if="errors.schedule" class="p-error block mt-2">{{ errors.schedule }}</small>
+            <small v-if="errors.sessions" class="p-error block mt-2">{{ errors.sessions }}</small>
           </template>
         </Card>
       </div>
@@ -162,21 +162,21 @@
               <div
                 class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50 transition-colors"
                 @click="uploadMainImage">
-                <div v-if="!course.mainImage">
+                <div v-if="!course.coverUrl">
                   <i class="pi pi-image text-3xl text-gray-400 mb-2"></i>
                   <p class="text-gray-500">點擊上傳主圖</p>
                   <p class="text-xs text-gray-400 mt-1">建議尺寸: 800x600px</p>
                 </div>
-                <img v-else :src="course.mainImage" alt="主圖" class="max-h-40 mx-auto" />
+                <img v-else :src="course.coverUrl" alt="主圖" class="max-h-40 mx-auto" />
               </div>
-              <small v-if="errors.mainImage" class="p-error">{{ errors.mainImage }}</small>
+              <small v-if="errors.coverUrl" class="p-error">{{ errors.coverUrl }}</small>
             </div>
 
             <div>
               <label class="block mb-1 font-medium">其他圖片 (最多 5 張)</label>
               <div class="grid grid-cols-3 gap-2">
                 <div v-for="(img, index) in course.images" :key="index" class="relative">
-                  <img :src="img" alt="課程圖片" class="w-full h-20 object-cover rounded-lg" />
+                  <img :src="img.url" alt="課程圖片" class="w-full h-20 object-cover rounded-lg" />
                   <Button icon="pi pi-times" class="absolute top-1 right-1 w-6 h-6 p-0" text severity="danger"
                     @click="removeImage(index)" />
                 </div>
@@ -198,11 +198,11 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- 左側圖片 -->
         <div>
-          <img :src="course.mainImage || 'https://via.placeholder.com/400x300?text=課程圖片'" alt="課程圖片"
+          <img :src="course.coverUrl || 'https://via.placeholder.com/400x300?text=課程圖片'" alt="課程圖片"
             class="w-full rounded-lg shadow-sm" />
 
           <div class="grid grid-cols-5 gap-2 mt-2">
-            <img v-for="(img, index) in course.images" :key="index" :src="img" alt="課程圖片"
+            <img v-for="(img, index) in course.images" :key="index" :src="img.url" alt="課程圖片"
               class="w-full h-16 object-cover rounded-lg cursor-pointer" />
           </div>
         </div>
@@ -210,18 +210,17 @@
         <!-- 右側內容 -->
         <div class="md:col-span-2">
           <h2 class="text-2xl font-bold mb-2">{{ course.title || '課程標題' }}</h2>
-
           <div class="flex items-center gap-2 mb-4">
-            <Tag :severity="getStatusSeverity(course.status)" :value="getStatusLabel(course.status)" />
+            <Tag :severity="getStatusSeverity(course.status || '')" :value="getStatusLabel(course.status || '')" />
             <span class="text-gray-500">|</span>
-            <span>{{ getRegionName(course.region) }}</span>
+            <span>{{ getRegionName(course.region || '') }}</span>
           </div>
 
           <div class="bg-blue-50 p-3 rounded-lg mb-4">
             <div class="flex items-center justify-between">
               <div>
                 <div class="text-sm text-gray-600">點數價格</div>
-                <div class="text-2xl font-bold text-blue-600">{{ course.pointsRequired || 0 }} 點</div>
+                <div class="text-2xl font-bold text-blue-600">{{ course.points || 0 }} 點</div>
               </div>
 
               <Button label="立即報名" icon="pi pi-calendar-plus" disabled />
@@ -235,20 +234,20 @@
 
           <div>
             <h3 class="text-lg font-semibold mb-2">可選時段</h3>
-            <div v-if="course.schedule.length === 0" class="text-center p-4 bg-gray-50 rounded-lg">
+            <div v-if="course.sessions.length === 0" class="text-center p-4 bg-gray-50 rounded-lg">
               <p class="text-gray-500">尚未設定課程時段</p>
             </div>
             <div v-else>
-              <div v-for="(slot, index) in course.schedule" :key="index" class="p-3 border-b last:border-b-0">
+              <div v-for="(slot, index) in course.sessions" :key="index" class="p-3 border-b last:border-b-0">
                 <div class="flex justify-between items-center">
                   <div>
                     <div class="font-medium">{{ formatDate(slot.date) }}</div>
                     <div class="text-sm text-gray-500">
-                      {{ formatTime(slot.startTime) }} - {{ formatTime(slot.endTime) }}
+                      {{ formatTime(slot.start) }} - {{ formatTime(slot.end) }}
                     </div>
                   </div>
                   <div class="text-sm">
-                    剩餘席位: <span class="font-medium">{{ slot.totalSeats }}</span>
+                    剩餘席位: <span class="font-medium">{{ slot.seatsLeft }}</span>
                   </div>
                 </div>
               </div>
@@ -276,9 +275,12 @@ import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 import Tag from 'primevue/tag';
 import { mockRegions } from '@/service/MockService';
-import type { CourseFormData, CourseScheduleItem } from '@/types/course';
-import { CourseStatus, CourseStatusOptions } from '@/enums/Course';
+import type { Course, CourseDetailDTO } from '@/types/course';
+import { CourseStatus, CourseStatusLabel } from '@/enums/Course';
 import { MainCategory, MainCategoryLabel, SubCategory, SubCategoryLabel } from '@/enums/CourseCategory';
+import { formatDate, formatTime } from '@/utils/dateUtils';
+import { getCourseStatusLabel, getCourseStatusSeverity } from '@/utils/statusUtils';
+import { CourseService } from '@/service/CourseService';
 
 // 通用狀態與工具
 const route = useRoute();
@@ -292,29 +294,31 @@ const isEditMode = computed(() => route.name === 'CourseEdit');
 const courseId = computed(() => route.params.id ? parseInt(route.params.id as string) : 0);
 
 // 課程數據
-const course = ref<CourseFormData>({
+const course = ref<CourseDetailDTO>({
   id: 0,
   title: '',
   description: '',
-  mainImage: '',
-  images: [],
   status: CourseStatus.ACTIVE,
-  pointsRequired: 0,
-  region: '',
-  categories: [],
+  points: 0,
+  region: undefined,
   publishDate: null,
-  schedule: []
+  categories: [],
+  coverUrl: undefined,
+  images: [],
+  sessions: [],
+  merchantId: 0,
+  createdAt: new Date(),
 });
 
 // 表單錯誤訊息
 const errors = reactive({
   title: '',
   description: '',
-  pointsRequired: '',
-  mainImage: '',
+  points: '',
+  coverUrl: '',
   region: '',
   categories: '',
-  schedule: ''
+  sessions: ''
 });
 
 // 分類選擇狀態
@@ -323,10 +327,11 @@ const selectedSubCategories = ref<string[]>([]);
 
 // 狀態選項
 const statusOptions = [
-  { label: CourseStatusOptions[CourseStatus.DRAFT], value: CourseStatus.DRAFT },
-  { label: CourseStatusOptions[CourseStatus.ACTIVE], value: CourseStatus.ACTIVE },
-  { label: CourseStatusOptions[CourseStatus.INACTIVE], value: CourseStatus.INACTIVE },
-  { label: CourseStatusOptions[CourseStatus.SCHEDULED], value: CourseStatus.SCHEDULED }
+  { label: CourseStatusLabel[CourseStatus.DRAFT], value: CourseStatus.DRAFT },
+  { label: CourseStatusLabel[CourseStatus.ACTIVE], value: CourseStatus.ACTIVE },
+  { label: CourseStatusLabel[CourseStatus.INACTIVE], value: CourseStatus.INACTIVE },
+  { label: CourseStatusLabel[CourseStatus.SCHEDULED], value: CourseStatus.SCHEDULED },
+  
 ];
 
 // 主分類列表
@@ -389,11 +394,11 @@ const regions = mockRegions;
 const courseSchema = z.object({
   title: z.string().min(3, '課程名稱至少需要3個字符').max(100, '課程名稱最多100個字符'),
   description: z.string().min(1, '請填寫課程描述'),
-  pointsRequired: z.number().min(1, '點數價格必須大於0'),
-  mainImage: z.string().min(1, '請上傳課程主圖'),
+  points: z.number().min(1, '點數價格必須大於0'),
+  coverUrl: z.string().min(1, '請上傳課程主圖'),
   region: z.string().min(1, '請選擇地區'),
   categories: z.array(z.string()).min(1, '請選擇至少一個分類'),
-  schedule: z.array(
+  sessions: z.array(
     z.object({
       date: z.instanceof(Date, { message: '請選擇日期' }),
       startTime: z.instanceof(Date, { message: '請選擇開始時間' }),
@@ -449,14 +454,7 @@ function validateForm(data: any): { success: boolean; errors: Record<string, str
 
 // 獲取狀態標籤
 function getStatusLabel(status: string): string {
-  const statusMap: Record<string, string> = {
-    'active': '已上架',
-    'inactive': '已下架',
-    'draft': '草稿',
-    'scheduled': '定時上架'
-  };
-  
-  return statusMap[status] || status;
+  return CourseStatusLabel[status as CourseStatus];
 }
 
 // 獲取狀態嚴重性
@@ -476,41 +474,32 @@ function getRegionName(code: string): string {
   return region ? region.name : '未指定地區';
 }
 
-// 格式化日期
-function formatDate(date: Date): string {
-  if (!date) return '';
-  return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
-}
-
-// 格式化時間
-function formatTime(date: Date): string {
-  if (!date) return '';
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-}
-
 // 添加時段
 function addTimeSlot(): void {
   const now = new Date();
   const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
 
-  course.value.schedule.push({
+  course.value.sessions.push({
+    id: 0,
+    courseId: course.value.id,
     date: new Date(),
-    startTime: now,
-    endTime: oneHourLater,
-    totalSeats: 10
+    start: now,
+    end: oneHourLater,
+    seats: 10,
+    seatsLeft: 10
   });
 }
 
 // 移除時段
 function removeTimeSlot(index: number): void {
-  course.value.schedule.splice(index, 1);
+  course.value.sessions.splice(index, 1);
 }
 
 // 上傳主圖
 function uploadMainImage(): void {
   // 實際應用中應該調用文件上傳 API
   // 這裡使用模擬數據
-  course.value.mainImage = 'https://via.placeholder.com/800x600?text=主圖';
+  course.value.coverUrl = 'https://via.placeholder.com/800x600?text=主圖';
 }
 
 // 上傳圖片
@@ -518,7 +507,12 @@ function uploadImage(): void {
   // 實際應用中應該調用文件上傳 API
   // 這裡使用模擬數據
   if (course.value.images.length < 5) {
-    course.value.images.push(`https://via.placeholder.com/400x300?text=圖片${course.value.images.length + 1}`);
+    course.value.images.push({
+      id: Math.floor(Math.random() * 1000),
+      courseId: course.value.id,
+      url: `https://via.placeholder.com/400x300?text=圖片${course.value.images.length + 1}`,
+      alt: `課程圖片${course.value.images.length + 1}`
+    });
   }
 }
 
@@ -566,8 +560,7 @@ async function saveCourse(): Promise<void> {
 
     // 返回課程列表頁
     router.push({ name: 'CourseList' });
-  } catch (error) {
-    console.error('保存課程失敗:', error);
+  } catch {
     toast.add({
       severity: 'error',
       summary: '保存失敗',
@@ -592,44 +585,11 @@ async function loadCourseData(): Promise<void> {
     // 模擬 API 請求
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    // 模擬課程數據
-    if (courseId.value === 1) {
-      course.value = {
-        id: 1,
-        title: '瑜珈初階班',
-        description: '<p>適合初學者的瑜珈課程，從基礎姿勢開始學習。</p><p>本課程包含：</p><ul><li>基本瑜珈姿勢</li><li>呼吸技巧</li><li>放鬆練習</li></ul>',
-        mainImage: 'https://via.placeholder.com/800x600?text=瑜珈課程',
-        images: [
-          'https://via.placeholder.com/400x300?text=瑜珈1',
-          'https://via.placeholder.com/400x300?text=瑜珈2'
-        ],
-        status: CourseStatus.ACTIVE,
-        pointsRequired: 25,
-        region: 'TPE',
-        categories: ['SPORT', 'SPORT_YOGA'],
-        publishDate: null,
-        schedule: [
-          {
-            id: 1,
-            date: new Date(2023, 5, 15),
-            startTime: new Date(2023, 5, 15, 10, 0),
-            endTime: new Date(2023, 5, 15, 12, 0),
-            totalSeats: 10
-          },
-          {
-            id: 2,
-            date: new Date(2023, 5, 22),
-            startTime: new Date(2023, 5, 22, 10, 0),
-            endTime: new Date(2023, 5, 22, 12, 0),
-            totalSeats: 10
-          }
-        ]
-      };
-
-      // 設置分類選擇
-      selectedMainCategory.value = 'SPORT';
-      selectedSubCategories.value = ['SPORT_YOGA'];
-    }
+    // 獲取課程詳細數據
+    const courseDetail = await CourseService.fetchCourseDetail(courseId.value);
+    // 將 API 返回的數據轉換為表單所需的格式
+    course.value = courseDetail.course;
+    course.value.sessions = courseDetail.sessions;
   } catch (error) {
     console.error('加載課程失敗:', error);
     toast.add({
