@@ -5,7 +5,6 @@ import { CourseService } from '@/service/CourseService';
 import type { Course, CourseDetailDTO, CourseSession } from '@/types/course';
 import type { Booking } from '@/types/booking';
 import type { Result } from '@/types';
-import { BookingStatus } from '@/enums/BookingStatus';
 
 /**
  * 课程管理 Store
@@ -68,7 +67,7 @@ export const useCourseStore = defineStore('course', () => {
     try {
       // 调用CourseService的getCourse方法
       const data = await CourseService.getCourse(keyword, regions, categories);
-      console.log('data', data);
+       
       
       allCourses.value = data;
       return { success: true, data };

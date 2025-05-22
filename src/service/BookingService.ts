@@ -25,14 +25,11 @@ export const BookingService = {
             const mockBookings: Booking[] = [
                 {
                     id: 101,
-                    customerId: 201,
-                    customerName: '張小明',
-                    customerPhone: '0912-345-678',
                     courseId: 1,
                     courseTitle: '瑜珈初階班',
                     date: today,
-                    startTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 14, 0),
-                    endTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 16, 0),
+                    start: "11:00",
+                    end: "12:00",
                     points: 25,
                     status: BookingStatus.Pending,
                     merchantName: '健康生活館',
@@ -47,14 +44,11 @@ export const BookingService = {
                 },
                 {
                     id: 102,
-                    customerId: 202,
-                    customerName: '李小華',
-                    customerPhone: '0923-456-789',
                     courseId: 2,
                     courseTitle: '烹飪課程：義式料理',
                     date: tomorrow,
-                    startTime: new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate(), 10, 0),
-                    endTime: new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate(), 12, 0),
+                    start: "10:00",
+                    end: "12:00",
                     points: 30,
                     status: BookingStatus.Confirmed,
                     merchantName: '美食烹飪學校',
@@ -69,14 +63,11 @@ export const BookingService = {
                 },
                 {
                     id: 103,
-                    customerId: 203,
-                    customerName: '王大偉',
-                    customerPhone: '0934-567-890',
                     courseId: 3,
                     courseTitle: '水彩畫入門',
                     date: dayAfterTomorrow,
-                    startTime: new Date(dayAfterTomorrow.getFullYear(), dayAfterTomorrow.getMonth(), dayAfterTomorrow.getDate(), 15, 30),
-                    endTime: new Date(dayAfterTomorrow.getFullYear(), dayAfterTomorrow.getMonth(), dayAfterTomorrow.getDate(), 17, 30),
+                    start: "15:30",
+                    end: "17:30",
                     points: 20,
                     status: BookingStatus.Completed,
                     merchantName: '藝術工作室',
@@ -91,14 +82,11 @@ export const BookingService = {
                 },
                 {
                     id: 104,
-                    customerId: 204,
-                    customerName: '陳美玲',
-                    customerPhone: '0945-678-901',
                     courseId: 1,
                     courseTitle: '瑜珈初階班',
                     date: new Date(),
-                    startTime: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate(), 14, 0),
-                    endTime: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate(), 16, 0),
+                    start: "14:00",
+                    end: "16:00",
                     points: 25,
                     status: BookingStatus.Cancelled,
                     merchantName: '健康生活館',
@@ -113,14 +101,11 @@ export const BookingService = {
                 },
                 {
                     id: 105,
-                    customerId: 205,
-                    customerName: '林志明',
-                    customerPhone: '0956-789-012',
                     courseId: 2,
                     courseTitle: '烹飪課程：義式料理',
                     date: new Date(),
-                    startTime: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate(), 10, 0),
-                    endTime: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate(), 12, 0),
+                    start: "10:00",
+                    end: "12:00",
                     points: 30,
                     status: BookingStatus.NoShow,
                     merchantName: '美食烹飪學校',
@@ -149,7 +134,7 @@ export const BookingService = {
      */
     async fetchCourseBookingDetail(courseId: number): Promise<{
         course: Course;
-        timeSlots: CourseSession[];
+        sessions: CourseSession[];
         bookingStatus: {
             canBook: boolean;
             conflictSlots: number[];
@@ -160,7 +145,7 @@ export const BookingService = {
             // API: GET /api/bookings/course/{courseId}/detail
 
             // 1. 获取课程详情和时间槽
-            const { course, timeSlots } = await CourseService.fetchCourseDetail(courseId);
+            const { course, sessions } = await CourseService.fetchCourseDetail(courseId);
 
             // 2. 获取用户当前的预约情况，检查时间冲突
             // 实际应用中，这部分应该从后端返回
@@ -171,7 +156,7 @@ export const BookingService = {
 
             return {
                 course,
-                timeSlots,
+                sessions,
                 bookingStatus: {
                     canBook: true, // 默认可预约
                     conflictSlots // 冲突的时间槽ID列表

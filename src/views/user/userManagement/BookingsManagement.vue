@@ -19,7 +19,7 @@
                             <div class="text-sm text-gray-500 mt-1">{{ formatDateString(booking.createdAt.toISOString()) }} {{ booking.time }}</div>
                             <div class="text-sm text-gray-500">{{ booking.merchantName || booking.location }}</div>
                         </div>
-                        <Tag :value="getTimeLeftLabel(booking.createdAt, booking.time || '')" 
+                        <Tag :value="getTimeLeftLabel(booking.createdAt, booking.start || '')" 
                             :severity="getTimeLeftSeverity(booking.createdAt, booking.time || '')" />
                     </div>
                     <div class="mt-3 flex justify-end gap-2">
@@ -296,14 +296,18 @@ const selectedBooking = ref<Booking | null>(null);
 const loading = ref(false);
 
 // 确认是否是即将到来的预约
-const isUpcoming = (date: Date, time: string): boolean => {
+const isUpcoming = (date: Date, time: string | Date): boolean => {
     const now = new Date();
     const bookingDate = new Date(date);
     
     // 设置时分秒
     if (time) {
-        const [hours, minutes] = time.split(':').map(Number);
-        bookingDate.setHours(hours || 0, minutes || 0, 0, 0);
+        if (typeof time === 'string') {
+            const [hours, minutes] = time.split(':').map(Number);
+            bookingDate.setHours(hours || 0, minutes || 0, 0, 0);
+        } else if (time instanceof Date) {
+            bookingDate.setHours(time.getHours(), time.getMinutes(), 0, 0);
+        }
     }
     
     const sevenDaysLater = new Date();
@@ -315,7 +319,7 @@ const isUpcoming = (date: Date, time: string): boolean => {
 // 即将到来的预约
 const upcomingBookings = computed(() => {
     return bookings.value
-        .filter(b => isUpcoming(b.createdAt, b.time || ''))
+        .filter(b => isUpcoming(b.createdAt, b.start || ''))
         .slice(0, 3);
 });
 
@@ -323,7 +327,7 @@ const upcomingBookings = computed(() => {
 const statusOptions = [
     { label: '全部', value: '' },
     { label: '已确认', value: BookingStatus.Confirmed.toString() },
-    { label: '已取消', value: BookingStatus.Canceled.toString() },
+    { label: '已取消', value: BookingStatus.Cancelled.toString() },
     { label: '待处理', value: BookingStatus.Pending.toString() }
 ];
 
@@ -388,7 +392,7 @@ function getEventClassNames(status: BookingStatus): string[] {
     switch (status) {
         case BookingStatus.Confirmed:
             return ['bg-blue-100', 'border-blue-500', 'text-blue-800'];
-        case BookingStatus.Canceled:
+        case BookingStatus.Cancelled:
             return ['bg-gray-100', 'border-gray-500', 'text-gray-800'];
         case BookingStatus.Pending:
             return ['bg-yellow-100', 'border-yellow-500', 'text-yellow-800'];
@@ -406,7 +410,7 @@ const getStatusLabel = (status: BookingStatus) => {
             return '已确认';
         case BookingStatus.Completed:
             return '已完成';
-        case BookingStatus.Canceled:
+        case BookingStatus.Cancelled:
             return '已取消';
         default:
             return '未知状态';
@@ -418,7 +422,7 @@ function getStatusSeverity(status: BookingStatus): string {
     switch (status) {
         case BookingStatus.Confirmed:
             return 'success';
-        case BookingStatus.Canceled:
+        case BookingStatus.Cancelled:
             return 'danger';
         case BookingStatus.Pending:
             return 'warning';

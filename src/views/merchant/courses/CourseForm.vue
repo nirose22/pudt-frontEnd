@@ -108,14 +108,14 @@
                 <!-- 時間範圍 -->
                 <div class="flex gap-2 items-center">
                   <div class="flex-grow">
-                    <label :for="`startTime-${index}`" class="block mb-1 font-medium">開始時間</label>
-                    <Calendar :id="`startTime-${index}`" v-model="slot.start" timeOnly showTime hourFormat="24"
+                    <label :for="`start-${index}`" class="block mb-1 font-medium">開始時間</label>
+                    <Calendar :id="`start-${index}`" v-model="slot.start as Date" timeOnly showTime hourFormat="24"
                       class="w-full" />
                   </div>
                   <span class="mt-6">至</span>
                   <div class="flex-grow">
-                    <label :for="`endTime-${index}`" class="block mb-1 font-medium">結束時間</label>
-                    <Calendar :id="`endTime-${index}`" v-model="slot.end" timeOnly showTime hourFormat="24"
+                    <label :for="`end-${index}`" class="block mb-1 font-medium">結束時間</label>
+                    <Calendar :id="`end-${index}`" v-model="slot.end as Date" timeOnly showTime hourFormat="24"
                       class="w-full" />
                   </div>
                 </div>
@@ -308,6 +308,12 @@ const course = ref<CourseDetailDTO>({
   sessions: [],
   merchantId: 0,
   createdAt: new Date(),
+  merchant: {
+    id: 0,
+    name: '',
+    logo: '',
+    description: ''
+  }
 });
 
 // 表單錯誤訊息
@@ -401,8 +407,8 @@ const courseSchema = z.object({
   sessions: z.array(
     z.object({
       date: z.instanceof(Date, { message: '請選擇日期' }),
-      startTime: z.instanceof(Date, { message: '請選擇開始時間' }),
-      endTime: z.instanceof(Date, { message: '請選擇結束時間' }),
+      start: z.instanceof(Date, { message: '請選擇開始時間' }),
+      end: z.instanceof(Date, { message: '請選擇結束時間' }),
       totalSeats: z.number().min(1, '席位數至少為1')
     })
   ).min(1, '請至少添加一個課程時段')

@@ -78,8 +78,8 @@
           <Column field="date" header="預約日期" sortable>
             <template #body="slotProps">
               <div>{{ formatDate(slotProps.data.date) }}</div>
-              <div class="text-xs text-gray-500">{{ formatTime(slotProps.data.startTime) }} - {{
-                formatTime(slotProps.data.endTime) }}</div>
+              <div class="text-xs text-gray-500">{{ formatTime(slotProps.data.start) }} - {{
+                formatTime(slotProps.data.end) }}</div>
             </template>
           </Column>
 
@@ -225,17 +225,17 @@ const filteredBookings = computed(() => {
 // 日曆視圖事件
 const calendarEvents = computed(() => {
   return filteredBookings.value.map(booking => {
-    const startTime = new Date(booking.date);
-    startTime.setHours(booking.startTime.getHours(), booking.startTime.getMinutes());
+    const start = new Date(booking.date);
+    start.setHours(booking.start.getHours(), booking.start.getMinutes());
 
-    const endTime = new Date(booking.date);
-    endTime.setHours(booking.endTime.getHours(), booking.endTime.getMinutes());
+    const end = new Date(booking.date);
+    end.setHours(booking.end.getHours(), booking.end.getMinutes());
 
     return {
       id: booking.id.toString(),
       title: `${booking.courseTitle} - ${booking.customerName}`,
-      start: startTime,
-      end: endTime,
+      start: start,
+      end: end,
       extendedProps: {
         booking
       },

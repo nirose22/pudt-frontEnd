@@ -9,7 +9,7 @@ import { PointKind, PointRefType  } from '@/enums/Point'
 import { useUserStore } from './userStore'
 import { CardType } from '@/enums/Cards'
 import type { PointTxn } from '@/types/point'
-import type { UnpaidItem } from '@/types/purchaseItem'
+import type { UnpaidItem } from '@/types/purchase'
 
 
 /**

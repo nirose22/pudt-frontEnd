@@ -26,7 +26,7 @@ export function generateMockCourses(): Course[] {
       region: getRandomRegionCode(),
       joinCount: Math.floor(Math.random() * 100),
       createdAt: generateRandomDate(),
-      recommended: i % 5 === 0
+      recommended: i % 5 === 0,
     });
   }
   

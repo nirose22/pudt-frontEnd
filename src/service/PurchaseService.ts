@@ -1,6 +1,6 @@
 import type { Result } from '@/types';
 import type { Order, OrderItem } from '@/types/order';
-import type { ExtendedPurchaseItem } from '@/types/purchaseItem';
+import type { ExtendedPurchaseItem } from '@/types/purchase';
 import { OrderStatus, PaymentMethod } from '@/enums/PurchaseStatus';
 import { CardType } from '@/enums/Cards';
 

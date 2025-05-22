@@ -4,7 +4,7 @@
         <div class=" bg-white rounded-lg h-full flex flex-col gap-4">
             <DateRangeFilter v-model:startDate="startDate" v-model:endDate="endDate" :defaultRangeDays="7"
                 :showControls="false" @change="handleDateRangeChange" class="border-b border-sky-100 pb-3" />
-            
+
             <!-- 課程列表（按日期分組） -->
             <div v-if="bookingsInRange.length" class="flex-1 flex flex-col gap-3 overflow-auto">
                 <div v-for="date in Object.keys(bookingsByDate)" :key="date" class="flex flex-col gap-1">
@@ -15,7 +15,7 @@
                                 {{ formatDateHeader(date) }}
                             </p>
                         </template>
-                        
+
                         <!-- 列表视图 -->
                         <template #list="slotProps">
                             <div v-for="(booking, index) in slotProps.items" :key="index">
@@ -30,7 +30,7 @@
                                         </div>
                                         <div class="flex items-center text-sm text-gray-600 mb-1">
                                             <i class="pi pi-clock text-sky-500 mr-1"></i>
-                                            <span>{{ booking.time }}</span>
+                                            <span>{{ booking.start }} - {{ booking.end }}</span>
                                         </div>
                                         <div class="flex items-center text-sm text-gray-600 mb-1">
                                             <i class="pi pi-map-marker text-sky-500 mr-1"></i>
@@ -44,7 +44,7 @@
                                 </div>
                             </div>
                         </template>
-                        
+
                         <template #empty>
                             <div class="text-center p-4 bg-sky-50 rounded-lg border border-sky-100">
                                 <i class="pi pi-calendar-times text-4xl text-sky-200 mb-2"></i>
@@ -54,14 +54,15 @@
                     </DataView>
                 </div>
             </div>
-            
+
             <div v-else class="content-center block text-center p-8 bg-sky-50 flex-1 rounded-lg border border-sky-100">
                 <i class="pi pi-calendar-times text-6xl text-sky-200 mb-4"></i>
                 <p class="text-sky-600 text-lg mb-2">您目前沒有任何預約</p>
                 <p class="text-gray-500 mb-4">選擇課程並預約參加吧！</p>
-                <Button label="瀏覽課程" icon="pi pi-search" @click="router.push('/courses')" class="!bg-sky-500 !border-sky-500" />
+                <Button label="瀏覽課程" icon="pi pi-search" @click="router.push('/courses')"
+                    class="!bg-sky-500 !border-sky-500" />
             </div>
-            
+
             <Dialog v-model:visible="showDetailDialog" header="課程詳情" :modal="true" :closable="true"
                 :style="{ width: '500px' }" :contentStyle="{ 'background-color': '#f8fafc' }">
                 <div v-if="selectedBooking" class="space-y-4">
@@ -76,7 +77,7 @@
                         </div>
                         <div class="flex justify-between mb-2">
                             <span class="text-gray-600">時間：</span>
-                            <span>{{ selectedBooking.time }}</span>
+                            <span>{{ selectedBooking.start }} - {{ selectedBooking.end }}</span>
                         </div>
                         <div class="flex justify-between mb-2">
                             <span class="text-gray-600">講師：</span>
@@ -98,6 +99,8 @@
                     <Button label="關閉" @click="showDetailDialog = false" class="!bg-sky-500 !border-sky-500" />
                 </template>
             </Dialog>
+            <Toast />
+            <ConfirmDialog class="max-w-md w-full" group="schedule" />
         </div>
     </div>
 </template>
@@ -111,7 +114,7 @@ import { BookingStatus } from '@/enums/BookingStatus';
 import DataView from 'primevue/dataview';
 import type { Booking } from '@/types/booking';
 import { useConfirm } from 'primevue/useconfirm';
-import { showSuccess, showError, initToast } from '@/utils/toastHelper';
+import { showSuccess, showError } from '@/utils/toastHelper';
 import Dialog from 'primevue/dialog';
 import { useToast } from 'primevue/usetoast';
 import { useRouter } from 'vue-router';
@@ -134,19 +137,19 @@ const range = ref<{ start: Date; end: Date } | null>(null);
 
 const handleDateRangeChange = (dateRange: { start: Date; end: Date }) => {
     range.value = dateRange;
-    // 日期变化后，重新获取符合日期范围的预约
+    // 日期變化後，重新獲取符合日期範圍的預約
     fetchFilteredBookings();
 };
 
-// 根据日期范围过滤预约
+// 根據日期範圍過濾預約
 const fetchFilteredBookings = async () => {
     try {
         loading.value = true;
-        // 先获取所有预约
+        // 先獲取所有預約
         await bookingStore.fetchBookings();
     } catch (error) {
-        console.error('获取预约失败:', error);
-        showError('获取预约数据失败');
+        console.error('獲取預約失敗:', error);
+        showError('獲取預約數據失敗');
     } finally {
         loading.value = false;
     }
@@ -157,11 +160,11 @@ const bookingsInRange = computed(() => {
     if (!range.value) {
         return bookingStore.bookings;
     }
-    
+
     // 确保只筛选确认状态的预约
     const confirmedBookings = bookingStore.bookings.filter(b => b.status === BookingStatus.Confirmed);
     return inRange(
-        range.value.start, 
+        range.value.start,
         range.value.end,
         confirmedBookings,
         // 优先使用专门的预约日期字段，如果不存在则使用创建日期
@@ -170,7 +173,7 @@ const bookingsInRange = computed(() => {
 });
 
 const bookingsByDate = computed(() => {
-    return byDate(bookingsInRange.value, booking => booking.date || booking.createdAt);
+    return byDate(bookingsInRange.value, booking => booking.date instanceof Date ? booking.date : booking.createdAt);
 });
 
 // 显示课程详情
@@ -189,6 +192,7 @@ const cancelBooking = async (booking: Booking) => {
         rejectLabel: '返回',
         acceptClass: 'p-button-danger',
         rejectClass: 'p-button-secondary',
+        group: 'schedule',
         accept: async () => {
             try {
                 const result = await bookingStore.cancel(booking.id);
@@ -201,8 +205,8 @@ const cancelBooking = async (booking: Booking) => {
                     showError(result.message ?? '操作失敗', '操作失敗');
                 }
             } catch (error) {
-                console.error('取消预约失败:', error);
-                showError('取消预约时发生错误');
+                console.error('取消預約失敗:', error);
+                showError('取消預約時發生錯誤');
             }
         }
     });
@@ -210,7 +214,6 @@ const cancelBooking = async (booking: Booking) => {
 
 // 初始化設定日期範圍
 onMounted(() => {
-    initToast(toast);
     range.value = {
         start: startDate.value,
         end: endDate.value

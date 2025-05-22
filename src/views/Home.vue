@@ -55,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import CourseDetail from '@/views/user/course/CourseDetail.vue'
+import CourseDetail from '@/components/user/CourseDetail.vue'
 import { ref, computed, onMounted } from 'vue'
 import SearchBar from '@/components/layout/SearchBar.vue';
 import TabPanel from 'primevue/tabpanel';
@@ -68,11 +68,13 @@ import CourseCarousel from '@/components/modal/CourseCarousel.vue';
 import { useUserStore } from '@/stores/userStore';
 import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
+import { useConfirm } from 'primevue/useconfirm';
 import type { Course } from '@/types/course';
 import { CourseService } from '@/service/CourseService';
 import { useBookingStore } from '@/stores/bookingStore';
 import { MainCategory } from '@/enums/CourseCategory';
 import { showError, initToast } from '@/utils/toastHelper';
+import { initConfirm } from '@/utils/confirmHelper';
 
 // 一次性解構 userStore
 const { isLoggedIn } = useUserStore();
@@ -82,7 +84,6 @@ const visible = ref(false);
 const router = useRouter();
 const bookingStore = useBookingStore();
 const toast = useToast();
-
 // 初始化toast
 onMounted(() => {
     initToast(toast);
@@ -228,10 +229,8 @@ async function selectCourse(course: Course) {
     loadingMap.value.set(courseId, true);
 
     try {
-        // 使用 bookingStore.loadCourseBookingDetail 加載課程詳情
         const result = await bookingStore.loadCourseBookingDetail(courseId);
         if (result.success) {
-            // 成功加載後打開詳情彈窗
             visible.value = true;
         } else {
             showError(result.message || '加載課程詳情失敗', '無法查看課程');

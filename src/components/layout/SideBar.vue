@@ -60,7 +60,6 @@ import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/userStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useToast } from 'primevue/usetoast';
-import Toast from 'primevue/toast';
 import Avatar from 'primevue/avatar';
 import { showError, initToast } from '@/utils/toastHelper';
 

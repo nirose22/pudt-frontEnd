@@ -26,7 +26,7 @@ export const useBookingStore = defineStore('booking', () => {
         return bookings.value.some(
             b =>
                 b.sessionId === sessionId &&
-                b.status !== BookingStatus.Canceled
+                b.status !== BookingStatus.Cancelled
         )
     }
 
@@ -92,7 +92,7 @@ export const useBookingStore = defineStore('booking', () => {
         
         try {
             // 从 BookingService 获取课程预约详情
-            const { course, timeSlots, bookingStatus } = await BookingService.fetchCourseBookingDetail(courseId)
+            const { bookingStatus } = await BookingService.fetchCourseBookingDetail(courseId)
             
             // 更新 course store 中的数据
             await courseStore.loadCourseDetail(courseId)
@@ -105,7 +105,7 @@ export const useBookingStore = defineStore('booking', () => {
                 message: '课程预约详情加载成功'
             }
         } catch (err) {
-            error.value = err instanceof Error ? err.message : '加载课程预约详情失败'
+            error.value = err instanceof Error ? err.message : '加載課程預約詳情失敗'
             return {
                 success: false,
                 message: error.value
@@ -123,7 +123,7 @@ export const useBookingStore = defineStore('booking', () => {
         try {
             // 检查是否可以预约
             if (!canBook(courseId, slotId)) {
-                error.value = '无法预约该课程时段'
+                error.value = '無法預約該課程時段'
                 return { 
                     success: false, 
                     message: error.value 
@@ -134,13 +134,13 @@ export const useBookingStore = defineStore('booking', () => {
             const slot = courseStore.getSessionById(slotId)
             
             if (!currentCourse || !slot || !userStore.profile) {
-                error.value = '课程信息不完整或未登录'
+                error.value = '課程信息不完整或未登錄'
                 return { 
                     success: false, 
                     message: error.value 
                 }
             }
-
+            // TODO: 
             // 调用 BookingService 创建预约
             const result = await BookingService.createBooking(
                 userStore.profile.id,
@@ -155,12 +155,22 @@ export const useBookingStore = defineStore('booking', () => {
                 courseStore.updateAvailableSeats(slotId, -1)
                 // 3. 添加到本地预约记录
                 const newBook: Booking = {
-                    id: result.data?.bookingId || Date.now(),
-                    userId: userStore.profile.id,
+                    id: 2 ,
+                    courseId,
                     sessionId: slotId,
                     points: currentCourse.points,
                     status: BookingStatus.Confirmed,
-                    createdAt: new Date()
+                    createdAt: new Date(),
+                    start: slot.start,
+                    end: slot.end,
+                    date: slot.date,
+                    courseTitle: currentCourse.title,
+                    merchantName: currentCourse.merchant.name,
+                    // 添加其他必要字段，确保类型兼容
+                    location: currentCourse.merchant.address || '',
+                    rating: 0,
+                    comment: '',
+                    notes: ''
                 }
                 bookings.value.push(newBook)
             }
@@ -190,7 +200,7 @@ export const useBookingStore = defineStore('booking', () => {
             }
             
             const bk = bookings.value[idx]
-            if (bk.status === BookingStatus.Canceled) {
+            if (bk.status === BookingStatus.Cancelled) {
                 error.value = '课程已被取消'
                 return { success: false, message: error.value }
             }
@@ -200,11 +210,11 @@ export const useBookingStore = defineStore('booking', () => {
             
             if (result.success) {
                 // 更新本地数据
-                bk.status = BookingStatus.Canceled
+                bk.status = BookingStatus.Cancelled
                 
                 // 还原点数
                 const course = courseStore.currentCourse
-                if (course && course.id === bk.sessionId) {
+                if (course && course.id === bk.courseId) {
                     userStore.adjustPoints(bk.points)
                 }
             }

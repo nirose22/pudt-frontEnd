@@ -257,7 +257,7 @@ import { ref, computed, onMounted, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import CourseCard from '@/components/modal/CourseCard.vue';
 import TabPanel from 'primevue/tabpanel';
-import CourseDetail from '@/views/user/course/CourseDetail.vue';
+import CourseDetail from '@/components/user/CourseDetail.vue';
 import type { Course, CourseSession } from '@/types/course';
 import Slider from 'primevue/slider';
 import InputNumber from 'primevue/inputnumber';
@@ -592,19 +592,19 @@ const isRecommendationCollapsed = ref(false);
 }
 
 .chip {
-	@apply cursor-pointer hover:bg-blue-200 ! transition-colors
+	@apply cursor-pointer hover:bg-blue-200! transition-colors
 }
 
 .chip:hover:not(.chip-selected) {
-	@apply bg-blue-100 !
+	@apply bg-blue-100!
 }
 
 .chip-selected {
-	@apply bg-blue-400 ! text-white !
+	@apply bg-blue-400! text-white!
 }
 
 .chip.chip-selected:hover {
-	@apply bg-blue-500 !
+	@apply bg-blue-500!
 }
 
 .fade-enter-active,

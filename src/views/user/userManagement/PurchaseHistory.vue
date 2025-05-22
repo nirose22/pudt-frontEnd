@@ -340,7 +340,7 @@ import DateRangeFilter from '@/components/common/DateRangeFilter.vue';
 import { formatDateString, inRange } from '@/utils/dateUtils';
 import { OrderStatus, PaymentMethod, OrderStatusLabel, PaymentMethodLabel } from '@/enums/PurchaseStatus';
 import { CardType, CardTypeLabel } from '@/enums/Cards';
-import type { PurchaseItem, ExtendedPurchaseItem } from '@/types/purchaseItem';
+import type { PurchaseItem, ExtendedPurchaseItem } from '@/types/purchase';
 import { PurchaseService } from '@/service/PurchaseService';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';

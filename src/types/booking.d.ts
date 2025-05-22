@@ -5,16 +5,13 @@ import { BookingStatus } from '@/enums/BookingStatus';
  */
 export interface BaseBooking {
   id: number;                // 预约ID
-  customerId: number;        // 客户ID (对应旧的userId)
-  customerName: string;      // 客户姓名
-  customerPhone: string;     // 客户电话
   sessionId?: number;        // 課程場次ID (FK -> CourseSession.id)
   courseId: number;          // 课程ID
   courseTitle: string;       // 课程标题
   points: number;            // 點數
-  date: Date;                // 预约日期
-  startTime: Date;           // 开始时间
-  endTime: Date;             // 结束时间
+  date: string | Date;                // 预约日期
+  start: string | Date;           // 开始时间
+  end: string | Date;             // 结束时间
   status: BookingStatus;     // 预约状态
   location?: string;         // 地点 (從舊接口整合)
   merchantName?: string;     // 商家名称 (從舊接口整合)
@@ -27,9 +24,8 @@ export interface BaseBooking {
  */
 export interface Booking extends BaseBooking {
   notes?: string;            // 客戶備註，可选
-  merchantNotes?: string;    // 商家備註，可选
   createdAt: Date;           // 創建時間
-  updatedAt: Date;           // 更新時間
+  updatedAt?: Date;           // 更新時間
   instructor?: {             // 教练信息 (從舊接口整合)
     id: number;
     name: string;
@@ -62,8 +58,8 @@ export interface BookingCalendarItem {
   id: number;
   title: string;
   date: Date;
-  startTime: Date;
-  endTime: Date;
+  start: Date;
+  end: Date;
   status: BookingStatus;
   customer: {
     id: number;
@@ -71,3 +67,9 @@ export interface BookingCalendarItem {
   };
 }
 
+export interface UserBookingForMerchant extends BaseBooking {
+  customerId: number;        // 客户ID (对应旧的userId)
+  customerName: string;      // 客户姓名
+  customerPhone: string;     // 客户电话
+  merchantNotes?: string;    // 商家備註，可选
+}

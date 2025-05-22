@@ -23,13 +23,13 @@ export interface Course extends BaseCourse {
   recommended?: boolean       // 是否推薦
 }
 
-/* 每張課程附圖（多對一）*/
-export interface CourseImage {
-  id: number                  // PK
-  courseId: number            // FK -> Course.id
-  url: string                 // 圖片 URL
-  alt?: string                // 圖片替代文字
-}
+// /* 每張課程附圖（多對一）*/
+// export interface CourseImage {
+//   id: number                  // PK
+//   courseId: number            // FK -> Course.id
+//   url: string                 // 圖片 URL
+//   alt?: string                // 圖片替代文字
+// }
 
 /* 課程與分類連結 (多選 tag) */
 export interface CourseCategoryLink {
@@ -39,8 +39,8 @@ export interface CourseCategoryLink {
 
 /* 時間區間接口 */
 export interface TimeRange {
-  start: Date               // HH:mm
-  end: Date                 // HH:mm
+  start: string | Date  // HH:mm or Date
+  end: string | Date
 }
 
 /* 單一課程場次 (可多天多時段) */
@@ -54,10 +54,9 @@ export interface CourseSession extends TimeRange {
 
 /* 課程詳情數據傳輸對象 */
 export interface CourseDetailDTO extends Course {
-  merchant?: Merchant
+  merchant: Merchant
   sessions: CourseSession[]
-  images: CourseImage[]
-  schedule?: any[] // 臨時添加，後續應該定義具體類型
+  images: PhotoItem[]
 }
 
 /**

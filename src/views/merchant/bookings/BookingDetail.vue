@@ -36,8 +36,8 @@
                             <!-- 預約時間 -->
                             <div>
                                 <h3 class="text-sm text-gray-500 mb-1">預約時間</h3>
-                                <p class="font-medium">{{ formatDate(booking.date) }} {{ formatTime(booking.startTime)
-                                    }} - {{ formatTime(booking.endTime) }}</p>
+                                <p class="font-medium">{{ formatDate(booking.date) }} {{ formatTime(booking.start)
+                                    }} - {{ formatTime(booking.end) }}</p>
                             </div>
 
                             <!-- 課程名稱 -->
@@ -245,8 +245,8 @@ const booking = ref<BookingDetail>({
     courseId: 0,
     courseTitle: '',
     date: new Date(),
-    startTime: new Date(),
-    endTime: new Date(),
+    start: new Date(),
+    end: new Date(),
     points: 0,
     status: BookingStatus.Pending,
     notes: '',
@@ -464,7 +464,7 @@ function applyTemplate(): void {
 
         // 替換變數
         content = content.replace('{{date}}', formatDate(booking.value.date));
-        content = content.replace('{{time}}', formatTime(booking.value.startTime));
+        content = content.replace('{{time}}', formatTime(booking.value.start));
 
         messageContent.value = content;
     }
@@ -530,8 +530,8 @@ async function loadBooking(): Promise<void> {
                 courseId: 1,
                 courseTitle: '瑜珈初階班',
                 date: date,
-                startTime: new Date(date.setHours(14, 0)),
-                endTime: new Date(date.setHours(16, 0)),
+                start: new Date(date.setHours(14, 0)),
+                end: new Date(date.setHours(16, 0)),
                 points: 25,
                 status: BookingStatus.Pending,
                 notes: '我是初學者，希望老師可以多給一些指導。',

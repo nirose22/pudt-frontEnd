@@ -91,7 +91,7 @@
             </div>
 
             <!-- 標籤頁 -->
-            <Tabs v-model:activeIndex="activeTabIndex" class="flex-1 flex flex-col activity-tabs" tabindex="0">
+            <Tabs v-model:activeIndex="activeTabIndex" class="flex-1 flex flex-col activity-tabs" :tabindex="0">
                 <TabList>
                     <Tab v-for="tab in tabItems" :key="tab.label" :value="tab.label" class="text-sky-700">
                         <i :class="tab.icon + ' mr-2'"></i>
@@ -304,7 +304,7 @@ const ratingForm = ref({
 const statusOptions = [
     { label: '全部狀態', value: '' },
     { label: '已完成', value: BookingStatus.Confirmed.toString() },
-    { label: '已取消', value: BookingStatus.Canceled.toString() },
+    { label: '已取消', value: BookingStatus.Cancelled.toString() },
     { label: '待處理', value: BookingStatus.Pending.toString() }
 ];
 
@@ -553,7 +553,7 @@ const getStatusSeverity = (status: BookingStatus) => {
     switch (status) {
         case BookingStatus.Confirmed:
             return 'success';
-        case BookingStatus.Canceled:
+        case BookingStatus.Cancelled:
             return 'danger';
         case BookingStatus.Pending:
             return 'info';

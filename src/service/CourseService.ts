@@ -1,5 +1,5 @@
 import type { Course, CourseDetailDTO, CourseSession } from "@/types/course";
-import type { Result } from "@/types";
+import type { PhotoItem, Result } from "@/types";
 import { MerchantService } from "./MerchantService";
 import { generateMockCourses } from "./MockService";
 
@@ -46,16 +46,22 @@ export const CourseService = {
             const merchant = await MerchantService.getMerchant(courseData.merchantId);
             
             // 获取课程时间
-            const timeSlots = this.getSessionsForCourse(courseId);
+            const timeSlots = await this.getSessionsForCourse(courseId);
+
+            // 获取课程图片
+            const images = await this.getCourseImages(courseId);
+
+            
             
             // 构建课程详情
             const courseDetail: CourseDetailDTO = {
                 ...courseData,
                 merchant,
                 sessions: timeSlots,
-                coverUrl: 'https://example.com/image.jpg',
+                coverUrl: 'https://picsum.photos/300/200',
                 joinCount: Math.floor(Math.random() * 20) + 5,
-                recommended: courseData.id % 3 === 0 // 随机设置部分课程为推荐
+                recommended: courseData.id % 3 === 0, // 随机设置部分课程为推荐
+                images: images, // 添加 images 属性
             };
             
             return { course: courseDetail, sessions: timeSlots };
@@ -71,7 +77,7 @@ export const CourseService = {
      * @param courseId 课程ID
      * @returns 课程时间段列表
      */
-    getSessionsForCourse(courseId: number): CourseSession[] {
+    async getSessionsForCourse(courseId: number): Promise<CourseSession[]> {
         // TODO: API调用
         // API: /api/courses/{courseId}/sessions
         
@@ -165,4 +171,38 @@ export const CourseService = {
             return { success: false, message: "移除收藏失败" };
         }
     },
+
+    async getCourseImages(courseId: number): Promise<PhotoItem[]> {
+        // TODO: API调用
+        // API: /api/courses/{courseId}/images
+        
+        // 模拟数据
+        const images: PhotoItem[] = [
+            {
+                id: 1,
+                imageSrc: "https://picsum.photos/id/20/300/200",
+                alt: "Image 1",
+                thumbnail: "https://picsum.photos/id/20/100/80",
+            },
+            {
+                id: 2,
+                imageSrc: "https://picsum.photos/id/21/300/200",
+                alt: "Image 2",
+                thumbnail: "https://picsum.photos/id/21/100/80",
+            },
+            {
+                id: 3,
+                imageSrc: "https://picsum.photos/id/22/300/200",
+                alt: "Image 3",
+                thumbnail: "https://picsum.photos/id/22/100/80",
+            },
+            {
+                id: 4,
+                imageSrc: "https://picsum.photos/id/23/300/200",
+                alt: "Image 4",
+                thumbnail: "https://picsum.photos/id/23/100/80",
+            },
+        ];
+        return images;
+    }
 }
