@@ -1,154 +1,208 @@
 <template>
     <Dialog v-model:visible="visible" :modal="true" :draggable="false" :resizable="false" :closable="true"
-        :dt="courseDlg">
+        :style="{ maxWidth: '90vw', width: '1200px' }" class="p-0 course-detail-dialog">
+        <Toast />
         <template #header>
-            <p> </p>
+                <h1 class="text-xl font-medium text-gray-800">
+                    課程詳情
+                </h1>
         </template>
-        <div v-if="currentCourse" class="max-w-6xl mx-auto p-6 sm:px-2">
-            <!-- 課程頂部信息 -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 overflow-hidden">
-                <!-- 左側 - 課程圖片 -->
-                <Galleria :value="galleryImages" :responsiveOptions="responsiveOptions" :numVisible="4" :circular="true"
-                    containerStyle="width: 100%" :showItemNavigatorsOnHover="true" :showItemNavigators="true">
-                    <template #item="slotProps">
-                        <img :src="slotProps.item.imageSrc" :alt="slotProps.item.alt" class="w-full" />
-                    </template>
-                    <template #thumbnail="slotProps">
-                        <img :src="slotProps.item.thumbnail" :alt="slotProps.item.alt" class="block" />
-                    </template>
-                </Galleria>
+        
+        <div class="overflow-y-auto">
+            <div v-if="currentCourse" class="sm:p-3">
+                <!-- 課程頂部信息 -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <!-- 左側 - 課程圖片 -->
+                    <div class="overflow-hidden rounded-xl shadow-sm">
+                        <Galleria :value="galleryImages" :responsiveOptions="responsiveOptions" :numVisible="4" :circular="true"
+                            containerStyle="width: 100%" :showItemNavigatorsOnHover="true" :showItemNavigators="true">
+                            <template #item="slotProps">
+                                <img :src="slotProps.item.imageSrc" :alt="slotProps.item.alt" class="w-full h-full object-cover" />
+                            </template>
+                            <template #thumbnail="slotProps">
+                                <img :src="slotProps.item.thumbnail" :alt="slotProps.item.alt" class="block" />
+                            </template>
+                        </Galleria>
+                    </div>
 
-                <!-- 右側 - 課程信息 -->
-                <div class="flex flex-col space-y-6 overflow-hidden">
-                    <div class="flex justify-between items-start">
-                        <h1 class="text-3xl font-bold">{{ currentCourse.title }}</h1>
-                        <!-- 收藏按鈕 -->
-                        <Button rounded size="large" severity="secondary"
-                            :icon="isFavorite ? 'pi pi-heart-fill' : 'pi pi-heart'" :class="{
+                    <!-- 右側 - 課程信息 -->
+                    <div class="flex flex-col space-y-4 bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-start gap-4">
+                            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 leading-tight">{{ currentCourse.title }}</h1>
+                            <!-- 收藏按鈕 -->
+                            <Button rounded text 
+                                :icon="isFavorite ? 'pi pi-heart-fill' : 'pi pi-heart'" 
+                                :class="{ 'text-red-500': isFavorite, 'hover:bg-red-50': !isFavorite, 'w-10 h-10': true }"
+                                @click="toggleFavorite" :loading="favoriteLoading" aria-label="收藏課程" />
+                        </div>
+                        
+                        <div class="flex items-center gap-2 bg-sky-50 p-3 rounded-lg">
+                                <div class="flex items-center">
+                                    <Rating :modelValue="merchantRating" readonly :cancel="false" 
+                                        :pt="{ onIcon: { class: 'text-amber-400' } }" />
+                                    <span class="ml-2 text-sky-700 font-medium">
+                                        {{ merchantRating.toFixed(1) }}
+                                    </span>
+                                </div>
+                                <span class="text-sm text-sky-600">
+                                    {{ currentCourse.merchant?.reviewCount || 0 }} 則評價
+                                </span>
+                        </div>
+                        
+                        <div class="mt-4 flex-grow">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">課程介紹</h3>
+                            <p class="text-gray-700 whitespace-pre-line p-4 ">
+                                {{ currentCourse.description }}
+                            </p>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-2 mt-4">
+                            <Chip label="即將開始" class="!bg-sky-100 !text-sky-700 !border-none" />
+                            <Chip label="熱門活動" class="!bg-orange-100 !text-orange-700 !border-none" v-if="currentCourse.popular" />
+                            <Chip label="新課程" class="!bg-green-100 !text-green-700 !border-none" v-if="currentCourse.isNew" />
+                        </div>
+                        
+                        <div v-if="userProfile" class="flex items-center justify-between p-4 rounded-lg bg-sky-50 border border-sky-100 mt-auto">
+                            <div>
+                                <p class="text-lg font-medium text-sky-700">
+                                    點數: {{ currentCourse.points }} 點
+                                </p>
+                                <p class="text-sm text-sky-600">
+                                    您目前有 {{ userPoints }} 點
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <Button icon="pi pi-share-alt" text rounded severity="secondary"
+                                    @click="shareCourse" class="hover:bg-sky-100" />
+                            </div>
+                        </div>
+                        <div v-else class="bg-gray-50 p-4 rounded-lg text-center border border-gray-100">
+                            <p class="text-gray-700">
+                                請先<Button text class="p-0 underline text-sky-600 focus:shadow-none" @click="router.push('/login')">登入</Button>以查看點數
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 商家信息卡片 -->
+                <div v-if="currentCourse?.merchant" class="mb-8 bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+                    <div class="p-5 border-b border-gray-100 bg-sky-50">
+                        <h2 class="text-xl font-semibold text-sky-700 flex items-center">
+                            <i class="pi pi-building mr-2"></i>{{ currentCourse.merchant.name }}
+                        </h2>
+                    </div>
+                    <div class="p-5">
+                        <p class="text-gray-700 mb-4">{{ currentCourse.merchant.description }}</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                            <div>
+                                <a :href="'https://maps.google.com/?q=' + currentCourse.merchant.address" target="_blank"
+                                    class="flex items-center text-sky-600 hover:text-sky-800">
+                                    <i class="pi pi-map-marker mr-2"></i>
+                                    <span>{{ currentCourse.merchant.address }}</span>
+                                </a>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="pi pi-phone mr-2"></i>
+                                <span>{{ currentCourse.merchant.phone }}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="pi pi-clock mr-2"></i>
+                                <span>{{ '營業時間：9:00-21:00' }}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="pi pi-tag mr-2"></i>
+                                <span>{{ currentCourse.merchant.description ? '商家服務' : '其他' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 預約區塊 -->
+                <div v-if="currentCourse" class="bg-white rounded-xl shadow-sm p-6 1border border-gray-100">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                        <h2 class="text-xl font-semibold text-sky-700 flex items-center">
+                            <i class="pi pi-calendar mr-2"></i>選擇預約時間
+                        </h2>
+                        <!-- 日期選擇 -->
+                        <div class="w-full md:w-auto">
+                            <DatePicker v-model="selectedDate" inputId="date" showIcon iconDisplay="input"
+                                variant="filled" class="w-full md:w-64" placeholder="選擇日期"
+                                :pt="{
+                                    input: { class: 'border border-gray-300 rounded-lg p-3 hover:border-sky-500 focus:border-sky-500' },
+                                    root: { class: 'w-full' }
+                                }" />
+                        </div>
+                    </div>
+                    <Divider />
+                    <!-- 時間選擇 -->
+                    <div class="mt-4">
+                        <h3 class="text-lg font-medium text-gray-700 mb-4">可預約時段</h3>
+                        <template v-if="filteredTimeSlots.length === 0">
+                            <div class="flex flex-col items-center justify-center py-10 bg-gray-50 rounded-lg border border-gray-100">
+                                <i class="pi pi-calendar-times text-4xl text-gray-400 mb-4"></i>
+                                <p class="text-gray-600 text-center">
+                                    目前沒有可預約時段<br>
+                                    <span class="text-sm text-gray-500">請選擇其他日期</span>
+                                </p>
+                            </div>
+                        </template>
+                        <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                            <button v-for="slot in filteredTimeSlots" :key="slot.id"
+                                :class="['time-slot-btn', { 'time-slot-selected': selectedSlot?.id === slot.id }]"
+                                :disabled="slot.seatsLeft === 0" @click="selectTimeSlot(slot)">
+                                <span class="text-base font-medium">{{ formatTimeSlot(slot) }}</span>
+                                <span class="block text-xs mt-1">
+                                    剩餘: {{ slot.seatsLeft }}/{{ slot.seats }}
+                                </span>
+                                <span v-if="slot.seatsLeft === 0" class="text-xs mt-1 font-medium text-red-500">
+                                    已滿
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <template #footer>
+            <div class="w-full bg-white border-t border-gray-200 p-3">
+                <div class="container mx-auto flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <Button text rounded 
+                            :icon="isFavorite ? 'pi pi-heart-fill' : 'pi pi-heart'" 
+                            :class="{
                                 'text-red-600': isFavorite,
+                                'hover:bg-red-50': !isFavorite
                             }" @click="toggleFavorite" :loading="favoriteLoading" aria-label="收藏課程" />
+                        <Button text rounded icon="pi pi-share-alt" class="hover:bg-sky-50"
+                            @click="shareCourse" />
                     </div>
-                    <div class="flex items-center gap-2">
-                        <Rating :modelValue="merchantRating" readonly />
-                        <span class="text-gray-600">
-                            {{ currentCourse.merchant?.rating || 0 }} ({{ currentCourse.merchant?.reviewCount || 0 }}
-                            評價)
-                        </span>
-                    </div>
-                    <ScrollPanel style="width: 100%; height: 100%">
-                        <p>
-                            {{ currentCourse.description }}
-                        </p>
-                    </ScrollPanel>
-                    <div class="bg-blue-50 p-4 rounded-lg">
-                        <p class="text-lg text-blue-700">
-                            點數: {{ currentCourse.points }} 點
-                        </p>
-                        <p class="text-sm text-blue-600">
-                            您目前有 {{ userPoints }} 點
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 商家信息卡片 -->
-        <Card v-if="currentCourse?.merchant" class="mb-8">
-            <template #title>{{ currentCourse.merchant.name }}</template>
-            <template #content>
-                <p class="text-gray-700 mb-4">{{ currentCourse.merchant.description }}</p>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
-                    <div>
-                        <a :href="'https://maps.google.com/?q=' + currentCourse.merchant.address" target="_blank"
-                            class="flex items-center text-blue-600 hover:text-blue-800">
-                            <i class="pi pi-map-marker mr-2"></i>
-                            <span>{{ currentCourse.merchant.address }}</span>
-                        </a>
-                    </div>
-                    <div class="flex items-center">
-                        <i class="pi pi-phone mr-2"></i>
-                        <span>{{ currentCourse.merchant.phone }}</span>
-                    </div>
-                    <div class="flex items-center">
-                        <i class="pi pi-clock mr-2"></i>
-                        <span>{{ '营业时间：9:00-21:00' }}</span>
-                    </div>
-                    <div class="flex items-center">
-                        <i class="pi pi-tag mr-2"></i>
-                        <span>{{ currentCourse.merchant.description ? '商家服务' : '其他' }}</span>
-                    </div>
-                </div>
-            </template>
-        </Card>
-
-        <!-- 預約區塊 -->
-        <div v-if="currentCourse" class=" bg-gray-50 rounded-lg p-4">
-            <div class="form-field-frame flex-col">
-                <h2 class="form-field-label">選擇預約時間</h2>
-                <!-- 日期選擇 -->
-                <IftaLabel class="w-1/3">
-                    <DatePicker class="w-full" v-model="selectedDate" inputId="date" showIcon iconDisplay="input"
-                        variant="filled" />
-                    <label for="date">Date</label>
-                </IftaLabel>
-            </div>
-            <Divider />
-            <!-- 時間選擇 -->
-            <div class="">
-                <div class="form-field-frame text-center gap-2.5">
-                    <h3 class="form-field-label">可預約時段</h3>
-                </div>
-                <template v-if="filteredTimeSlots.length === 0">
-                    <p class="text-center p-5">
-                        目前沒有可預約時段
-                    </p>
-                </template>
-                <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                    <button v-for="slot in filteredTimeSlots" :key="slot.id"
-                        :class="['avaliable-btn', { 'avaliable-btn-selected': selectedSlot?.id === slot.id }]"
-                        :disabled="slot.seatsLeft === 0" @click="selectTimeSlot(slot)">
-                        <span>{{ formatTimeSlot(slot) }}</span>
-                        <span class="block text-xs">
-                            剩餘: {{ slot.seatsLeft }}/{{ slot.seats }}
-                        </span>
-                        <span v-if="slot.seatsLeft === 0" class="">
-                            已滿
-                        </span>
-                    </button>
-                </div>
-            </div>
-        </div>
-        <template #footer class="bg-sky-300">
-            <Toolbar class="w-full bg-amber-100">
-                <template #start>
-                    <Button text rounded size="large" severity="secondary"
-                        :icon="isFavorite ? 'pi pi-heart-fill' : 'pi pi-heart'" :class="{
-                            'text-red-600': isFavorite,
-                        }" @click="toggleFavorite" :loading="favoriteLoading" aria-label="收藏課程" />
-                    <Button text rounded size="large" icon="pi pi-share-alt" severity="secondary"
-                        @click="shareCourse" />
-                </template>
-                <template #center>
-                    <div class="!text-lg font-bold !text-gray-800">
+                    <div class="text-lg font-bold text-gray-800">
                         <p v-if="selectedSlot">
                             已選擇: {{ selectedSlot.date.toLocaleDateString() }} {{ formatTimeSlot(selectedSlot) }}
                         </p>
-                        <p v-else class="">
+                        <p v-else>
                             請選擇預約時段
                         </p>
                     </div>
-                </template>
-                <template #end>
-                    <ConfirmDialog id="confirm" style="width: 450px;" />
-                    <Button size="large" @click="handleBooking" :disabled="!canBook">
-                        <span class="text-lg font-medium">
-                            {{
-                                !selectedSlot
-                                    ? '請選擇時段'
-                                    : !currentCourse || userPoints < (currentCourse.points) ? '點數不足' : '立即預約' }} </span>
-                    </Button>
-                </template>
-            </Toolbar>
+                    <div>
+                        <ConfirmDialog id="confirm" style="width: 450px;" />
+                        <Button @click="handleBooking" :disabled="!canBook"
+                            class="booking-btn px-6 py-2 text-white transition-all"
+                            :class="{
+                                'bg-sky-600 hover:bg-sky-700': canBook,
+                                'bg-gray-400': !canBook
+                            }">
+                            <span class="font-medium">
+                                {{
+                                    !selectedSlot
+                                        ? '請選擇時段'
+                                        : !currentCourse || userPoints < (currentCourse.points) ? '點數不足' : '立即預約' 
+                                }}
+                            </span>
+                        </Button>
+                    </div>
+                </div>
+            </div>
         </template>
     </Dialog>
 </template>
@@ -159,16 +213,13 @@ import { useCourseStore } from '@/stores/courseStore'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm';
 import Rating from 'primevue/rating';
-import Card from 'primevue/card';
+import Chip from 'primevue/chip';
 import Galleria from 'primevue/galleria';
 import DatePicker from 'primevue/datepicker';
-import IftaLabel from 'primevue/iftalabel';
 import Divider from 'primevue/divider';
 import Dialog from 'primevue/dialog';
-import { isSameDate } from '@/utils/dateUtils';
-import Toolbar from 'primevue/toolbar';
-import ScrollPanel from 'primevue/scrollpanel';
 import ConfirmDialog from 'primevue/confirmdialog';
+import { isSameDate } from '@/utils/dateUtils';
 import { useUserStore } from '@/stores/userStore';
 import { useBookingStore } from '@/stores/bookingStore';
 import type { CourseSession, Result } from '@/types';
@@ -430,7 +481,7 @@ const formatTimeSlot = (slot: CourseSession) => {
                     // 如果是时间字符串，直接返回
                     return time;
                 }
-                
+
                 const date = new Date(time);
                 if (isNaN(date.getTime())) {
                     console.error('无效时间字符串:', time);
@@ -455,26 +506,42 @@ const formatTimeSlot = (slot: CourseSession) => {
     return `${formatTime(slot.start)} - ${formatTime(slot.end)}`;
 };
 </script>
+
 <style>
 @reference "tailwindcss";
 
-.avaliable-btn {
-    @apply px-4 py-3 rounded-lg border cursor-pointer border-gray-300 transition-colors;
+.time-slot-btn {
+    @apply px-4 py-3 rounded-lg border cursor-pointer border-gray-300 transition-all 
+           flex flex-col items-center justify-center bg-white hover:shadow-md;
 }
 
-.avaliable-btn:disabled {
-    @apply bg-gray-100 text-gray-500 cursor-not-allowed;
+.time-slot-btn:disabled {
+    @apply bg-gray-50 text-gray-400 cursor-not-allowed hover:shadow-none border-gray-200;
 }
 
-.avaliable-btn-selected {
-    @apply bg-blue-400 text-white;
+.time-slot-selected {
+    @apply bg-sky-500 text-white border-sky-500;
 }
 
-.avaliable-btn-selected:hover:not(:disabled) {
-    @apply bg-blue-500;
+.time-slot-selected:hover:not(:disabled) {
+    @apply bg-sky-600 border-sky-600 shadow-lg;
 }
 
-.avaliable-btn:hover:not(.avaliable-btn-selected):not(:disabled) {
-    @apply bg-blue-200;
+.time-slot-btn:hover:not(.time-slot-selected):not(:disabled) {
+    @apply bg-sky-50 border-sky-300;
 }
+
+.fixed-booking-bar {
+    @apply fixed bottom-0 left-0 right-0 bg-white z-10 py-4 border-t border-gray-200 shadow-lg;
+}
+
+.booking-btn {
+    @apply min-w-[140px] transition-all;
+}
+
+.booking-btn:not(:disabled):hover {
+    @apply transform -translate-y-1;
+}
+
+
 </style>

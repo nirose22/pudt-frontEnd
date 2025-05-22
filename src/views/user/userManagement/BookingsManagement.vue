@@ -117,7 +117,7 @@
                     </div>
                     <div class="flex justify-between mb-2">
                         <span class="text-gray-600">時間：</span>
-                        <span>{{ selectedBooking.time }}</span>
+                        <span>{{ selectedBooking.start }} - {{ selectedBooking.end }}</span>
                     </div>
                     <div class="flex justify-between mb-2">
                         <span class="text-gray-600">地點：</span>
@@ -238,7 +238,7 @@
                 </div>
                 <div class="text-sm">
                     <p class="font-medium text-sky-700">{{ selectedBooking?.location }}</p>
-                    <p class="text-gray-600 mt-1">課程將於 {{ formatDateString((selectedBooking?.createdAt || new Date()).toISOString()) }} {{ selectedBooking?.time }} 開始</p>
+                    <p class="text-gray-600 mt-1">課程將於 {{ formatDateString((selectedBooking?.createdAt || new Date()).toISOString()) }} {{ selectedBooking?.start }} 開始</p>
                 </div>
             </div>
             <template #footer>

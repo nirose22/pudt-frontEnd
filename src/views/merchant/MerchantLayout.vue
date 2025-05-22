@@ -1,5 +1,5 @@
 <template>
-    <div class="h-full overflow-hidden flex flex-col">
+    <div class="h-full flex flex-col">
         <!-- 顶部导航栏 -->
         <MerchantHeader @toggle-sidebar="toggleSidebar" />
         <div class="flex overflow-hidden">

@@ -1,7 +1,6 @@
 <template>
-  <div class="h-full max-h-screen bg-gray-50 flex flex-col">
+  <div class="h-full  bg-gray-50  ">
     <RouterView></RouterView>
-    <Footer />
   </div>
 </template>
 <script setup lang="ts">
@@ -75,11 +74,29 @@ button.p-button, button.p-button:not(:disabled):hover {
 /* transition */
 .fade-enter-active,
 .fade-leave-active {
-    transition: opacity 0.2s ease;
+  transition: opacity 0.2s ease;
 }
 
 .fade-enter-from,
 .fade-leave-to {
-    opacity: 0;
+  opacity: 0;
+}
+
+div {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.4) transparent;
+}
+
+div::-webkit-scrollbar {
+  width: 4px;
+}
+
+div::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+div::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 20px;
 }
 </style>

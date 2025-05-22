@@ -7,6 +7,7 @@ export interface Merchant {
   email: string
   phone: string
   address: string
+  createdAt: Date
   description?: string
   bizHours?: string             /** 營業時間 */
   category?: MainCategory             /** 業態，如 yoga / gym */
@@ -15,7 +16,6 @@ export interface Merchant {
   coverUrl?: string
   rating?: number               /** 平均評分 */
   reviewCount?: number
-  createdAt: Date
 }
 
 /* ────────────────────────────  商  家  統  計  ──────────────────────────── */

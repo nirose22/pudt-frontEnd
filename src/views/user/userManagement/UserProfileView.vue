@@ -34,7 +34,7 @@
                                 <!-- 點數顯示 -->
                                 <div class="flex flex-wrap justify-center md:justify-start gap-2 mt-2">
                                     <Chip :label="`點數: ${userStore.points}`"
-                                        class="!bg-white !text-blue-700 !font-bold" />
+                                        class="!bg-sky-400 !text-white !font-bold" />
                                 </div>
                             </div>
                         </div>
@@ -149,6 +149,7 @@ import { useToast } from 'primevue/usetoast';
 import Avatar from 'primevue/avatar';
 import Chip from 'primevue/chip';
 import Dialog from 'primevue/dialog';
+import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import { useUserStore } from '@/stores/userStore';
 import { useBookingStore } from '@/stores/bookingStore';
@@ -168,7 +169,6 @@ import {
     levelDescriptions,
     levelRoles
 } from '@/utils/userLevelUtils';
-import type { Booking } from '@/types';
 
 const toast = useToast();
 const showPhotoDialog = ref(false);
@@ -333,39 +333,10 @@ provide('bookingsData', {
 // 為 ActivityHistory 提供数据
 provide('activityData', {
     courseHistory: computed(() => {
-        return bookingStore.bookings.map((booking: Booking) => ({
-            id: booking.id,
-            courseTitle: booking.courseTitle || '',
-            courseType: '瑜伽課',
-            location: booking.location || '',
-            date: booking.date instanceof Date 
-                ? booking.date.toISOString().split('T')[0] 
-                : (booking.date || ''),
-            time: booking.start instanceof Date 
-                ? `${booking.start.getHours()}:${booking.start.getMinutes().toString().padStart(2, '0')}` 
-                : (booking.start || ''),
-            points: booking.points,
-            status: booking.status,
-            rating: booking.rating,
-            comment: booking.comment,
-            instructor: booking.instructor
-        }));
+        return bookingStore.bookings
     }),
     absenceRecords: computed(() => {
-        return bookingStore.byStatus(BookingStatus.Pending).map(booking => ({
-            id: booking.id,
-            userId: booking.courseId,
-            courseTitle: booking.courseTitle || '',
-            courseType: '瑜伽課',
-            date: booking.date instanceof Date 
-                ? booking.date.toISOString().split('T')[0] 
-                : (booking.date || ''),
-            time: booking.start instanceof Date 
-                ? `${booking.start.getHours()}:${booking.start.getMinutes().toString().padStart(2, '0')}` 
-                : (booking.start || ''),
-            points: booking.points,
-            reason: '未出席'
-        }));
+        return bookingStore.byStatus(BookingStatus.Pending)
     })
 });
 

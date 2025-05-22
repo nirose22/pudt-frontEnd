@@ -23,14 +23,6 @@ export interface Course extends BaseCourse {
   recommended?: boolean       // 是否推薦
 }
 
-// /* 每張課程附圖（多對一）*/
-// export interface CourseImage {
-//   id: number                  // PK
-//   courseId: number            // FK -> Course.id
-//   url: string                 // 圖片 URL
-//   alt?: string                // 圖片替代文字
-// }
-
 /* 課程與分類連結 (多選 tag) */
 export interface CourseCategoryLink {
   courseId: number

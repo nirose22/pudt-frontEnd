@@ -311,8 +311,10 @@ const course = ref<CourseDetailDTO>({
   merchant: {
     id: 0,
     name: '',
-    logo: '',
-    description: ''
+    email: '',
+    phone: '',
+    address: '',
+    createdAt: new Date(),
   }
 });
 
