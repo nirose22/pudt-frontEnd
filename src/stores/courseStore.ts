@@ -5,6 +5,8 @@ import { CourseService } from '@/services/CourseService';
 import type { Course, CourseDetailDTO, CourseSession } from '@/types/course';
 import type { Booking } from '@/types/booking';
 import type { Result } from '@/types';
+import { errorHandler } from '@/utils/errorHandler';
+import { ERROR_MESSAGES } from '@/utils/apiConfig';
 
 /**
  * 课程管理 Store
@@ -65,16 +67,11 @@ export const useCourseStore = defineStore('course', () => {
     error.value = null;
 
     try {
-      // 调用CourseService的getCourse方法
       const data = await CourseService.getCourse(keyword, regions, categories);
-       
-      
       allCourses.value = data;
       return { success: true, data };
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '获取课程数据时出错';
-      error.value = errorMessage;
-      return { success: false, message: errorMessage };
+      return errorHandler.handleApiError(err, ERROR_MESSAGES.COURSE_ERROR);
     } finally {
       isLoading.value = false;
     }
@@ -94,9 +91,7 @@ export const useCourseStore = defineStore('course', () => {
       courseSession.value = sessions;
       return { success: true, data: course };
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '加载课程详情失败';
-      error.value = errorMessage;
-      return { success: false, message: errorMessage };
+      return errorHandler.handleApiError(err, ERROR_MESSAGES.COURSE_ERROR);
     } finally {
       isLoading.value = false;
     }
@@ -117,9 +112,7 @@ export const useCourseStore = defineStore('course', () => {
       }
       return result;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '获取收藏课程失败';
-      error.value = errorMessage;
-      return { success: false, message: errorMessage };
+      return errorHandler.handleApiError(err, ERROR_MESSAGES.COURSE_ERROR);
     } finally {
       isLoading.value = false;
     }
@@ -179,10 +172,7 @@ export const useCourseStore = defineStore('course', () => {
       }
       return result;
     } catch (err) {
-      return { 
-        success: false, 
-        message: err instanceof Error ? err.message : '添加收藏失败' 
-      };
+      return errorHandler.handleApiError(err, ERROR_MESSAGES.COURSE_ERROR);
     }
   };
 
@@ -200,10 +190,7 @@ export const useCourseStore = defineStore('course', () => {
       }
       return result;
     } catch (err) {
-      return { 
-        success: false, 
-        message: err instanceof Error ? err.message : '移除收藏失败' 
-      };
+      return errorHandler.handleApiError(err, ERROR_MESSAGES.COURSE_ERROR);
     }
   };
 

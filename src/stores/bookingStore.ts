@@ -7,6 +7,8 @@ import { BookingStatus } from '@/enums/BookingStatus'
 import { useUserStore } from './userStore'
 import { BookingService } from '@/services/BookingService'
 import { useCourseStore } from './courseStore'
+import { errorHandler } from '@/utils/errorHandler'
+import { ERROR_MESSAGES } from '@/utils/apiConfig'
 
 export const useBookingStore = defineStore('booking', () => {
     /* ---------- state ---------- */
@@ -69,7 +71,7 @@ export const useBookingStore = defineStore('booking', () => {
             }
             
             if (!userId) {
-                error.value = '未登录或用户ID无效'
+                error.value = ERROR_MESSAGES.UNAUTHORIZED
                 return false
             }
             
@@ -78,7 +80,7 @@ export const useBookingStore = defineStore('booking', () => {
             bookings.value = data
             return true
         } catch (err) {
-            error.value = err instanceof Error ? err.message : '获取预约记录失败'
+            error.value = err instanceof Error ? err.message : ERROR_MESSAGES.BOOKING_ERROR
             return false
         } finally {
             loading.value = false
@@ -102,14 +104,10 @@ export const useBookingStore = defineStore('booking', () => {
             
             return {
                 success: true,
-                message: '课程预约详情加载成功'
+                message: '課程預約詳情加載成功'
             }
         } catch (err) {
-            error.value = err instanceof Error ? err.message : '加載課程預約詳情失敗'
-            return {
-                success: false,
-                message: error.value
-            }
+            return errorHandler.handleApiError(err, ERROR_MESSAGES.BOOKING_ERROR)
         } finally {
             loading.value = false
         }
@@ -123,22 +121,14 @@ export const useBookingStore = defineStore('booking', () => {
         try {
             // 检查是否可以预约
             if (!canBook(courseId, slotId)) {
-                error.value = '無法預約該課程時段'
-                return { 
-                    success: false, 
-                    message: error.value 
-                }
+                return errorHandler.handleBusinessError(null, '無法預約該課程時段')
             }
 
             const currentCourse = courseStore.currentCourse
             const slot = courseStore.getSessionById(slotId)
             
             if (!currentCourse || !slot || !userStore.profile) {
-                error.value = '課程信息不完整或未登錄'
-                return { 
-                    success: false, 
-                    message: error.value 
-                }
+                return errorHandler.handleBusinessError(null, '課程信息不完整或未登錄')
             }
             // TODO: 
             // 调用 BookingService 创建预约
@@ -155,7 +145,7 @@ export const useBookingStore = defineStore('booking', () => {
                 courseStore.updateAvailableSeats(slotId, -1)
                 // 3. 添加到本地预约记录
                 const newBook: Booking = {
-                    id: 2 ,
+                    id: Date.now(),
                     courseId,
                     sessionId: slotId,
                     points: currentCourse.points,
@@ -177,11 +167,7 @@ export const useBookingStore = defineStore('booking', () => {
             
             return result
         } catch (err) {
-            error.value = err instanceof Error ? err.message : '预约失败'
-            return { 
-                success: false, 
-                message: error.value 
-            }
+            return errorHandler.handleApiError(err, ERROR_MESSAGES.BOOKING_ERROR)
         } finally {
             loading.value = false
         }
@@ -195,14 +181,12 @@ export const useBookingStore = defineStore('booking', () => {
         try {
             const idx = bookings.value.findIndex(b => b.id === id)
             if (idx === -1) {
-                error.value = '预约不存在'
-                return { success: false, message: error.value }
+                return errorHandler.handleBusinessError(null, '預約不存在')
             }
             
             const bk = bookings.value[idx]
             if (bk.status === BookingStatus.Cancelled) {
-                error.value = '课程已被取消'
-                return { success: false, message: error.value }
+                return errorHandler.handleBusinessError(null, '課程已被取消')
             }
             
             // 调用 BookingService 取消预约
@@ -220,11 +204,7 @@ export const useBookingStore = defineStore('booking', () => {
             }
             return result
         } catch (err) {
-            error.value = err instanceof Error ? err.message : '取消预约失败'
-            return { 
-                success: false, 
-                message: error.value 
-            }
+            return errorHandler.handleApiError(err, ERROR_MESSAGES.BOOKING_ERROR)
         } finally {
             loading.value = false
         }

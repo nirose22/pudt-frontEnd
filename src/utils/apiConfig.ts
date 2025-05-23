@@ -15,8 +15,46 @@ export const API_ROUTES = {
         LOGOUT: '/auth/logout',
         GOOGLE_LOGIN: '/auth/google/login',
         FACEBOOK_LOGIN: '/auth/facebook/login',
+        PROFILE: (id: number | 'me') => `/users/${id}`,
     },
-    // 其他 API 路由...
+    COURSE: {
+        LIST: '/courses',
+        DETAIL: (id: number) => `/courses/${id}/detail`,
+        SESSIONS: (id: number) => `/courses/${id}/sessions`,
+        IMAGES: (id: number) => `/courses/${id}/images`,
+        FAVORITES: (userId: number) => `/users/${userId}/favorites`,
+        ADD_FAVORITE: (userId: number) => `/users/${userId}/favorites`,
+        REMOVE_FAVORITE: (userId: number, courseId: number) => `/users/${userId}/favorites/${courseId}`,
+    },
+    BOOKING: {
+        LIST: (userId: number) => `/users/${userId}/bookings`,
+        DETAIL: (courseId: number) => `/bookings/course/${courseId}/detail`,
+        CREATE: '/bookings',
+        CANCEL: (bookingId: number) => `/bookings/${bookingId}/cancel`,
+        CHECK: '/bookings/check',
+    },
+    MERCHANT: {
+        DETAIL: (id: number | 'me') => `/merchants/${id}`,
+        COURSES: (id: number | 'me') => `/merchants/${id}/courses`,
+        UPDATE: (id: number) => `/merchants/${id}`,
+    },
+    PURCHASE: {
+        HISTORY: (userId: number) => `/users/${userId}/purchase-history`,
+        INVOICE: (invoiceNo: string) => `/invoices/${invoiceNo}/download`,
+        UNPAID: (userId: number) => `/users/${userId}/unpaid-items`,
+        PAY_UNPAID: (itemId: number) => `/payments/unpaid/${itemId}`,
+    },
+    POINTS: {
+        CARDS: '/points/cards',
+        HISTORY: '/points/history',
+        BUY: '/points/buy',
+        TRANSFER: '/points/transfer',
+    },
+    ATTENDANCE: {
+        LIST: (userId: number | string) => `/users/${userId}/absences`,
+        SUBMIT_LEAVE: (bookingId: number) => `/bookings/${bookingId}/leave`,
+        CANCEL_LEAVE: (leaveId: number) => `/absences/leave/${leaveId}`
+    },
 }
 
 // 错误消息常量
@@ -28,4 +66,10 @@ export const ERROR_MESSAGES = {
     FORBIDDEN: '沒有權限訪問該資源',
     NOT_FOUND: '請求的資源不存在',
     VALIDATION_ERROR: '輸入數據驗證失敗',
+    BOOKING_ERROR: '預約失敗，請稍後重試',
+    COURSE_ERROR: '課程操作失敗，請稍後重試',
+    MERCHANT_ERROR: '商家信息獲取失敗，請稍後重試',
+    PURCHASE_ERROR: '購買記錄獲取失敗，請稍後重試',
+    POINTS_ERROR: '點數操作失敗，請稍後重試',
+    ATTENDANCE_ERROR: '出勤記錄操作失敗',
 }

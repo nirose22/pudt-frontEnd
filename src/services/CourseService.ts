@@ -1,9 +1,8 @@
 import type { Course, CourseDetailDTO, CourseSession } from "@/types/course";
 import type { PhotoItem, Result } from "@/types";
-import { MerchantService } from "./MerchantService";
-import { generateMockCourses } from "./MockService";
 import apiClient from '@/utils/api';
-import { API_ROUTES } from '@/utils/apiConfig';
+import { API_ROUTES, ERROR_MESSAGES } from '@/utils/apiConfig';
+import { errorHandler } from '@/utils/errorHandler';
 
 /**
  * 课程服务 - 负责所有与课程相关的API调用
@@ -18,8 +17,7 @@ export const CourseService = {
      */
     async getCourse(keyword?: string, regions?: string[], categories?: string[]): Promise<Course[]> {
         try {
-            // 使用 apiClient 調用 API
-            return await apiClient.get<Course[]>('/courses', {
+            return await apiClient.get<Course[]>(API_ROUTES.COURSE.LIST, {
                 params: { keyword, regions, categories }
             });
             
@@ -27,8 +25,7 @@ export const CourseService = {
             return Promise.resolve(generateMockCourses());
             */
         } catch (error) {
-            console.error('获取课程列表失败:', error);
-            throw error;
+            throw errorHandler.handleApiError(error, ERROR_MESSAGES.COURSE_ERROR);
         }
     },
 
@@ -42,8 +39,7 @@ export const CourseService = {
         sessions: CourseSession[];
     }> {
         try {
-            // 使用 apiClient 調用 API
-            return await apiClient.get(`/courses/${courseId}/detail`);
+            return await apiClient.get(API_ROUTES.COURSE.DETAIL(courseId));
             
             /* 暫時保留原有邏輯，待後端 API 完成後移除
             const courseData = generateMockCourses().find(c => c.id === courseId);
@@ -69,8 +65,7 @@ export const CourseService = {
             return { course: courseDetail, sessions: timeSlots };
             */
         } catch (error) {
-            console.error("获取课程详情失败:", error);
-            throw error;
+            throw errorHandler.handleApiError(error, ERROR_MESSAGES.COURSE_ERROR);
         }
     },
     
@@ -81,8 +76,7 @@ export const CourseService = {
      */
     async getSessionsForCourse(courseId: number): Promise<CourseSession[]> {
         try {
-            // 使用 apiClient 調用 API
-            return await apiClient.get<CourseSession[]>(`/courses/${courseId}/sessions`);
+            return await apiClient.get<CourseSession[]>(API_ROUTES.COURSE.SESSIONS(courseId));
             
             /* 暫時保留模擬數據，待後端 API 完成後移除
             const sessions: CourseSession[] = [];
@@ -116,8 +110,7 @@ export const CourseService = {
             return sessions;
             */
         } catch (error) {
-            console.error('获取课程时间段失败:', error);
-            throw error;
+            throw errorHandler.handleApiError(error, ERROR_MESSAGES.COURSE_ERROR);
         }
     },
     
@@ -128,8 +121,7 @@ export const CourseService = {
      */
     async getUserFavorites(userId: number): Promise<Result<Course[]>> {
         try {
-            // 使用 apiClient 調用 API
-            return await apiClient.get<Result<Course[]>>(`/users/${userId}/favorites`);
+            return await apiClient.get<Result<Course[]>>(API_ROUTES.COURSE.FAVORITES(userId));
             
             /* 暫時保留模擬數據，待後端 API 完成後移除
             const allCourses = generateMockCourses();
@@ -140,8 +132,7 @@ export const CourseService = {
             return { success: true, data: favorites };
             */
         } catch (error) {
-            console.error("获取用户收藏失败:", error);
-            return { success: false, message: "获取用户收藏失败" };
+            return errorHandler.handleApiError(error, ERROR_MESSAGES.COURSE_ERROR);
         }
     },
     
@@ -153,15 +144,13 @@ export const CourseService = {
      */
     async addFavorite(userId: number, courseId: number): Promise<Result> {
         try {
-            // 使用 apiClient 調用 API
-            return await apiClient.post<Result>(`/users/${userId}/favorites`, { courseId });
+            return await apiClient.post<Result>(API_ROUTES.COURSE.ADD_FAVORITE(userId), { courseId });
             
             /* 暫時保留模擬數據，待後端 API 完成後移除
             return { success: true, message: "成功添加到收藏" };
             */
         } catch (error) {
-            console.error("添加收藏失败:", error);
-            return { success: false, message: "添加收藏失败" };
+            return errorHandler.handleApiError(error, ERROR_MESSAGES.COURSE_ERROR);
         }
     },
     
@@ -173,22 +162,19 @@ export const CourseService = {
      */
     async removeFavorite(userId: number, courseId: number): Promise<Result> {
         try {
-            // 使用 apiClient 調用 API
-            return await apiClient.delete<Result>(`/users/${userId}/favorites/${courseId}`);
+            return await apiClient.delete<Result>(API_ROUTES.COURSE.REMOVE_FAVORITE(userId, courseId));
             
             /* 暫時保留模擬數據，待後端 API 完成後移除
             return { success: true, message: "成功从收藏中移除" };
             */
         } catch (error) {
-            console.error("移除收藏失败:", error);
-            return { success: false, message: "移除收藏失败" };
+            return errorHandler.handleApiError(error, ERROR_MESSAGES.COURSE_ERROR);
         }
     },
 
     async getCourseImages(courseId: number): Promise<PhotoItem[]> {
         try {
-            // 使用 apiClient 調用 API
-            return await apiClient.get<PhotoItem[]>(`/courses/${courseId}/images`);
+            return await apiClient.get<PhotoItem[]>(API_ROUTES.COURSE.IMAGES(courseId));
             
             /* 暫時保留模擬數據，待後端 API 完成後移除
             const images: PhotoItem[] = [
@@ -220,8 +206,7 @@ export const CourseService = {
             return images;
             */
         } catch (error) {
-            console.error('获取课程图片失败:', error);
-            throw error;
+            throw errorHandler.handleApiError(error, ERROR_MESSAGES.COURSE_ERROR);
         }
     }
 }

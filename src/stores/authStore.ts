@@ -29,9 +29,6 @@ export const useAuthStore = defineStore('auth', () => {
 
 	/* ---------- getters ---------- */
 	const isLoggedIn = computed(() => !!token.value && !!role.value)
-	const isAdmin = computed(() => role.value === UserRole.Admin)
-	const isMerchant = computed(() => role.value === UserRole.Merchant)
-	// const isUser = computed(() => role.value === UserRole.User)
 
 	/* ---------- actions ---------- */
 	async function login(creds: LoginCredentials): Promise<Result> {
@@ -39,7 +36,7 @@ export const useAuthStore = defineStore('auth', () => {
 			const res = await authApi.login(creds)
 			if (res.success && res.token) {
 				token.value = res.token
-				role.value = res.role
+				role.value = res.role as UserRole
 				if (res.role === UserRole.User) {
 					useUserStore().fetchProfile()
 				}
@@ -57,7 +54,7 @@ export const useAuthStore = defineStore('auth', () => {
 			const res = await authApi.loginWithGoogle()
 			if (res.success && res.token) {
 				token.value = res.token
-				role.value = res.role
+				role.value = res.role as UserRole
 				if (res.role === UserRole.User) {
 					useUserStore().fetchProfile()
 				}
@@ -75,7 +72,7 @@ export const useAuthStore = defineStore('auth', () => {
 			const res = await authApi.loginWithFacebook()
 			if (res.success && res.token) {
 				token.value = res.token
-				role.value = res.role
+				role.value = res.role as UserRole
 				if (res.role === UserRole.User) {
 					useUserStore().fetchProfile()
 				}
@@ -93,7 +90,7 @@ export const useAuthStore = defineStore('auth', () => {
 			const res = await authApi.register(data)
 			if (res.success && res.token) {
 				token.value = res.token
-				role.value = res.role
+				role.value = res.role as UserRole
 
 				// 保存用戶偏好到本地存儲
 				localStorage.setItem('userInterests', JSON.stringify(data.interests))
@@ -130,8 +127,6 @@ export const useAuthStore = defineStore('auth', () => {
 	return {
 		token,
 		role,
-		isAdmin,
-		isMerchant,
 		isLoggedIn,
 		login,
 		loginWithGoogle,

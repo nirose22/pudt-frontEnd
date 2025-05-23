@@ -6,7 +6,7 @@ export interface Result<T = unknown> {
     message?: string
     data?: T
     token?: string
-    role?: string
+    role?: UserRole
 } 
 
 // 导出别名，保持向后兼容性
