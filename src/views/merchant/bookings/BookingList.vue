@@ -153,7 +153,7 @@ import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import type { Booking } from '@/types/booking';
 import { BookingStatus } from '@/enums/BookingStatus';
-import { BookingService } from '@/service/BookingService';
+import { BookingService } from '@/services/BookingService';
 import { useUserStore } from '@/stores/userStore';
 import { formatDate, formatTime, createRelativeDate } from '@/utils/dateUtils';
 import { getBookingStatusLabel, getBookingStatusSeverity, getBookingStatusColor } from '@/utils/statusUtils';

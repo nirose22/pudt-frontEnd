@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue';
 import type { RouteLocationNormalizedLoaded, Router } from 'vue-router';
 import { MainCategory, SubCategory } from '@/enums/CourseCategory';
-import { mockRegions } from '@/service/MockService';
+import { mockRegions } from '@/services/MockService';
 import { useToast } from 'primevue/usetoast';
 
 export function useCourseFilters(route: RouteLocationNormalizedLoaded, router: Router) {

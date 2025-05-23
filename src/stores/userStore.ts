@@ -259,6 +259,7 @@ export const useUserStore = defineStore('user', () => {
         points.value += amount
         //TODO: api
         //userApi.adjustPoints
+        return { success: true, message: '點數調整成功', data: points.value }
     }
 
     /**

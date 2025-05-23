@@ -3,6 +3,8 @@ import type { Order, OrderItem } from '@/types/order';
 import type { ExtendedPurchaseItem } from '@/types/purchase';
 import { OrderStatus, PaymentMethod } from '@/enums/PurchaseStatus';
 import { CardType } from '@/enums/Cards';
+import apiClient from '@/utils/api';
+import { API_ROUTES } from '@/utils/apiConfig';
 
 /**
  * 购买服务 - 处理购买记录和订单相关功能
@@ -15,10 +17,10 @@ export const PurchaseService = {
      */
     async getPurchaseHistory(userId: number): Promise<Result<ExtendedPurchaseItem[]>> {
         try {
-            // TODO: 实际环境调用后端API
-            // API: GET /api/users/{userId}/purchase-history
+            // 使用 apiClient 調用 API
+            return await apiClient.get<Result<ExtendedPurchaseItem[]>>(`/users/${userId}/purchase-history`);
             
-            // 模拟数据
+            /* 暫時保留模擬數據，待後端 API 完成後移除
             const mockPurchases: ExtendedPurchaseItem[] = [
                 {
                     id: 1,
@@ -88,9 +90,10 @@ export const PurchaseService = {
             ];
             
             return { success: true, data: mockPurchases };
+            */
         } catch (error) {
             console.error('获取购买历史失败:', error);
-            return { success: false, message: '获取购买历史失败', error };
+            return { success: false, message: '获取购买历史失败' };
         }
     },
     
@@ -122,14 +125,15 @@ export const PurchaseService = {
      */
     async downloadInvoice(invoiceNo: string): Promise<Result<void>> {
         try {
-            // TODO: 实际环境调用后端API
-            // API: GET /api/invoices/{invoiceNo}/download
+            // 使用 apiClient 調用 API
+            return await apiClient.get<Result<void>>(`/invoices/${invoiceNo}/download`);
             
-            // 模拟下载成功
+            /* 暫時保留模擬數據，待後端 API 完成後移除
             return { success: true, message: '发票下载成功' };
+            */
         } catch (error) {
             console.error('下载发票失败:', error);
-            return { success: false, message: '下载发票失败', error };
+            return { success: false, message: '下载发票失败' };
         }
     }
 }; 

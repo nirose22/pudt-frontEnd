@@ -244,8 +244,7 @@ export const usePurchaseStore = defineStore('purchase', () => {
       if (!adjustResult.success) {
         return { success: false, message: adjustResult.message || '點數調整失敗' }
       }
-      
-      const newBalance = adjustResult.data as number
+      const newBalance = adjustResult.data 
     
       // 建立點數歷史記錄
       const pointHistoryItem: PointTxn = {

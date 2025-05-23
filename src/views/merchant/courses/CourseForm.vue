@@ -274,13 +274,13 @@ import Editor from 'primevue/editor';
 import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 import Tag from 'primevue/tag';
-import { mockRegions } from '@/service/MockService';
+import { mockRegions } from '@/services/MockService';
 import type { Course, CourseDetailDTO } from '@/types/course';
 import { CourseStatus, CourseStatusLabel } from '@/enums/Course';
 import { MainCategory, MainCategoryLabel, SubCategory, SubCategoryLabel } from '@/enums/CourseCategory';
 import { formatDate, formatTime } from '@/utils/dateUtils';
 import { getCourseStatusLabel, getCourseStatusSeverity } from '@/utils/statusUtils';
-import { CourseService } from '@/service/CourseService';
+import { CourseService } from '@/services/CourseService';
 
 // 通用狀態與工具
 const route = useRoute();

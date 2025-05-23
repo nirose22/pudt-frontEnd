@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import type { ComputedRef } from 'vue';
-import { CourseService } from '@/service/CourseService';
+import { CourseService } from '@/services/CourseService';
 import type { Course, CourseDetailDTO, CourseSession } from '@/types/course';
 import type { Booking } from '@/types/booking';
 import type { Result } from '@/types';

@@ -132,7 +132,7 @@ import CourseDetail from '@/components/user/CourseDetail.vue';
 import DataView from 'primevue/dataview';
 import type { Course } from '@/types/course';
 import { showSuccess, showError, showInfo, initToast } from '@/utils/toastHelper';
-import { generateMockCourses } from '@/service/MockService';
+import { generateMockCourses } from '@/services/MockService';
 
 const userStore = useUserStore();
 const router = useRouter();

@@ -1,5 +1,5 @@
 <template>
-    <div class="h-full flex flex-col">
+    <div class="h-full flex flex-col min-h-screen">
         <!-- 顶部导航栏 -->
         <Header />
         <!-- 路由視圖 -->

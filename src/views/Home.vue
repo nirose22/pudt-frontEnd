@@ -70,7 +70,7 @@ import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import type { Course } from '@/types/course';
-import { CourseService } from '@/service/CourseService';
+import { CourseService } from '@/services/CourseService';
 import { useBookingStore } from '@/stores/bookingStore';
 import { MainCategory } from '@/enums/CourseCategory';
 import { showError, initToast } from '@/utils/toastHelper';

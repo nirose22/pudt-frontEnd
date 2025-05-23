@@ -5,7 +5,7 @@ import type { Result } from '@/types'
 import type { Booking } from '@/types/booking'
 import { BookingStatus } from '@/enums/BookingStatus'
 import { useUserStore } from './userStore'
-import { BookingService } from '@/service/BookingService'
+import { BookingService } from '@/services/BookingService'
 import { useCourseStore } from './courseStore'
 
 export const useBookingStore = defineStore('booking', () => {

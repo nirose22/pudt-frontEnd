@@ -2,6 +2,8 @@ import type { Course, Booking, CourseSession } from '@/types';
 import type { Result } from '@/types';
 import { CourseService } from './CourseService';
 import { BookingStatus } from '@/enums/BookingStatus';
+import apiClient from '@/utils/api';
+import { API_ROUTES } from '@/utils/apiConfig';
 
 export const BookingService = {
     /**
@@ -11,11 +13,10 @@ export const BookingService = {
      */
     async getUserBookings(userId: number): Promise<Booking[]> {
         try {
-            // TODO: 实际环境调用后端API
-            // API: GET /api/users/{userId}/bookings
-
-            // 模拟数据 - 增加需要显示的字段
-
+            // 使用 apiClient 調用 API
+            return await apiClient.get<Booking[]>(`/users/${userId}/bookings`);
+            
+            /* 暫時保留模擬數據，待後端 API 完成後移除
             const today = new Date();
             const tomorrow = new Date(today);
             tomorrow.setDate(tomorrow.getDate() + 1);
@@ -121,6 +122,7 @@ export const BookingService = {
             ];
 
             return mockBookings;
+            */
         } catch (error) {
             console.error('获取用户预约记录失败:', error);
             throw error;
@@ -141,27 +143,21 @@ export const BookingService = {
         };
     }> {
         try {
-            // TODO: 实际环境可以改为单一API调用
-            // API: GET /api/bookings/course/{courseId}/detail
-
-            // 1. 获取课程详情和时间槽
+            // 使用 apiClient 調用 API
+            return await apiClient.get(`/bookings/course/${courseId}/detail`);
+            
+            /* 暫時保留原有邏輯，待後端 API 完成後移除
             const { course, sessions } = await CourseService.fetchCourseDetail(courseId);
-
-            // 2. 获取用户当前的预约情况，检查时间冲突
-            // 实际应用中，这部分应该从后端返回
             const conflictSlots: number[] = [];
-
-            // 在此示例中，我们模拟时间冲突检查
-            // 实际应用应由后端完成，或在前端逻辑中实现
-
             return {
                 course,
                 sessions,
                 bookingStatus: {
-                    canBook: true, // 默认可预约
-                    conflictSlots // 冲突的时间槽ID列表
+                    canBook: true,
+                    conflictSlots
                 }
             };
+            */
         } catch (error) {
             console.error('获取课程预约详情失败:', error);
             throw error;
@@ -177,18 +173,21 @@ export const BookingService = {
      */
     async createBooking(userId: number, courseId: number, timeSlotId: number): Promise<Result> {
         try {
-            // TODO: 实际环境调用后端API
-            // API: POST /api/bookings
-            // 请求体: { userId, courseId, timeSlotId }
-
-            // 模拟创建预约的结果
-            const bookingId = Date.now(); // 模拟生成预约ID
-
+            // 使用 apiClient 調用 API
+            return await apiClient.post<Result>('/bookings', {
+                userId,
+                courseId,
+                timeSlotId
+            });
+            
+            /* 暫時保留模擬數據，待後端 API 完成後移除
+            const bookingId = Date.now();
             return {
                 success: true,
                 message: '预约成功',
                 data: { bookingId }
             };
+            */
         } catch (error) {
             console.error('创建预约失败:', error);
             return {
@@ -205,14 +204,15 @@ export const BookingService = {
      */
     async cancelBooking(bookingId: number): Promise<Result> {
         try {
-            // TODO: 实际环境调用后端API
-            // API: PUT /api/bookings/{bookingId}/cancel
-
-            // 模拟取消预约的结果
+            // 使用 apiClient 調用 API
+            return await apiClient.put<Result>(`/bookings/${bookingId}/cancel`);
+            
+            /* 暫時保留模擬數據，待後端 API 完成後移除
             return {
                 success: true,
                 message: '您的预约已成功取消'
             };
+            */
         } catch (error) {
             console.error('取消预约失败:', error);
             return {
@@ -234,13 +234,16 @@ export const BookingService = {
         reason?: string;
     }> {
         try {
-            // TODO: 实际环境调用后端API
-            // API: GET /api/bookings/check?userId={userId}&courseId={courseId}&timeSlotId={timeSlotId}
-
-            // 模拟检查预约可用性的结果
+            // 使用 apiClient 調用 API
+            return await apiClient.get(`/bookings/check`, {
+                params: { userId, courseId, timeSlotId }
+            });
+            
+            /* 暫時保留模擬數據，待後端 API 完成後移除
             return {
                 canBook: true
             };
+            */
         } catch (error) {
             console.error('检查预约可用性失败:', error);
             return {
