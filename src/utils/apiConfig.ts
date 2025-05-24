@@ -42,6 +42,14 @@ export const API_ROUTES = {
         STATS: (id: number | 'me') => `/merchants/${id}/stats`,
         INSTRUCTORS: (id: number | 'me') => `/merchants/${id}/instructors`,
         INSTRUCTOR_DETAIL: (id: number | 'me', instructorId: number) => `/merchants/${id}/instructors/${instructorId}`,
+        POINTS_STATS: (id: number) => `/merchants/${id}/points/stats`,
+        POINTS_TRANSACTIONS: (id: number) => `/merchants/${id}/points/transactions`,
+        POINTS_SETTLEMENT: (id: number) => `/merchants/${id}/points/settlement`,
+        BOOKINGS: (id: number) => `/merchants/${id}/bookings`,
+        BOOKING_DETAIL: (id: number, bookingId: number) => `/merchants/${id}/bookings/${bookingId}`,
+        BOOKING_STATUS: (id: number, bookingId: number) => `/merchants/${id}/bookings/${bookingId}/status`,
+        BOOKING_NOTES: (id: number, bookingId: number) => `/merchants/${id}/bookings/${bookingId}/notes`,
+        BOOKING_MESSAGE: (id: number, bookingId: number) => `/merchants/${id}/bookings/${bookingId}/message`
     },
     PURCHASE: {
         HISTORY: (userId: number) => `/users/${userId}/purchase-history`,

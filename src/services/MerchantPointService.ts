@@ -1,6 +1,8 @@
 import type { PointTransaction, PointStats } from '@/types/point';
 import type { Result } from '@/types';
-import apiClient from '@/utils/api';
+import { apiClient } from '@/utils/api';
+import { API_ROUTES, ERROR_MESSAGES } from '@/utils/apiConfig';
+import { request } from '@/utils/requestHelper';
 
 export const MerchantPointService = {
     /**
@@ -8,13 +10,11 @@ export const MerchantPointService = {
      * @param merchantId 商家ID
      * @returns 點數統計資訊
      */
-    async getPointsStats(merchantId: number): Promise<PointStats> {
-        try {
-            return await apiClient.get<PointStats>(`/merchants/${merchantId}/points/stats`);
-        } catch (error) {
-            console.error('獲取點數統計失敗:', error);
-            throw error;
-        }
+    async getPointsStats(merchantId: number): Promise<Result<PointStats>> {
+        return request<PointStats>(
+            () => apiClient.get(API_ROUTES.MERCHANT.POINTS_STATS(merchantId)),
+            ERROR_MESSAGES.POINTS_ERROR
+        );
     },
 
     /**
@@ -22,13 +22,11 @@ export const MerchantPointService = {
      * @param merchantId 商家ID
      * @returns 交易記錄列表
      */
-    async getTransactions(merchantId: number): Promise<PointTransaction[]> {
-        try {
-            return await apiClient.get<PointTransaction[]>(`/merchants/${merchantId}/points/transactions`);
-        } catch (error) {
-            console.error('獲取交易記錄失敗:', error);
-            throw error;
-        }
+    async getTransactions(merchantId: number): Promise<Result<PointTransaction[]>> {
+        return request<PointTransaction[]>(
+            () => apiClient.get(API_ROUTES.MERCHANT.POINTS_TRANSACTIONS(merchantId)),
+            ERROR_MESSAGES.POINTS_ERROR
+        );
     },
 
     /**
@@ -46,18 +44,13 @@ export const MerchantPointService = {
             account: string;
             name: string;
         }
-    ): Promise<Result> {
-        try {
-            return await apiClient.post<Result>(`/merchants/${merchantId}/points/settlement`, {
+    ): Promise<Result<void>> {
+        return request<void>(
+            () => apiClient.post(API_ROUTES.MERCHANT.POINTS_SETTLEMENT(merchantId), {
                 amount,
                 bankInfo
-            });
-        } catch (error) {
-            console.error('提交結算申請失敗:', error);
-            return {
-                success: false,
-                message: error instanceof Error ? error.message : '提交結算申請失敗，請稍後再試'
-            };
-        }
+            }),
+            ERROR_MESSAGES.POINTS_ERROR
+        );
     }
 }; 

@@ -1,24 +1,20 @@
-import apiClient from '@/utils/api'
+import { apiClient } from '@/utils/api'
 import { API_ROUTES, ERROR_MESSAGES } from '@/utils/apiConfig'
-import { errorHandler } from '@/utils/errorHandler'
 import type { PointsCard, PointTxn, Result } from '@/types'
+import { request } from '@/utils/requestHelper'
 
 export const pointService = {
   async fetchPointsCards(): Promise<Result<PointsCard[]>> {
-    try {
-      const data = await apiClient.get<PointsCard[]>(API_ROUTES.POINTS.CARDS)
-      return { success: true, data }
-    } catch (error) {
-      return errorHandler.handleApiError(error, ERROR_MESSAGES.POINTS_ERROR)
-    }
+    return request<PointsCard[]>(
+      () => apiClient.get(API_ROUTES.POINTS.CARDS),
+      ERROR_MESSAGES.POINTS_ERROR
+    )
   },
 
   async fetchPointsHistory(): Promise<Result<PointTxn[]>> {
-    try {
-      const data = await apiClient.get<PointTxn[]>(API_ROUTES.POINTS.HISTORY)
-      return { success: true, data }
-    } catch (error) {
-      return errorHandler.handleApiError(error, ERROR_MESSAGES.POINTS_ERROR)
-    }
+    return request<PointTxn[]>(
+      () => apiClient.get(API_ROUTES.POINTS.HISTORY),
+      ERROR_MESSAGES.POINTS_ERROR
+    )
   }
 } 

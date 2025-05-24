@@ -2,6 +2,8 @@ import { apiClient } from '@/utils/api';
 import type { MerchantBookingDetail } from '@/types/booking';
 import { BookingStatus } from '@/enums/BookingStatus';
 import type { Result } from '@/types';
+import { API_ROUTES, ERROR_MESSAGES } from '@/utils/apiConfig';
+import { request, buildQueryString } from '@/utils/requestHelper';
 
 export type BookingQuery = {
     status?: BookingStatus;
@@ -27,13 +29,9 @@ export class MerchantBookingService {
         merchantId: number,
         query: BookingQuery = {}
     ): Promise<Result<MerchantBookingDetail[]>> {
-        const { status, date } = query;
-        let url = this.base(merchantId);
-
-        if (status) url += `/status/${status}`;
-        if (date) url += `/date/${date}`;
-
-        return apiClient.get(url);
+        const queryString = buildQueryString(query);
+        const url = `${API_ROUTES.MERCHANT.BOOKINGS(merchantId)}${queryString}`;
+        return request<MerchantBookingDetail[]>(() => apiClient.get(url), ERROR_MESSAGES.BOOKING_ERROR);
     }
 
     /** 單筆訂單詳情 */
@@ -41,7 +39,10 @@ export class MerchantBookingService {
         merchantId: number,
         bookingId: number
     ): Promise<Result<MerchantBookingDetail>> {
-        return apiClient.get(`${this.base(merchantId)}/${bookingId}`);
+        return request<MerchantBookingDetail>(
+            () => apiClient.get(API_ROUTES.MERCHANT.BOOKING_DETAIL(merchantId, bookingId)),
+            ERROR_MESSAGES.BOOKING_ERROR
+        );
     }
 
     /** 更新訂單狀態 */
@@ -50,7 +51,10 @@ export class MerchantBookingService {
         bookingId: number,
         status: BookingStatus
     ): Promise<Result<void>> {
-        return apiClient.put(`${this.base(merchantId)}/${bookingId}/status`, { status });
+        return request<void>(
+            () => apiClient.put(API_ROUTES.MERCHANT.BOOKING_STATUS(merchantId, bookingId), { status }),
+            ERROR_MESSAGES.BOOKING_ERROR
+        );
     }
 
     /** 更新訂單備註 */
@@ -59,7 +63,10 @@ export class MerchantBookingService {
         bookingId: number,
         notes: string
     ): Promise<Result<void>> {
-        return apiClient.put(`${this.base(merchantId)}/${bookingId}/notes`, { notes });
+        return request<void>(
+            () => apiClient.put(API_ROUTES.MERCHANT.BOOKING_NOTES(merchantId, bookingId), { notes }),
+            ERROR_MESSAGES.BOOKING_ERROR
+        );
     }
 
     /** 發送通知訊息 */
@@ -69,6 +76,12 @@ export class MerchantBookingService {
         content: string,
         options: SendOption = {}
     ): Promise<Result<void>> {
-        return apiClient.post(`${this.base(merchantId)}/${bookingId}/message`, { content, options });
+        return request<void>(
+            () => apiClient.post(API_ROUTES.MERCHANT.BOOKING_MESSAGE(merchantId, bookingId), {
+                content,
+                options
+            }),
+            ERROR_MESSAGES.BOOKING_ERROR
+        );
     }
 }

@@ -1,10 +1,10 @@
 import type { Result } from '@/types';
 import type { Order, OrderItem } from '@/types/order';
 import type { ExtendedPurchaseItem } from '@/types/purchase';
-import { OrderStatus, PaymentMethod } from '@/enums/PurchaseStatus';
 import { CardType } from '@/enums/Cards';
-import apiClient from '@/utils/api';
-import { API_ROUTES } from '@/utils/apiConfig';
+import { apiClient } from '@/utils/api';
+import { API_ROUTES, ERROR_MESSAGES } from '@/utils/apiConfig';
+import { request } from '@/utils/requestHelper';
 
 /**
  * 购买服务 - 处理购买记录和订单相关功能
@@ -16,85 +16,10 @@ export const PurchaseService = {
      * @returns Promise<ExtendedPurchaseItem[]> 购买记录列表
      */
     async getPurchaseHistory(userId: number): Promise<Result<ExtendedPurchaseItem[]>> {
-        try {
-            // 使用 apiClient 調用 API
-            return await apiClient.get<Result<ExtendedPurchaseItem[]>>(`/users/${userId}/purchase-history`);
-            
-            /* 暫時保留模擬數據，待後端 API 完成後移除
-            const mockPurchases: ExtendedPurchaseItem[] = [
-                {
-                    id: 1,
-                    date: '2025-05-01',
-                    cardType: CardType.Advanced,
-                    amount: 1000,
-                    points: 10,
-                    status: OrderStatus.Paid,
-                    paymentMethod: PaymentMethod.CreditCard,
-                    invoiceNo: 'INV-001',
-                    invoiceAvailable: true,
-                    invoiceNumber: 'INV-001',
-                    invoiceDate: '2025-05-01',
-                    paymentDate: '2025-05-01',
-                    expiry: '2026-05-01'
-                },
-                {
-                    id: 2,
-                    date: '2025-04-15',
-                    cardType: CardType.Advanced,
-                    amount: 1800,
-                    points: 20,
-                    status: OrderStatus.Pending,
-                    paymentMethod: PaymentMethod.CreditCard,
-                    invoiceAvailable: false
-                },
-                {
-                    id: 3,
-                    date: '2025-03-20',
-                    cardType: CardType.VIP,
-                    amount: 5000,
-                    points: 100,
-                    status: OrderStatus.Paid,
-                    paymentMethod: PaymentMethod.CreditCard,
-                    invoiceNo: 'INV-003',
-                    invoiceAvailable: true,
-                    invoiceNumber: 'INV-003',
-                    invoiceDate: '2025-03-20',
-                    paymentDate: '2025-03-20',
-                    expiry: '2026-03-20'
-                },
-                {
-                    id: 4,
-                    date: '2025-02-10',
-                    cardType: CardType.VIP,
-                    amount: 2000,
-                    points: 50,
-                    status: OrderStatus.Pending,
-                    paymentMethod: PaymentMethod.CreditCard,
-                    invoiceAvailable: false
-                },
-                {
-                    id: 5,
-                    date: '2025-01-01',
-                    cardType: CardType.VIP,
-                    amount: 1000,
-                    points: 10,
-                    status: OrderStatus.Paid,
-                    paymentMethod: PaymentMethod.CreditCard,
-                    invoiceNo: 'INV-005',
-                    invoiceAvailable: true,
-                    invoiceNumber: 'INV-005',
-                    invoiceDate: '2025-01-01',
-                    paymentDate: '2025-01-01',
-                    expiry: '2026-01-01'
-                }
-            ];
-            
-            return { success: true, data: mockPurchases };
-            */
-        } catch (error) {
-            console.error('获取购买历史失败:', error);
-            return { success: false, message: '获取购买历史失败' };
-        }
+        return request<ExtendedPurchaseItem[]>(
+            () => apiClient.get(API_ROUTES.PURCHASE.HISTORY(userId)),
+            ERROR_MESSAGES.PURCHASE_ERROR
+        );
     },
     
     /**
@@ -124,16 +49,9 @@ export const PurchaseService = {
      * @returns 下载结果
      */
     async downloadInvoice(invoiceNo: string): Promise<Result<void>> {
-        try {
-            // 使用 apiClient 調用 API
-            return await apiClient.get<Result<void>>(`/invoices/${invoiceNo}/download`);
-            
-            /* 暫時保留模擬數據，待後端 API 完成後移除
-            return { success: true, message: '发票下载成功' };
-            */
-        } catch (error) {
-            console.error('下载发票失败:', error);
-            return { success: false, message: '下载发票失败' };
-        }
+        return request<void>(
+            () => apiClient.get(API_ROUTES.PURCHASE.INVOICE(invoiceNo)),
+            ERROR_MESSAGES.PURCHASE_ERROR
+        );
     }
 }; 
