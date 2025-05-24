@@ -58,8 +58,8 @@
                         
                         <div class="flex flex-wrap gap-2 mt-4">
                             <Chip label="即將開始" class="!bg-sky-100 !text-sky-700 !border-none" />
-                            <Chip label="熱門活動" class="!bg-orange-100 !text-orange-700 !border-none" v-if="currentCourse.popular" />
-                            <Chip label="新課程" class="!bg-green-100 !text-green-700 !border-none" v-if="currentCourse.isNew" />
+                            <Chip label="熱門活動" class="!bg-orange-100 !text-orange-700 !border-none" v-if="currentCourse.joinCount && currentCourse.joinCount > 10" />
+                            <Chip label="新課程" class="!bg-green-100 !text-green-700 !border-none" v-if="isNewCourse" />
                         </div>
                         
                         <div v-if="userProfile" class="flex items-center justify-between p-4 rounded-lg bg-sky-50 border border-sky-100 mt-auto">
@@ -148,7 +148,7 @@
                         </template>
                         <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                             <button v-for="slot in filteredTimeSlots" :key="slot.id"
-                                :class="['time-slot-btn', { 'time-slot-selected': selectedSlot?.id === slot.id }]"
+                                :class="['time-slot-btn', { 'time-slot-selected': selectedSession?.id === slot.id }]"
                                 :disabled="slot.seatsLeft === 0" @click="selectTimeSlot(slot)">
                                 <span class="text-base font-medium">{{ formatTimeSlot(slot) }}</span>
                                 <span class="block text-xs mt-1">
@@ -177,8 +177,8 @@
                             @click="shareCourse" />
                     </div>
                     <div class="text-lg font-bold text-gray-800">
-                        <p v-if="selectedSlot">
-                            已選擇: {{ selectedSlot.date.toLocaleDateString() }} {{ formatTimeSlot(selectedSlot) }}
+                        <p v-if="selectedSession">
+                            已選擇: {{ selectedSession.date.toLocaleDateString() }} {{ formatTimeSlot(selectedSession) }}
                         </p>
                         <p v-else>
                             請選擇預約時段
@@ -194,7 +194,7 @@
                             }">
                             <span class="font-medium">
                                 {{
-                                    !selectedSlot
+                                    !selectedSession
                                         ? '請選擇時段'
                                         : !currentCourse || userPoints < (currentCourse.points) ? '點數不足' : '立即預約' 
                                 }}
@@ -209,6 +209,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useCourseStore } from '@/stores/courseStore'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm';
@@ -242,11 +243,8 @@ const toast = useToast();
 const confirm = useConfirm();
 
 // 使用 computed 确保 currentCourse 有值
-const currentCourse = computed(() => courseStore.currentCourse);
-const selectedSlot = computed(() => courseStore.selectedSession);
-const courseSession = computed(() => courseStore.courseSession);
-const userPoints = computed(() => userStore.points);
-const userProfile = userStore.profile;
+const { currentCourse, selectedSession, courseSession } = storeToRefs(courseStore);
+const { points: userPoints, profile: userProfile } = storeToRefs(userStore);
 
 // 添加一個新的計算屬性來安全處理商家評分
 const merchantRating = computed(() => {
@@ -330,9 +328,9 @@ const selectTimeSlot = (slot: CourseSession) => {
 
 // 新增計算屬性，檢查是否可以預約
 const canBook = computed(() => {
-    if (!selectedSlot.value || !currentCourse.value) return false;
+    if (!selectedSession.value || !currentCourse.value) return false;
 
-    if (selectedSlot.value.seatsLeft <= 0) return false;
+    if (selectedSession.value.seatsLeft <= 0) return false;
 
     if (userPoints.value < currentCourse.value.points) return false;
 
@@ -341,7 +339,7 @@ const canBook = computed(() => {
 
 // 處理預約
 const handleBooking = async () => {
-    if (!canBook.value || !selectedSlot.value || !selectedDate.value || !currentCourse.value) return;
+    if (!canBook.value || !selectedSession.value || !selectedDate.value || !currentCourse.value) return;
 
     if (userPoints.value < currentCourse.value.points) {
         showError('請先購買點數', '點數不足');
@@ -370,11 +368,11 @@ const handleBooking = async () => {
             rejectLabel: '取消',
             rejectClass: 'p-button-secondary',
             accept: async () => {
-                if (!currentCourse.value || !selectedSlot.value) return;
+                if (!currentCourse.value || !selectedSession.value) return;
 
                 const result = await bookingStore.book(
                     currentCourse.value.id,
-                    selectedSlot.value.id
+                    selectedSession.value.id
                 );
 
                 if (result && 'success' in result && result.success) {
@@ -399,45 +397,39 @@ const handleBooking = async () => {
 const favoriteLoading = ref(false);
 const isFavorite = computed(() => {
     if (!currentCourse.value) return false;
-    return userStore.isFavorite(currentCourse.value.id);
+    return courseStore.isFavorite(currentCourse.value.id);
 });
 
 // 切換收藏狀態
 const toggleFavorite = async () => {
-    if (userStore.displayName == UserRole.Guest) {
+    if (!currentCourse.value) return;
+    
+    if (userStore.displayName === UserRole.Guest) {
         // 用戶未登入時的處理
         showInfo('請先登入以使用收藏功能', '提示');
-        // 可以選擇導向登入頁面
-        // router.push('/login');
         return;
     }
 
-    if (!currentCourse.value) {
-        showError('課程信息不完整，無法收藏', '錯誤');
+    const userId = userStore.userId;
+    if (!userId) {
+        showError('用戶資料未載入', '錯誤');
         return;
     }
 
     favoriteLoading.value = true;
-
     try {
         if (isFavorite.value) {
             // 取消收藏
-            const result = await userStore.removeFavorite(currentCourse.value.id) as Result;
-            if (result.success) {
-                // 使用硬編碼的字串，與 userStore 中的訊息保持一致
-                showSuccess('已從收藏中移除', '成功');
-            }
+            await courseStore.removeFavoriteCourse(currentCourse.value.id, userId);
+            showSuccess('已從收藏中移除', '成功');
         } else {
             // 添加收藏
-            const result = await userStore.addFavorite(currentCourse.value) as Result;
-            if (result.success) {
-                // 使用硬編碼的字串，與 userStore 中的訊息保持一致
-                showSuccess('已加入收藏', '成功');
-            }
+            await courseStore.addFavoriteCourse(currentCourse.value.id, userId);
+            showSuccess('已加入收藏', '成功');
         }
     } catch (error) {
-        console.error('處理收藏操作時出錯:', error);
-        showError('處理收藏請求時發生錯誤', '錯誤');
+        showError('操作失敗，請稍後再試', '錯誤');
+        console.error('收藏操作失敗:', error);
     } finally {
         favoriteLoading.value = false;
     }
@@ -505,6 +497,15 @@ const formatTimeSlot = (slot: CourseSession) => {
 
     return `${formatTime(slot.start)} - ${formatTime(slot.end)}`;
 };
+
+const isNewCourse = computed(() => {
+    if (!currentCourse.value?.createdAt) return false;
+    const now = new Date();
+    const createdDate = new Date(currentCourse.value.createdAt);
+    const diffTime = Math.abs(now.getTime() - createdDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 7; // 7天內的新課程
+});
 </script>
 
 <style>
