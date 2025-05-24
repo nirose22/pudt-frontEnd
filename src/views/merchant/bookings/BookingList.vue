@@ -13,7 +13,7 @@
         <DateRangeFilter v-model="filters.dateRange" class="w-full sm:w-auto" />
 
         <!-- 狀態篩選 -->
-        <MultiSelect v-model="filters.status" :options="statusOptions" optionLabel="label" optionValue="value"
+        <MultiSelect v-model="filters.status" :options="STATUS_OPTIONS" optionLabel="label" optionValue="value"
           placeholder="預約狀態" class="w-full sm:w-auto" display="chip" />
       </div>
 
@@ -103,12 +103,12 @@
             <template #body="slotProps">
               <div class="flex gap-1">
                 <Button icon="pi pi-eye" text rounded @click="viewBookingDetail(slotProps.data)" />
-                <Button icon="pi pi-check" text rounded severity="success" @click="confirmBooking(slotProps.data)"
-                  v-if="slotProps.data.status === 'pending'" />
-                <Button icon="pi pi-times" text rounded severity="danger" @click="cancelBooking(slotProps.data)"
-                  v-if="['pending', 'confirmed'].includes(slotProps.data.status)" />
-                <Button icon="pi pi-check-circle" text rounded severity="info" @click="completeBooking(slotProps.data)"
-                  v-if="slotProps.data.status === 'confirmed'" />
+                <Button v-if="slotProps.data.status === BookingStatus.Pending"
+                  icon="pi pi-check" text rounded severity="success" @click="updateBookingStatus(slotProps.data, BookingStatus.Confirmed)" />
+                <Button v-if="[BookingStatus.Pending, BookingStatus.Confirmed].includes(slotProps.data.status)"
+                  icon="pi pi-times" text rounded severity="danger" @click="updateBookingStatus(slotProps.data, BookingStatus.Cancelled)" />
+                <Button v-if="slotProps.data.status === BookingStatus.Confirmed"
+                  icon="pi pi-check-circle" text rounded severity="info" @click="updateBookingStatus(slotProps.data, BookingStatus.Completed)" />
               </div>
             </template>
           </Column>
@@ -134,243 +134,140 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useConfirm } from 'primevue/useconfirm';
-import { useToast } from 'primevue/usetoast';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import Button from 'primevue/button';
-import InputText from 'primevue/inputtext';
-import MultiSelect from 'primevue/multiselect';
-import Tag from 'primevue/tag';
-import Avatar from 'primevue/avatar';
-import Card from 'primevue/card';
-import ConfirmDialog from 'primevue/confirmdialog';
+import type { MerchantBookingDetail } from '@/types/booking';
+import { BookingStatus } from '@/enums/BookingStatus';
+import { formatDate, formatTime } from '@/utils/dateUtils';
+import { getBookingStatusLabel, getBookingStatusSeverity, getBookingStatusColor } from '@/utils/statusUtils';
+import { useMerchantBookingStore } from '@/stores/merchantBookingStore';
+
+// 組件引入
+import {
+    DataTable, Column, Button, InputText, MultiSelect,
+    Tag, Avatar, Card, ConfirmDialog, IconField, InputIcon
+} from 'primevue';
 import DateRangeFilter from '@/components/common/DateRangeFilter.vue';
 import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import IconField from 'primevue/iconfield';
-import InputIcon from 'primevue/inputicon';
-import type { Booking } from '@/types/booking';
-import { BookingStatus } from '@/enums/BookingStatus';
-import { BookingService } from '@/services/BookingService';
-import { useUserStore } from '@/stores/userStore';
-import { formatDate, formatTime, createRelativeDate } from '@/utils/dateUtils';
-import { getBookingStatusLabel, getBookingStatusSeverity, getBookingStatusColor } from '@/utils/statusUtils';
+import type { CalendarOptions } from '@fullcalendar/core';
 
 const router = useRouter();
-const confirm = useConfirm();
-const toast = useToast();
-const userStore = useUserStore();
-const profile = userStore.profile;
+const merchantBookingStore = useMerchantBookingStore();
 
-// 視圖類型
+// 狀態
 const view = ref<'calendar' | 'list'>('list');
+const selectedBookings = ref<MerchantBookingDetail[]>([]);
+const loading = ref(false);
+
+// 常量
+const STATUS_OPTIONS = [
+    { label: '待確認', value: BookingStatus.Pending },
+    { label: '已確認', value: BookingStatus.Confirmed },
+    { label: '已完成', value: BookingStatus.Completed },
+    { label: '已取消', value: BookingStatus.Cancelled },
+    { label: '未出席', value: BookingStatus.NoShow }
+];
 
 // 篩選條件
 const filters = ref({
-  search: '',
-  dateRange: {
-    start: null as Date | null,
-    end: null as Date | null
-  },
-  status: [] as string[]
+    search: '',
+    dateRange: {
+        start: null as Date | null,
+        end: null as Date | null
+    },
+    status: [] as BookingStatus[]
 });
 
-// 狀態選項
-const statusOptions = [
-  { label: '待確認', value: 'pending' },
-  { label: '已確認', value: 'confirmed' },
-  { label: '已完成', value: 'completed' },
-  { label: '已取消', value: 'cancelled' },
-  { label: '未出席', value: 'noshow' }
-];
-
-// 預約數據
-const bookings = ref<Booking[]>([]);
-const selectedBookings = ref<Booking[]>([]);
-const loading = ref(false);
-
-// 根據篩選條件過濾預約
+// 計算屬性
 const filteredBookings = computed(() => {
-  let result = [...bookings.value];
+    let result = merchantBookingStore.bookings;
 
-  // 搜尋過濾
-  if (filters.value.search) {
-    const searchLower = filters.value.search.toLowerCase();
-    result = result.filter(booking =>
-      booking.customerName.toLowerCase().includes(searchLower) ||
-      booking.courseTitle.toLowerCase().includes(searchLower)
-    );
-  }
+    if (filters.value.search) {
+        const searchLower = filters.value.search.toLowerCase();
+        result = result.filter(booking =>
+            booking.customerName?.toLowerCase().includes(searchLower) ||
+            booking.courseTitle?.toLowerCase().includes(searchLower)
+        );
+    }
 
-  // 日期範圍過濾
-  if (filters.value.dateRange.start && filters.value.dateRange.end) {
-    result = result.filter(booking => {
-      const bookingDate = booking.date.getTime();
-      const startDate = filters.value.dateRange.start!.getTime();
-      const endDate = filters.value.dateRange.end!.getTime();
-      return bookingDate >= startDate && bookingDate <= endDate;
-    });
-  }
+    if (filters.value.dateRange.start && filters.value.dateRange.end) {
+        const { start, end } = filters.value.dateRange;
+        result = result.filter(booking => {
+            const bookingDate = new Date(booking.date).getTime();
+            return bookingDate >= start.getTime() && bookingDate <= end.getTime();
+        });
+    }
 
-  // 狀態過濾
-  if (filters.value.status.length > 0) {
-    result = result.filter(booking => filters.value.status.includes(booking.status));
-  }
+    if (filters.value.status.length > 0) {
+        result = result.filter(booking => filters.value.status.includes(booking.status));
+    }
 
-  return result;
+    return result;
 });
 
-// 日曆視圖事件
-const calendarEvents = computed(() => {
-  return filteredBookings.value.map(booking => {
-    const start = new Date(booking.date);
-    start.setHours(booking.start.getHours(), booking.start.getMinutes());
+const calendarEvents = computed(() => 
+    filteredBookings.value.map(booking => ({
+        id: booking.id.toString(),
+        title: `${booking.courseTitle} - ${booking.customerName || ''}`,
+        start: new Date(booking.date + 'T' + booking.start),
+        end: new Date(booking.date + 'T' + booking.end),
+        extendedProps: { booking },
+        backgroundColor: getBookingStatusColor(booking.status)
+    }))
+);
 
-    const end = new Date(booking.date);
-    end.setHours(booking.end.getHours(), booking.end.getMinutes());
-
-    return {
-      id: booking.id.toString(),
-      title: `${booking.courseTitle} - ${booking.customerName}`,
-      start: start,
-      end: end,
-      extendedProps: {
-        booking
-      },
-      backgroundColor: getBookingStatusColor(booking.status)
-    };
-  });
-});
-
-// 日曆配置
-const calendarOptions = computed(() => ({
-  plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
-  initialView: 'dayGridMonth',
-  headerToolbar: {
-    left: 'prev,next today',
-    center: 'title',
-    right: 'dayGridMonth,timeGridWeek,timeGridDay'
-  },
-  events: calendarEvents.value,
-  eventClick: (info: any) => {
-    const booking = info.event.extendedProps.booking;
-    viewBookingDetail(booking);
-  },
-  eventTimeFormat: { 
-    hour: "2-digit" as "2-digit", 
-    minute: "2-digit" as "2-digit", 
-    hour12: false 
-  },
-  locale: 'zh-tw'
+const calendarOptions = computed<CalendarOptions>(() => ({
+    plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
+    initialView: 'dayGridMonth',
+    headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,timeGridWeek,timeGridDay'
+    },
+    events: calendarEvents.value,
+    eventClick: (info) => viewBookingDetail(info.event.extendedProps.booking),
+    eventTimeFormat: {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    },
+    locale: 'zh-tw'
 }));
 
-// 獲取姓名縮寫
-function getInitials(name: string): string {
-  return name.charAt(0).toUpperCase();
-}
+// 方法
+const getInitials = (name: string): string => name.charAt(0).toUpperCase();
 
-// 加載預約數據
-async function loadBookings(): Promise<void> {
-  loading.value = true;
-
-  try {
-    // 模擬 API 請求
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // 使用 BookingService
-    bookings.value = await BookingService.getUserBookings(profile?.id ?? 0);
-  } catch (error) {
-    console.error('加載預約失敗:', error);
-    toast.add({
-      severity: 'error',
-      summary: '加載失敗',
-      detail: '無法加載預約數據，請稍後再試',
-      life: 3000
-    });
-  } finally {
-    loading.value = false;
-  }
-}
-
-// 查看預約詳情
-function viewBookingDetail(booking: Booking): void {
-  router.push(`/merchant/bookings/${booking.id}`);
-}
-
-// 確認預約
-function confirmBooking(booking: Booking): void {
-  confirm.require({
-    message: `確定要確認 ${booking.customerName} 的 "${booking.courseTitle}" 預約嗎？`,
-    header: '確認預約',
-    icon: 'pi pi-check-circle',
-    acceptLabel: '確認',
-    rejectLabel: '取消',
-    accept: () => {
-      // 實際應用中應該調用 API 確認預約
-      booking.status = BookingStatus.Confirmed;
-
-      toast.add({
-        severity: 'success',
-        summary: '預約已確認',
-        detail: `${booking.customerName} 的預約已成功確認`,
-        life: 3000
-      });
+const loadBookings = async (): Promise<void> => {
+    loading.value = true;
+    try {
+        await merchantBookingStore.loadBookings();
+    } finally {
+        loading.value = false;
     }
-  });
-}
+};
 
-// 取消預約
-function cancelBooking(booking: Booking): void {
-  confirm.require({
-    message: `確定要取消 ${booking.customerName} 的 "${booking.courseTitle}" 預約嗎？`,
-    header: '取消預約',
-    icon: 'pi pi-times-circle',
-    acceptLabel: '確認取消',
-    rejectLabel: '返回',
-    accept: () => {
-      // 實際應用中應該調用 API 取消預約
-      booking.status = BookingStatus.Cancelled;
+const viewBookingDetail = (booking: MerchantBookingDetail): void => {
+    router.push(`/merchant/bookings/${booking.id}`);
+};
 
-      toast.add({
-        severity: 'info',
-        summary: '預約已取消',
-        detail: `${booking.customerName} 的預約已取消`,
-        life: 3000
-      });
+const updateBookingStatus = async (booking: MerchantBookingDetail, status: BookingStatus): Promise<void> => {
+    try {
+        await merchantBookingStore.updateBookingStatus(booking.id, status);
+    } catch (error) {
+        console.error(`更新預約狀態失敗: ${status}`, error);
     }
-  });
+};
+
+// 生命週期
+onMounted(loadBookings);
+
+// 添加状态相关的工具函数
+function getStatusLabel(status: string): string {
+  return getBookingStatusLabel(status);
 }
 
-// 完成預約
-function completeBooking(booking: Booking): void {
-  confirm.require({
-    message: `確定要將 ${booking.customerName} 的 "${booking.courseTitle}" 預約標記為已完成嗎？`,
-    header: '完成預約',
-    icon: 'pi pi-check-square',
-    acceptLabel: '確認完成',
-    rejectLabel: '取消',
-    accept: () => {
-      // 實際應用中應該調用 API 完成預約
-      booking.status = BookingStatus.Completed;
-
-      toast.add({
-        severity: 'success',
-        summary: '預約已完成',
-        detail: `${booking.customerName} 的預約已標記為完成`,
-        life: 3000
-      });
-    }
-  });
+function getStatusSeverity(status: string): string {
+  return getBookingStatusSeverity(status);
 }
-
-// 初始化
-onMounted(() => {
-  loadBookings();
-});
-
-// 輔助變數 - 使用工具函數
-const yesterday = createRelativeDate(-1);
-const lastWeek = createRelativeDate(-7);
 </script>

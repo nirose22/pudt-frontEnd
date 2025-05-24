@@ -47,8 +47,12 @@ export function isWithinInterval(date: Date, interval: { start: Date; end: Date 
  * @returns 格式化后的日期字符串
  */
 export function formatDate(date: Date | string): string {
-    const dateObj = date instanceof Date ? date : new Date(date);
-    return `${dateObj.getFullYear()}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getDate().toString().padStart(2, '0')}`;
+    const d = new Date(date);
+    return d.toLocaleDateString('zh-TW', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    });
 }
 
 /**
@@ -57,8 +61,11 @@ export function formatDate(date: Date | string): string {
  * @returns 格式化后的时间字符串
  */
 export function formatTime(date: Date | string): string {
-    const dateObj = date instanceof Date ? date : new Date(date);
-    return `${dateObj.getHours().toString().padStart(2, '0')}:${dateObj.getMinutes().toString().padStart(2, '0')}`;
+    const d = new Date(date);
+    return d.toLocaleTimeString('zh-TW', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
 }
 
 /**
@@ -67,7 +74,14 @@ export function formatTime(date: Date | string): string {
  * @returns 格式化后的日期时间字符串
  */
 export function formatDateTime(date: Date | string): string {
-    return `${formatDate(date)} ${formatTime(date)}`;
+    const d = new Date(date);
+    return d.toLocaleString('zh-TW', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
 }
 
 /**
@@ -132,4 +146,37 @@ export function formatRelativeTime(date: Date | string): string {
     if (days < 30) return `${days}天前`;
     
     return formatDate(date);
+}
+
+export function getBookingStatusLabel(status: string): string {
+    const statusMap: Record<string, string> = {
+        'pending': '待確認',
+        'confirmed': '已確認',
+        'completed': '已完成',
+        'cancelled': '已取消',
+        'noshow': '未出席'
+    };
+    return statusMap[status] || status;
+}
+
+export function getBookingStatusSeverity(status: string): string {
+    const severityMap: Record<string, string> = {
+        'pending': 'warning',
+        'confirmed': 'success',
+        'completed': 'info',
+        'cancelled': 'secondary',
+        'noshow': 'danger'
+    };
+    return severityMap[status] || 'info';
+}
+
+/**
+ * 創建相對日期
+ * @param days 相對天數（負數表示過去，正數表示未來）
+ * @returns Date 對象
+ */
+export function createRelativeDate(days: number): Date {
+    const date = new Date();
+    date.setDate(date.getDate() + days);
+    return date;
 }

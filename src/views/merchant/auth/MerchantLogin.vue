@@ -2,66 +2,69 @@
   <div class="flex min-h-screen bg-gray-100">
     <div class="m-auto w-full max-w-md p-6">
       <div class="bg-white rounded-lg shadow-lg p-6">
+        <Toast />
+
         <!-- Logo 和標題 -->
-        <div class="text-center mb-6">
-          <img src="../../../assets/image/pudt_logo.png" alt="PUDT Logo" class="h-16 mx-auto mb-2" />
-          <h1 class="text-2xl font-bold text-gray-800">商家管理系統</h1>
-          <p class="text-gray-500">登入您的商家帳號</p>
+        <div class="flex flex-col items-center mb-6">
+          <img src="../../../assets/image/pudt_logo-sm.png" alt="PUDT Logo" class="h-16 mb-4" />
+          <h2 class="text-xl font-bold text-sky-600">商家登入</h2>
         </div>
-        
-        <form @submit.prevent="login">
-          <!-- 電子郵件 -->
-          <div class="mb-4">
-            <label for="email" class="block mb-1 font-medium">電子郵件</label>
-            <span class="p-input-icon-left w-full">
-              <i class="pi pi-envelope"></i>
-              <InputText id="email" v-model="loginForm.email" type="email" class="w-full" placeholder="請輸入您的電子郵件" />
-            </span>
-            <!-- <small v-if="v$.email.$invalid && v$.email.$dirty" class="p-error">{{ v$.email.$errors[0].$message }}</small> -->
-          </div>
-          
-          <!-- 密碼 -->
-          <div class="mb-4">
-            <div class="flex justify-between items-center mb-1">
-              <label for="password" class="font-medium">密碼</label>
-              <RouterLink to="/merchant/forgot-password" class="text-sm text-blue-600 hover:text-blue-800">忘記密碼？</RouterLink>
+
+        <Form v-slot="$form" @submit="login" :resolver="resolver" :initialValues="initialValues"
+          class="flex flex-col gap-4">
+          <FormField name="email">
+            <IconField>
+              <InputIcon class="pi pi-envelope" />
+              <InputText placeholder="請輸入您的電子郵件" type="email" class="w-full" fluid />
+            </IconField>
+            <Message v-if="$form.email?.invalid" severity="error" size="small" variant="simple">
+              {{ $form.email.error?.message }}
+            </Message>
+          </FormField>
+
+          <FormField name="password">
+            <IconField>
+              <InputIcon class="pi pi-lock" />
+              <Password type="password" placeholder="請輸入您的密碼" :feedback="false" toggleMask fluid variant="filled"
+                class="w-full" />
+            </IconField>
+            <Message v-if="$form.password?.invalid" severity="error" size="small" variant="simple">
+              {{ $form.password.error?.message }}
+            </Message>
+          </FormField>
+
+          <div class="flex justify-between items-center">
+            <div class="flex items-center">
+              <Checkbox v-model="rememberMe" :binary="true" />
+              <span class="text-sm text-gray-600 ml-2">記住我</span>
             </div>
-            <span class="p-input-icon-left w-full">
-              <i class="pi pi-lock"></i>
-              <Password id="password" v-model="loginForm.password" toggleMask :feedback="false" class="w-full" placeholder="請輸入您的密碼" />
-            </span>
-            <!-- <small v-if="v$.password.$invalid && v$.password.$dirty" class="p-error">{{ v$.password.$errors[0].$message }}</small> -->
+            <RouterLink to="/merchant/forgot-password" class="text-sm text-sky-600 hover:text-sky-800">忘記密碼？
+            </RouterLink>
           </div>
-          
-          <!-- 記住我 -->
-          <div class="mb-4 flex items-center">
-            <Checkbox id="rememberMe" v-model="loginForm.rememberMe" :binary="true" />
-            <label for="rememberMe" class="ml-2 cursor-pointer">記住我</label>
+
+          <Button type="submit" label="登入" size="large" rounded class="w-full" :loading="loading" />
+
+          <Divider>
+            <span class="text-sm text-gray-500">或使用以下方式登入</span>
+          </Divider>
+
+          <div class="flex gap-4 justify-center">
+            <Button type="button" icon="pi pi-google" class="p-button-rounded p-button-outlined"
+              @click="handleGoogleLogin" />
+            <Button type="button" icon="pi pi-facebook" class="p-button-rounded p-button-outlined"
+              @click="handleFacebookLogin" />
           </div>
-          
-          <!-- 登入按鈕 -->
-          <Button type="submit" label="登入" icon="pi pi-sign-in" class="w-full" :loading="loading" />
-          
-          <!-- 錯誤訊息 -->
-          <div v-if="errorMessage" class="mt-4 p-3 bg-red-50 text-red-700 rounded-lg text-center">
-            {{ errorMessage }}
-          </div>
-        </form>
-        
-        <!-- 分隔線 -->
-        <div class="my-4 flex items-center">
-          <div class="flex-grow border-t border-gray-300"></div>
-          <span class="px-3 text-gray-500 text-sm">或</span>
-          <div class="flex-grow border-t border-gray-300"></div>
-        </div>
-        
+        </Form>
+
         <!-- 聯絡客服 -->
-        <div class="text-center">
-          <p class="text-gray-600 text-sm mb-2">還沒有商家帳號？</p>
-          <Button label="聯絡客服申請" icon="pi pi-envelope" outlined class="w-full" @click="contactSupport" />
+        <div class="text-center mt-4">
+          <p class="text-sm text-gray-600">
+            還沒有商家帳號？
+            <Button link @click="contactSupport" class="p-0">聯絡客服申請</Button>
+          </p>
         </div>
       </div>
-      
+
       <!-- 頁腳 -->
       <div class="mt-4 text-center text-gray-500 text-sm">
         <p>&copy; {{ new Date().getFullYear() }} PUDT. 保留所有權利。</p>
@@ -71,91 +74,71 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
+import { ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-// import { useVuelidate } from '@vuelidate/core';
-// import { required, email, minLength } from '@vuelidate/validators';
-import { useToast } from 'primevue/usetoast';
+import { Form, FormField } from '@primevue/forms';
+import { z } from 'zod';
+import { zodResolver } from '@primevue/forms/resolvers/zod';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
+import Message from 'primevue/message';
 import Checkbox from 'primevue/checkbox';
 import Button from 'primevue/button';
+import Divider from 'primevue/divider';
+import { showSuccess, showError, showInfo } from '@/utils/toastHelper';
 
 const router = useRouter();
 const route = useRoute();
-const toast = useToast();
 
-// 登入表單
-const loginForm = reactive({
+const loading = ref(false);
+const rememberMe = ref(false);
+
+const initialValues = ref({
   email: '',
-  password: '',
-  rememberMe: false
+  password: ''
 });
 
-// 驗證規則
-const rules = {
-  // email: { required, email },
-  // password: { required, minLength: minLength(6) }
-};
+const resolver = zodResolver(
+  z.object({
+    email: z.string().email({ message: '請輸入有效的電子郵件' }),
+    password: z.string().min(6, { message: '密碼至少需要6個字符' })
+  })
+);
 
-// const v$ = useVuelidate(rules, loginForm);
+async function login(e: any) {
+  if (e.valid) {
+    loading.value = true;
+    try {
+      // 模擬 API 請求
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-// 狀態
-const loading = ref(false);
-const errorMessage = ref('');
-
-// 登入
-async function login() {
-  errorMessage.value = '';
-  // const isValid = await v$.value.$validate();
-  
-  // if (!isValid) {
-  //   return;
-  // }
-  
-  loading.value = true;
-  
-  try {
-    // 模擬 API 請求
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // 模擬登入成功
-    if (loginForm.email === 'merchant@example.com' && loginForm.password === 'password123') {
-      // 儲存 token
-      localStorage.setItem('merchantToken', 'mock-token-123456');
-      
-      // 導向重定向頁面或儀表板
-      const redirectPath = route.query.redirect as string || '/merchant';
-      router.push(redirectPath);
-      
-      toast.add({
-        severity: 'success',
-        summary: '登入成功',
-        detail: '歡迎回來！',
-        life: 3000
-      });
-    } else {
-      // 登入失敗
-      errorMessage.value = '電子郵件或密碼錯誤，請重試。';
+      if (e.values.email === 'merchant@example.com' && e.values.password === 'password123') {
+        localStorage.setItem('merchantToken', 'mock-token-123456');
+        const redirectPath = route.query.redirect as string || '/merchant';
+        router.push(redirectPath);
+        showSuccess('歡迎回來！', '登入成功');
+      } else {
+        showError('電子郵件或密碼錯誤，請重試。', '登入失敗');
+      }
+    } catch (error) {
+      showError('登入時發生錯誤，請稍後再試。', '登入失敗');
+    } finally {
+      loading.value = false;
     }
-  } catch (error) {
-    console.error('登入失敗:', error);
-    errorMessage.value = '登入時發生錯誤，請稍後再試。';
-  } finally {
-    loading.value = false;
   }
 }
 
-// 聯絡客服
-function contactSupport() {
-  toast.add({
-    severity: 'info',
-    summary: '聯絡客服',
-    detail: '請聯絡我們的客服人員以申請商家帳號',
-    life: 3000
-  });
-  
-  // 實際應用中可以導向聯絡頁面或顯示聯絡資訊
-  // router.push('/contact');
+const handleGoogleLogin = async () => {
+  showInfo('Google 登入功能開發中', 'Google 登入');
 }
-</script> 
+
+const handleFacebookLogin = async () => {
+  showInfo('Facebook 登入功能開發中', 'Facebook 登入');
+}
+
+function contactSupport() {
+  showInfo('請聯絡我們的客服人員以申請商家帳號', '聯絡客服');
+}
+</script>

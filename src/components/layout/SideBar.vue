@@ -3,17 +3,17 @@
         <template #header>
             <BaseLogo class="h-full w-25" />
         </template>
-        <Toast position="top-center" />
+        <Toast position="top-center" group="sidebar" />
         <div class="flex flex-col h-full  justify-between">
             <div class="flex flex-col">
                 <ul class="py-2 text-gray-700">
                     <li v-for="(menuItem, index) in menuItems" :key="index">
                         <RouterLink :to="menuItem.path" custom v-slot="{ navigate, isActive }">
-                            <div @click="navigate" :class="['p-3 cursor-pointer flex items-center transition-colors duration-200 rounded-md',
+                            <a @click="navigate" :class="['p-3 cursor-pointer flex items-center transition-colors duration-200 rounded-md',
                                 isActive ? 'bg-blue-50 text-blue-600' : 'hover:bg-blue-100']">
                                 <i :class="['pi mr-2', menuItem.icon]"></i>
                                 {{ menuItem.label }}
-                            </div>
+                            </a>
                         </RouterLink>
                     </li>
                 </ul>
@@ -21,13 +21,11 @@
             <div class="flex flex-col">
                 <Divider />
                 <template v-if="!authStore.isLoggedIn">
-                    <RouterLink to="/login" custom v-slot="{ navigate, isActive }">
-                        <div class="menu-item" @click="navigate">
-                            <i class="pi pi-user"></i>
-                            <span>登入</span>
-                        </div>
-                    </RouterLink>
-                    <RouterLink to="/register" custom v-slot="{ navigate, isActive }">
+                    <div class="menu-item" @click="showLoginDialog = true">
+                        <i class="pi pi-user"></i>
+                        <span>登入</span>
+                    </div>
+                    <RouterLink to="/register" custom v-slot="{ navigate }">
                         <div class="menu-item" @click="navigate">
                             <i class="pi pi-user"></i>
                             <span>註冊</span>
@@ -35,17 +33,17 @@
                     </RouterLink>
                 </template>
                 <template v-else>
-                    <RouterLink to="/profile/management" custom v-slot="{ navigate, isActive }">
+                    <RouterLink to="/profile/management" custom v-slot="{ navigate }">
                         <div class="menu-item" @click="navigate">
                             <Avatar :label="profile?.name?.charAt(0)" size="large" class="!bg-green-100 !text-green-800"
                                 shape="circle" />
                             <span>{{ profile?.name }}</span>
                         </div>
                     </RouterLink>
-                    <!-- <div class="menu-item" @click="handleLogout">
+                    <div v-if="profile?.id" class="menu-item" @click="authStore.logout">
                         <i class="pi pi-user"></i>
                         <span>登出</span>
-                    </div> -->
+                    </div>
                 </template>
             </div>
         </div>
@@ -55,22 +53,17 @@
 import Drawer from 'primevue/drawer';
 import Divider from 'primevue/divider';
 import BaseLogo from '@/components/layout/BaseLogo.vue';
-import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed, type Ref, inject } from 'vue';
 import { useUserStore } from '@/stores/userStore';
 import { useAuthStore } from '@/stores/authStore';
-import { useToast } from 'primevue/usetoast';
 import Avatar from 'primevue/avatar';
-import { showError, initToast } from '@/utils/toastHelper';
+import { showError } from '@/utils/toastHelper';
 
 const visibleMenu = defineModel<boolean>('visible', { required: true });
 
-const router = useRouter();
 const userStore = useUserStore();
 const authStore = useAuthStore();
 const profile = computed(() => userStore.profile);
-
-const toast = useToast();
 
 const menuDt = ref({
     mask: {
@@ -84,9 +77,8 @@ const menuDt = ref({
     }
 })
 
-onMounted(() => {
-    initToast(toast);
-});
+const showLoginDialog = inject('showLoginDialog') as Ref<boolean>;
+
 // 菜單項目
 const menuItems = [
     { id: 'search', label: '探索', icon: 'pi-map-marker', path: '/search' },
@@ -96,45 +88,13 @@ const menuItems = [
     { id: 'history', label: '活動紀錄', icon: 'pi-history', path: '/profile/history' },
 ];
 
-
 const isLoggedIn = () => {
     if (!authStore.isLoggedIn) {
-        showError('請先登入', '錯誤');
+        showError('請先登入', '錯誤', { group: 'sidebar' });
         return false;
     }
     return true;
 }
-
-const handleLogin = () => {
-    router.push('/login');
-    visibleMenu.value = false;
-}
-
-const handleLogout = () => {
-    authStore.logout();
-    router.push('/login');
-    visibleMenu.value = false;
-}
-
-const handleRegister = () => {
-    router.push('/register');
-    visibleMenu.value = false;
-}
-
-const handleProfile = () => {
-    if (!isLoggedIn()) return;
-    router.push('/profile');
-    visibleMenu.value = false;
-}
-
-const handleNavigation = (item: any, level: number) => {
-    if (item.requireLogin && userStore.displayName === 'Guest') {
-        showError('請先登入', '錯誤');
-    }
-
-    // 原有代碼...
-};
-
 </script>
 <style scoped>
 @reference "tailwindcss";

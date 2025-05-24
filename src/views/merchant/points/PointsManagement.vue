@@ -187,7 +187,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { useToast } from 'primevue/usetoast';
+import { showSuccess, showError, showInfo } from '@/utils/toastHelper';
 import Card from 'primevue/card';
 import Chart from 'primevue/chart';
 import DataTable from 'primevue/datatable';
@@ -200,8 +200,6 @@ import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
 import DateRangeFilter from '@/components/common/DateRangeFilter.vue';
 import type { PointTransaction, PointTransactionType, PointTransactionStatus } from '@/types/point';
-
-const toast = useToast();
 
 // 點數統計
 const pointsStats = ref({
@@ -383,7 +381,7 @@ async function loadTransactions(): Promise<void> {
   
   try {
     // 模擬 API 請求
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
     // 模擬交易數據
     const today = new Date();
@@ -468,12 +466,7 @@ async function loadTransactions(): Promise<void> {
     ];
   } catch (error) {
     console.error('加載交易失敗:', error);
-    toast.add({
-      severity: 'error',
-      summary: '加載失敗',
-      detail: '無法加載交易數據，請稍後再試',
-      life: 3000
-    });
+    showError('無法加載交易數據，請稍後再試', '加載失敗');
   } finally {
     loading.value = false;
   }
@@ -481,75 +474,58 @@ async function loadTransactions(): Promise<void> {
 
 // 提交結算申請
 async function submitSettlement(): Promise<void> {
-  // 表單驗證
-  if (!settlementAmount.value || settlementAmount.value < 100) {
-    toast.add({
-      severity: 'error',
-      summary: '驗證失敗',
-      detail: '結算點數至少需要 100 點',
-      life: 3000
-    });
+  if (!validateSettlementForm()) {
     return;
   }
-  
-  if (!bankInfo.value.code || !bankInfo.value.account || !bankInfo.value.name) {
-    toast.add({
-      severity: 'error',
-      summary: '驗證失敗',
-      detail: '請填寫完整的銀行資訊',
-      life: 3000
-    });
-    return;
-  }
-  
+
   submitting.value = true;
-  
   try {
     // 模擬 API 請求
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     // 更新點數統計
     pointsStats.value.pendingPoints -= settlementAmount.value;
+    pointsStats.value.settledPoints += settlementAmount.value;
     
     // 添加交易記錄
     const newTransaction: PointTransaction = {
-      id: transactions.value.length + 1001,
+      id: transactions.value.length + 1,
       date: new Date(),
-      description: '點數結算申請',
       type: 'settlement',
       points: settlementAmount.value,
-      status: 'processing'
+      description: '點數結算',
+      status: 'pending',
+      bankInfo: { ...bankInfo.value }
     };
-    
     transactions.value.unshift(newTransaction);
-    
-    toast.add({
-      severity: 'success',
-      summary: '申請成功',
-      detail: `已成功申請結算 ${settlementAmount.value} 點，將於 3-5 個工作天內處理`,
-      life: 3000
-    });
-    
-    showSettlementDialog.value = false;
     
     // 重置表單
     settlementAmount.value = 100;
-    bankInfo.value = {
-      code: '',
-      account: '',
-      name: ''
-    };
+    bankInfo.value = { code: '', account: '', name: '' };
+    showSettlementDialog.value = false;
+    
+    showSuccess('您的結算申請已送出，將於 3-5 個工作天內處理', '申請成功');
   } catch (error) {
-    console.error('結算申請失敗:', error);
-    toast.add({
-      severity: 'error',
-      summary: '申請失敗',
-      detail: '無法提交結算申請，請稍後再試',
-      life: 3000
-    });
+    console.error('提交結算申請失敗:', error);
+    showError('請稍後再試', '申請失敗');
   } finally {
     submitting.value = false;
   }
+}
+
+// 驗證結算表單
+function validateSettlementForm(): boolean {
+  if (settlementAmount.value < 100) {
+    showError('結算點數不能少於 100 點', '驗證失敗');
+    return false;
+  }
+  
+  if (!bankInfo.value.code || !bankInfo.value.account || !bankInfo.value.name) {
+    showError('請填寫完整的銀行帳戶資訊', '驗證失敗');
+    return false;
+  }
+  
+  return true;
 }
 
 // 初始化

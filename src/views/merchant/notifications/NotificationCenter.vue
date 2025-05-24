@@ -82,7 +82,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useConfirm } from 'primevue/useconfirm';
-import { useToast } from 'primevue/usetoast';
+import { showSuccess, showError, showInfo } from '@/utils/toastHelper';
 import Card from 'primevue/card';
 import DataView from 'primevue/dataview';
 import Select from 'primevue/select';
@@ -93,7 +93,6 @@ import type { Notification, NotificationType } from '@/types/message';
 
 const router = useRouter();
 const confirm = useConfirm();
-const toast = useToast();
 
 // 篩選條件
 const filters = ref({
@@ -194,77 +193,49 @@ function navigateTo(link: string): void {
 // 標記為已讀
 function markAsRead(notification: Notification): void {
   notification.read = true;
-  
-  toast.add({
-    severity: 'info',
-    summary: '已標記為已讀',
-    detail: `"${notification.title}" 已標記為已讀`,
-    life: 3000
-  });
+  showInfo('已標記為已讀');
 }
 
 // 標記全部為已讀
 function markAllAsRead(): void {
-  confirm.require({
-    message: '確定要將所有通知標記為已讀嗎？',
-    header: '標記全部為已讀',
-    icon: 'pi pi-check-circle',
-    acceptLabel: '確認',
-    rejectLabel: '取消',
-    accept: () => {
-      notifications.value.forEach(notification => {
-        notification.read = true;
-      });
-      
-      toast.add({
-        severity: 'info',
-        summary: '已全部標記為已讀',
-        detail: '所有通知已標記為已讀',
-        life: 3000
-      });
-    }
+  notifications.value.forEach(notification => {
+    notification.read = true;
   });
+  showSuccess('已將所有通知標記為已讀');
+}
+
+// 刪除通知
+function deleteNotification(notification: Notification): void {
+  const index = notifications.value.findIndex(n => n.id === notification.id);
+  if (index !== -1) {
+    notifications.value.splice(index, 1);
+    showSuccess('通知已刪除');
+  }
 }
 
 // 確認刪除通知
 function confirmDeleteNotification(notification: Notification): void {
   confirm.require({
-    message: `確定要刪除通知 "${notification.title}" 嗎？`,
-    header: '確認刪除',
+    message: '確定要刪除這條通知嗎？',
+    header: '刪除確認',
     icon: 'pi pi-exclamation-triangle',
-    acceptLabel: '確認刪除',
-    rejectLabel: '取消',
-    accept: () => {
-      notifications.value = notifications.value.filter(n => n.id !== notification.id);
-      
-      toast.add({
-        severity: 'success',
-        summary: '通知已刪除',
-        detail: `通知 "${notification.title}" 已成功刪除`,
-        life: 3000
-      });
-    }
+    accept: () => deleteNotification(notification)
   });
 }
 
-// 確認清除全部通知
+// 清除所有通知
+function clearAllNotifications(): void {
+  notifications.value = [];
+  showSuccess('已清除所有通知');
+}
+
+// 確認清除所有通知
 function confirmClearAll(): void {
   confirm.require({
-    message: '確定要清除所有通知嗎？此操作無法復原。',
-    header: '清除全部通知',
+    message: '確定要清除所有通知嗎？此操作無法撤銷。',
+    header: '清除確認',
     icon: 'pi pi-exclamation-triangle',
-    acceptLabel: '確認清除',
-    rejectLabel: '取消',
-    accept: () => {
-      notifications.value = [];
-      
-      toast.add({
-        severity: 'success',
-        summary: '通知已清除',
-        detail: '所有通知已成功清除',
-        life: 3000
-      });
-    }
+    accept: () => clearAllNotifications()
   });
 }
 
@@ -324,12 +295,7 @@ async function loadNotifications(): Promise<void> {
     ];
   } catch (error) {
     console.error('加載通知失敗:', error);
-    toast.add({
-      severity: 'error',
-      summary: '加載失敗',
-      detail: '無法加載通知數據，請稍後再試',
-      life: 3000
-    });
+    showError('加載失敗');
   } finally {
     loading.value = false;
   }

@@ -17,6 +17,8 @@ export interface BaseBooking {
   merchantName?: string;     // 商家名称 (從舊接口整合)
   rating?: number;           // 評分 (從舊接口整合)
   comment?: string;          // 評論 (從舊接口整合)
+  createdAt: Date;           // 創建時間
+  updatedAt?: Date;           // 更新時間
 }
 
 /**
@@ -24,8 +26,6 @@ export interface BaseBooking {
  */
 export interface Booking extends BaseBooking {
   notes?: string;            // 客戶備註，可选
-  createdAt: Date;           // 創建時間
-  updatedAt?: Date;           // 更新時間
   instructor?: {             // 教练信息 (從舊接口整合)
     id: number;
     name: string;
@@ -67,9 +67,11 @@ export interface BookingCalendarItem {
   };
 }
 
-export interface UserBookingForMerchant extends BaseBooking {
+/**
+ * 商家預約記錄
+ */
+export interface MerchantBookingDetail extends BaseBooking, BookingDetail {
   customerId: number;        // 客户ID (对应旧的userId)
   customerName: string;      // 客户姓名
   customerPhone: string;     // 客户电话
-  merchantNotes?: string;    // 商家備註，可选
 }

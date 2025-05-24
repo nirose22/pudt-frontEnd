@@ -9,25 +9,21 @@ const routes: RouteRecordRaw[] = [
     path: '/',
     name: 'UserLayout',
     component: () => import('@/views/user/userLayout.vue'),
-    meta: { requiresAuth: true, role: UserRole.User },
     children: [
       {
         path: '',
         name: 'Home',
         component: () => import('@/views/Home.vue'),
-        meta: { requiresAuth: true, role: UserRole.User },
       },
       {
         path: 'search',
         name: 'Search',
         component: () => import('@/views/user/SearchResultView.vue'),
-        meta: { role: UserRole.User },
       },
       {
         path: 'profile',
         name: 'UserProfile',
         component: () => import('@/views/user/userManagement/UserProfileView.vue'),
-        meta: { requiresAuth: true, role: UserRole.User },
         children: [
           {
             path: 'management',
@@ -76,11 +72,6 @@ const routes: RouteRecordRaw[] = [
     ]
   },
   {
-    path: '/login',
-    name: 'Login',
-    component: () => import('@/views/auth/Login.vue'),
-  },
-  {
     path: '/register',
     name: 'Register',
     component: () => import('@/views/auth/RegisterView.vue')
@@ -103,19 +94,19 @@ router.beforeEach((to, from, next) => {
   
   // 檢查是否需要認證
   if (to.meta.requiresAuth && !isLoggedIn) {
-    next({ name: 'Login', query: { redirect: to.fullPath } });
+    // 不再重定向到登录页面，而是返回当前页面
+    next(false);
     return;
   }
   
   // 檢查商家權限
   if (to.meta.requiresMerchantAuth) {
     if (!isLoggedIn) {
-      next({ name: 'Login', query: { redirect: to.fullPath } });
+      next({ name: 'MerchantLogin' });
       return;
     }
     
     if (userRole !== UserRole.Merchant) {
-      // 如果用戶不是商家，則跳轉到首頁
       next({ name: 'Home' });
       return;
     }
@@ -123,20 +114,17 @@ router.beforeEach((to, from, next) => {
   
   // 檢查用戶角色權限
   if (to.meta.role && userRole !== to.meta.role) {
-    // 如果是商家帳號訪問用戶頁面，則跳轉到商家首頁
     if (userRole === UserRole.Merchant) {
       next({ name: 'MerchantDashboard' });
       return;
     }
     
-    // 如果是普通用戶訪問商家頁面，則跳轉到用戶首頁
     if (userRole === UserRole.User) {
       next({ name: 'Home' });
       return;
     }
   }
   
-  // 其他情況正常導航
   next();
 });
 

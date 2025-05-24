@@ -126,7 +126,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useConfirm } from 'primevue/useconfirm';
-import { useToast } from 'primevue/usetoast';
+import { showSuccess, showError, showInfo } from '@/utils/toastHelper';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
@@ -143,7 +143,6 @@ import { getCourseStatusLabel, getCourseStatusSeverity } from '@/utils/statusUti
 
 const router = useRouter();
 const confirm = useConfirm();
-const toast = useToast();
 
 // 篩選條件
 const filters = ref({
@@ -231,7 +230,7 @@ async function loadCourses(): Promise<void> {
 
     try {
         // 模擬 API 請求
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
         // 模擬課程數據
         courses.value = [
@@ -239,12 +238,12 @@ async function loadCourses(): Promise<void> {
                 id: 1,
                 title: '瑜珈初階班',
                 description: '適合初學者的瑜珈課程',
-                coverUrl: 'https://via.placeholder.com/150?text=Yoga',
+                coverUrl: '/images/courses/yoga.jpg',
                 status: CourseStatus.ACTIVE,
-                points: 25,
-                bookedSlots: 8,
-                totalSlots: 10,
-                startDate: new Date(2023, 5, 15)
+                points: 500,
+                totalSlots: 20,
+                bookedSlots: 15,
+                startDate: new Date('2024-03-01')
             },
             {
                 id: 2,
@@ -293,12 +292,7 @@ async function loadCourses(): Promise<void> {
         ];
     } catch (error) {
         console.error('加載課程失敗:', error);
-        toast.add({
-            severity: 'error',
-            summary: '加載失敗',
-            detail: '無法加載課程數據，請稍後再試',
-            life: 3000
-        });
+        showError('加載失敗');
     } finally {
         loading.value = false;
     }
@@ -306,93 +300,67 @@ async function loadCourses(): Promise<void> {
 
 // 編輯課程
 function editCourse(course: CourseListItem): void {
-    router.push(`/merchant/courses/edit/${course.id}`);
+    router.push(`/merchant/courses/${course.id}/edit`);
 }
 
 // 複製課程
 function duplicateCourse(course: CourseListItem): void {
-    toast.add({
-        severity: 'success',
-        summary: '課程已複製',
-        detail: `已創建 "${course.title}" 的副本`,
-        life: 3000
-    });
-
-    // 實際應用中應該調用 API 複製課程
-    const newCourse = { ...course };
-    newCourse.id = courses.value.length + 1;
-    newCourse.title = `${course.title} (副本)`;
-    newCourse.status = CourseStatus.DRAFT;
-    courses.value.unshift(newCourse);
+    // 模擬 API 請求
+    setTimeout(() => {
+        showSuccess('課程已複製');
+        loadCourses(); // 重新加載課程列表
+    }, 500);
 }
 
 // 切換課程狀態
 function toggleCourseStatus(course: CourseListItem): void {
     const newStatus = course.status === CourseStatus.ACTIVE ? CourseStatus.INACTIVE : CourseStatus.ACTIVE;
-    const statusText = newStatus === CourseStatus.ACTIVE ? '上架' : '下架';
+    const action = newStatus === CourseStatus.ACTIVE ? '上架' : '下架';
+    
+    // 模擬 API 請求
+    setTimeout(() => {
+        course.status = newStatus;
+        showSuccess(`課程已${action}`);
+    }, 500);
+}
 
-    // 實際應用中應該調用 API 更新課程狀態
-    course.status = newStatus;
-
-    toast.add({
-        severity: 'info',
-        summary: '狀態已更新',
-        detail: `課程 "${course.title}" 已${statusText}`,
-        life: 3000
-    });
+// 刪除課程
+function deleteCourse(course: CourseListItem): void {
+    // 模擬 API 請求
+    setTimeout(() => {
+        courses.value = courses.value.filter(c => c.id !== course.id);
+        showSuccess('課程已刪除');
+    }, 500);
 }
 
 // 確認刪除課程
 function confirmDelete(course: CourseListItem): void {
     confirm.require({
-        message: `確定要刪除課程 "${course.title}" 嗎？`,
-        header: '確認刪除',
+        message: '確定要刪除這門課程嗎？此操作無法撤銷。',
+        header: '刪除確認',
         icon: 'pi pi-exclamation-triangle',
-        acceptLabel: '確認刪除',
-        rejectLabel: '取消',
-        accept: () => deleteCourse(course),
-        reject: () => { }
+        accept: () => deleteCourse(course)
     });
 }
 
-// 刪除課程
-function deleteCourse(course: CourseListItem): void {
-    // 實際應用中應該調用 API 刪除課程
-    courses.value = courses.value.filter(c => c.id !== course.id);
-
-    toast.add({
-        severity: 'success',
-        summary: '課程已刪除',
-        detail: `課程 "${course.title}" 已成功刪除`,
-        life: 3000
-    });
+// 刪除選中的課程
+function deleteSelectedCourses(): void {
+    // 模擬 API 請求
+    setTimeout(() => {
+        const selectedIds = selectedCourses.value.map(course => course.id);
+        courses.value = courses.value.filter(course => !selectedIds.includes(course.id));
+        selectedCourses.value = [];
+        showSuccess('已刪除選中的課程');
+    }, 500);
 }
 
-// 確認刪除選中課程
+// 確認刪除選中的課程
 function confirmDeleteSelected(): void {
     confirm.require({
-        message: `確定要刪除選中的 ${selectedCourses.value.length} 個課程嗎？`,
-        header: '確認刪除',
+        message: `確定要刪除選中的 ${selectedCourses.value.length} 門課程嗎？此操作無法撤銷。`,
+        header: '刪除確認',
         icon: 'pi pi-exclamation-triangle',
-        acceptLabel: '確認刪除',
-        rejectLabel: '取消',
-        accept: () => deleteSelectedCourses(),
-        reject: () => { }
-    });
-}
-
-// 刪除選中課程
-function deleteSelectedCourses(): void {
-    // 實際應用中應該調用 API 批量刪除課程
-    const selectedIds = selectedCourses.value.map(course => course.id);
-    courses.value = courses.value.filter(course => !selectedIds.includes(course.id));
-    selectedCourses.value = [];
-
-    toast.add({
-        severity: 'success',
-        summary: '課程已刪除',
-        detail: `已成功刪除 ${selectedIds.length} 個課程`,
-        life: 3000
+        accept: () => deleteSelectedCourses()
     });
 }
 

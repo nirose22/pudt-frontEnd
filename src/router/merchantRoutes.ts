@@ -74,6 +74,12 @@ const merchantRoutes: RouteRecordRaw[] = [
       }
     ]
   },
+  {
+    path: '/merchant/login',
+    name: 'MerchantLogin',
+    component: () => import('@/views/merchant/auth/MerchantLogin.vue'),
+    meta: { title: '商家登入', role: UserRole.Merchant }
+  }
 ];
 
 export default merchantRoutes; 

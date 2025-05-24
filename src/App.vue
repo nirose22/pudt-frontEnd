@@ -1,14 +1,41 @@
 <template>
   <div class="h-full min-h-screen bg-gray-50">
-    <RouterView></RouterView>
+    <Toast position="top-right" group="global" />
+    <router-view v-slot="{ Component }">
+      <component :is="Component" />
+    </router-view>
+    <LoginDialog v-model:visible="showLoginDialog" />
   </div>
 </template>
 <script setup lang="ts">
-import Footer from '@/components/layout/Footer.vue'
 import { useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/authStore'
+import Toast from 'primevue/toast'
+import LoginDialog from '@/components/auth/LoginDialog.vue'
+import { ref, watch, provide, onMounted } from 'vue'
 
 const route = useRoute()
+const authStore = useAuthStore()
+const showLoginDialog = ref(false)
 
+
+
+// 监听路由变化，检查是否需要显示登录对话框
+watch(
+  () => route.meta.requiresAuth,
+  (requiresAuth) => {
+    console.log(1212);
+    
+    if (requiresAuth && !authStore.isLoggedIn) {
+      console.log(1111);
+      
+      showLoginDialog.value = true;
+    }
+  },
+  { immediate: true }
+)
+
+provide('showLoginDialog', showLoginDialog)
 </script>
 <style>
 @reference "tailwindcss";

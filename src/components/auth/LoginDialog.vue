@@ -1,12 +1,13 @@
 <template>
-    <Dialog v-model:visible="visible" modal :style="{ width: '450px' }" :closable="false" class="login-dialog">
+    <Dialog v-model:visible="visible" modal :style="{ width: '450px' }" :closable="true" class="login-dialog"
+        @hide="onHide">
         <template #header>
-            <div class="flex flex-col items-center">
-                <img src="@/assets/image/pudt_logo-sm.png" alt="PUDT Logo" class="h-16 mb-4" />
-                <h2 class="text-xl font-bold text-sky-600">登入</h2>
-            </div>
+            <div class="grow"></div>
         </template>
-
+        <div class="flex flex-col items-center">
+            <img src="@/assets/image/pudt_logo-sm.png" alt="PUDT Logo" class="h-16 mb-4" />
+            <h2 class="text-xl font-bold text-sky-600">登入</h2>
+        </div>
         <div class="flex flex-col gap-4">
             <Form v-slot="$form" @submit="onFormSubmit" :resolver="resolver" :initialValues="initialValues"
                 class="flex flex-col gap-4">
@@ -22,8 +23,8 @@
                 <FormField name="password">
                     <IconField>
                         <InputIcon class="pi pi-lock" />
-                        <Password type="password" placeholder="密碼" :feedback="false" toggleMask fluid
-                            variant="filled" class="w-full" />
+                        <Password type="password" placeholder="密碼" :feedback="false" toggleMask fluid variant="filled"
+                            class="w-full" />
                     </IconField>
                     <Message v-if="$form.password?.invalid" severity="error" size="small" variant="simple">
                         {{ $form.password.error?.message }}
@@ -37,14 +38,14 @@
 
                 <Button type="submit" label="登入" size="large" rounded class="w-full" :loading="loading" />
 
-                <Divider align="center">
+                <Divider>
                     <span class="text-sm text-gray-500">或使用以下方式登入</span>
                 </Divider>
 
                 <div class="flex gap-4 justify-center">
-                    <Button type="button" icon="pi pi-google" class="p-button-rounded p-button-outlined" 
+                    <Button type="button" icon="pi pi-google" class="p-button-rounded p-button-outlined"
                         @click="handleGoogleLogin" />
-                    <Button type="button" icon="pi pi-facebook" class="p-button-rounded p-button-outlined" 
+                    <Button type="button" icon="pi pi-facebook" class="p-button-rounded p-button-outlined"
                         @click="handleFacebookLogin" />
                 </div>
             </Form>
@@ -61,11 +62,10 @@
     </Dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
-import { useToast } from 'primevue/usetoast'
 import Dialog from 'primevue/dialog'
 import Password from 'primevue/password'
 import IconField from 'primevue/iconfield'
@@ -78,13 +78,16 @@ import InputText from 'primevue/inputtext'
 import Divider from 'primevue/divider'
 import Checkbox from 'primevue/checkbox'
 import Button from 'primevue/button'
+import { showError, showSuccess } from '@/utils/toastHelper'
+
+
+const visible = defineModel<boolean>('visible', { required: true })
 
 const router = useRouter()
 const authStore = useAuthStore()
-const toast = useToast()
-const visible = ref(true)
 const loading = ref(false)
 const rememberMe = ref(false)
+
 
 const initialValues = ref({
     account: '',
@@ -98,7 +101,7 @@ const resolver = zodResolver(
     })
 )
 
-const onFormSubmit = async (e) => {
+const onFormSubmit = async (e: any) => {
     if (e.valid) {
         loading.value = true
         try {
@@ -107,13 +110,13 @@ const onFormSubmit = async (e) => {
                 rememberMe: rememberMe.value
             })
             if (authRes.success) {
-                toast.add({ severity: 'success', summary: '登入成功', life: 3000 })
-                router.push('/')
+                showSuccess('登入成功')
+                visible.value = false
             } else {
-                toast.add({ severity: 'error', summary: authRes.message, life: 3000 })
+                showError(authRes.message ?? '登入失敗')
             }
         } catch (error) {
-            toast.add({ severity: 'error', summary: '登入失敗', life: 3000 })
+            showError('登入失敗', error instanceof Error ? error.message : '未知錯誤')
         } finally {
             loading.value = false
         }
@@ -124,10 +127,10 @@ const handleGoogleLogin = async () => {
     try {
         const res = await authStore.loginWithGoogle()
         if (res.success) {
-            router.push('/')
+            visible.value = false
         }
     } catch (error) {
-        toast.add({ severity: 'error', summary: 'Google 登入失敗', life: 3000 })
+        showError('Google 登入失敗')
     }
 }
 
@@ -135,16 +138,20 @@ const handleFacebookLogin = async () => {
     try {
         const res = await authStore.loginWithFacebook()
         if (res.success) {
-            router.push('/')
+            visible.value = false
         }
     } catch (error) {
-        toast.add({ severity: 'error', summary: 'Facebook 登入失敗', life: 3000 })
+        showError('Facebook 登入失敗')
     }
 }
 
 const goToRegister = () => {
     visible.value = false
     router.push('/register')
+}
+
+const onHide = () => {
+    visible.value = false
 }
 </script>
 

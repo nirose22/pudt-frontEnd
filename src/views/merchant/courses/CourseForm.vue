@@ -263,29 +263,27 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { z } from 'zod';
-import { useToast } from 'primevue/usetoast';
-import Card from 'primevue/card';
-import InputText from 'primevue/inputtext';
-import InputNumber from 'primevue/inputnumber';
-import Select from 'primevue/select';
-import MultiSelect from 'primevue/multiselect';
-import Calendar from 'primevue/calendar';
-import Editor from 'primevue/editor';
-import Button from 'primevue/button';
-import Dialog from 'primevue/dialog';
-import Tag from 'primevue/tag';
-import { mockRegions } from '@/services/MockService';
+import { showSuccess, showError, showInfo } from '@/utils/toastHelper';
+import { useMerchantStore } from '@/stores/merchantStore';
 import type { Course, CourseDetailDTO } from '@/types/course';
 import { CourseStatus, CourseStatusLabel } from '@/enums/Course';
 import { MainCategory, MainCategoryLabel, SubCategory, SubCategoryLabel } from '@/enums/CourseCategory';
 import { formatDate, formatTime } from '@/utils/dateUtils';
 import { getCourseStatusLabel, getCourseStatusSeverity } from '@/utils/statusUtils';
-import { CourseService } from '@/services/CourseService';
+import {
+    Card, InputText, InputNumber, Select, MultiSelect,
+    Calendar, Button, Dialog, Tag
+} from 'primevue';
+import Editor from 'primevue/editor';
+import { mockRegions } from '@/services/MockService';
+import { useCourseStore } from '@/stores/courseStore';
 
-// 通用狀態與工具
 const route = useRoute();
 const router = useRouter();
-const toast = useToast();
+const merchantStore = useMerchantStore();
+const courseStore = useCourseStore();
+
+// 狀態
 const showPreview = ref(false);
 const saving = ref(false);
 
@@ -295,27 +293,27 @@ const courseId = computed(() => route.params.id ? parseInt(route.params.id as st
 
 // 課程數據
 const course = ref<CourseDetailDTO>({
-  id: 0,
-  title: '',
-  description: '',
-  status: CourseStatus.ACTIVE,
-  points: 0,
-  region: undefined,
-  publishDate: null,
-  categories: [],
-  coverUrl: undefined,
-  images: [],
-  sessions: [],
-  merchantId: 0,
-  createdAt: new Date(),
-  merchant: {
     id: 0,
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
+    title: '',
+    description: '',
+    status: CourseStatus.ACTIVE,
+    points: 0,
+    region: undefined,
+    publishDate: null,
+    categories: [],
+    coverUrl: undefined,
+    images: [],
+    sessions: [],
+    merchantId: 0,
     createdAt: new Date(),
-  }
+    merchant: {
+        id: 0,
+        name: '',
+        email: '',
+        phone: '',
+        address: '',
+        createdAt: new Date(),
+    }
 });
 
 // 表單錯誤訊息
@@ -504,77 +502,70 @@ function removeTimeSlot(index: number): void {
 }
 
 // 上傳主圖
-function uploadMainImage(): void {
-  // 實際應用中應該調用文件上傳 API
-  // 這裡使用模擬數據
-  course.value.coverUrl = 'https://via.placeholder.com/800x600?text=主圖';
+async function uploadMainImage(): Promise<void> {
+  try {
+    // 模擬上傳
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // 更新圖片 URL
+    course.value.coverUrl = 'https://via.placeholder.com/800x600?text=課程主圖';
+    
+    showSuccess('主圖已成功上傳', '上傳成功');
+  } catch (error) {
+    console.error('上傳主圖失敗:', error);
+    showError('無法上傳主圖，請稍後再試', '上傳失敗');
+  }
 }
 
 // 上傳圖片
-function uploadImage(): void {
-  // 實際應用中應該調用文件上傳 API
-  // 這裡使用模擬數據
-  if (course.value.images.length < 5) {
+async function uploadImage(): Promise<void> {
+  try {
+    // 模擬上傳
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // 添加新圖片
     course.value.images.push({
-      id: Math.floor(Math.random() * 1000),
-      courseId: course.value.id,
-      url: `https://via.placeholder.com/400x300?text=圖片${course.value.images.length + 1}`,
-      alt: `課程圖片${course.value.images.length + 1}`
+      url: 'https://via.placeholder.com/400x300?text=課程圖片',
+      alt: '課程圖片'
     });
+    
+    showSuccess('圖片已成功上傳', '上傳成功');
+  } catch (error) {
+    console.error('上傳圖片失敗:', error);
+    showError('無法上傳圖片，請稍後再試', '上傳失敗');
   }
 }
 
 // 移除圖片
 function removeImage(index: number): void {
   course.value.images.splice(index, 1);
+  showInfo('圖片已移除', '已移除');
 }
 
 // 保存課程
 async function saveCourse(): Promise<void> {
-  clearErrors();
-
-  const validation = validateForm(course.value);
-
-  if (!validation.success) {
-    // 更新錯誤狀態
-    Object.entries(validation.errors).forEach(([field, message]) => {
-      if (field in errors) {
-        errors[field as keyof typeof errors] = message;
-      }
-    });
-
-    toast.add({
-      severity: 'error',
-      summary: '表單驗證失敗',
-      detail: '請檢查並填寫所有必填欄位',
-      life: 3000
-    });
+  if (!validateForm(course.value)) {
     return;
   }
 
   saving.value = true;
-
   try {
-    // 模擬 API 請求
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // 實際應用中應該調用 API 保存課程
-    toast.add({
-      severity: 'success',
-      summary: '保存成功',
-      detail: isEditMode.value ? '課程已更新' : '課程已創建',
-      life: 3000
-    });
-
-    // 返回課程列表頁
-    router.push({ name: 'CourseList' });
-  } catch {
-    toast.add({
-      severity: 'error',
-      summary: '保存失敗',
-      detail: '無法保存課程，請稍後再試',
-      life: 3000
-    });
+    if (isEditMode.value) {
+      const result = await courseStore.updateCourse(courseId.value, course.value);
+      if (result.success) {
+        showSuccess('課程已成功更新', '更新成功');
+        router.push('/merchant/courses');
+      }
+    } else {
+      const result = await courseStore.createCourse(course.value);
+      if (result.success) {
+        showSuccess('課程已成功建立', '建立成功');
+        router.push('/merchant/courses');
+      }
+    }
+  } catch (error) {
+    console.error('儲存課程失敗:', error);
+    showError('無法儲存課程，請稍後再試', '儲存失敗');
   } finally {
     saving.value = false;
   }
@@ -582,30 +573,23 @@ async function saveCourse(): Promise<void> {
 
 // 返回上一頁
 function navigateBack(): void {
-  router.push({ name: 'CourseList' });
+  router.push('/merchant/courses');
 }
 
 // 載入課程數據
 async function loadCourseData(): Promise<void> {
-  if (!isEditMode.value) return;
+  if (!isEditMode.value) {
+    return;
+  }
 
   try {
-    // 模擬 API 請求
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // 獲取課程詳細數據
-    const courseDetail = await CourseService.fetchCourseDetail(courseId.value);
-    // 將 API 返回的數據轉換為表單所需的格式
-    course.value = courseDetail.course;
-    course.value.sessions = courseDetail.sessions;
+    const result = await courseStore.loadCourseDetail(courseId.value);
+    if (result.success && result.data) {
+      course.value = result.data;
+    }
   } catch (error) {
-    console.error('加載課程失敗:', error);
-    toast.add({
-      severity: 'error',
-      summary: '加載失敗',
-      detail: '無法加載課程數據，請稍後再試',
-      life: 3000
-    });
+    console.error('加載課程數據失敗:', error);
+    showError('無法加載課程數據，請稍後再試', '加載失敗');
   }
 }
 

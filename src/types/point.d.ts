@@ -55,3 +55,13 @@ export interface PointTransaction {
   points: number;
   status: PointTransactionStatus;
 }
+
+
+/**
+ * 點數統計
+ */
+export interface PointStats {
+  totalPoints: number; // 總點數
+  settledPoints: number; // 已結算點數
+  pendingPoints: number; // 待結算點數
+}

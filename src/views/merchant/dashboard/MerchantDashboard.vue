@@ -157,11 +157,10 @@ import Rating from 'primevue/rating';
 import Badge from 'primevue/badge';
 import Tag from 'primevue/tag';
 import Button from 'primevue/button';
-import { useToast } from 'primevue/usetoast';
+import { showSuccess, showError, showInfo } from '@/utils/toastHelper';
 import { formatDateTime } from '@/utils/dateUtils';
 
 const router = useRouter();
-const toast = useToast();
 
 // 儀表板數據
 const dashboardData = ref({
@@ -252,47 +251,14 @@ const pendingBookings = ref([
     { id: 103, customerName: '王大偉', courseTitle: '水彩畫入門', date: new Date(2023, 5, 16, 15, 30), status: 'pending' }
 ]);
 
-// 格式化日期
-function formatDate(date: Date): string {
-    return formatDateTime(date);
-}
-
-// 獲取狀態標籤
-function getStatusLabel(status: string): string {
-    const statusMap: Record<string, string> = {
-        'pending': '待確認',
-        'confirmed': '已確認',
-        'completed': '已完成',
-        'cancelled': '已取消',
-        'noshow': '未出席'
-    };
-    return statusMap[status] || status;
-}
-
-// 獲取狀態嚴重性
-function getStatusSeverity(status: string): string {
-    const severityMap: Record<string, string> = {
-        'pending': 'warning',
-        'confirmed': 'success',
-        'completed': 'info',
-        'cancelled': 'secondary',
-        'noshow': 'danger'
-    };
-    return severityMap[status] || 'info';
-}
-
 // 確認預約
-function confirmBooking(id: number): void {
-    // 這裡應該調用 API 確認預約
-    toast.add({
-        severity: 'success',
-        summary: '預約已確認',
-        detail: `預約 #${id} 已成功確認`,
-        life: 3000
-    });
-
-    // 更新列表（實際應用中應該重新獲取數據）
-    pendingBookings.value = pendingBookings.value.filter(booking => booking.id !== id);
+function confirmBooking(bookingId: number): void {
+    // 模擬 API 請求
+    setTimeout(() => {
+        showSuccess('預約已確認');
+        // 更新預約列表
+        pendingBookings.value = pendingBookings.value.filter(booking => booking.id !== bookingId);
+    }, 500);
 }
 
 // 導航到指定頁面
@@ -300,10 +266,57 @@ function navigateTo(path: string): void {
     router.push(path);
 }
 
+// 獲取狀態標籤樣式
+function getStatusSeverity(status: string): string {
+    const severityMap: Record<string, string> = {
+        'pending': 'warning',
+        'confirmed': 'success',
+        'cancelled': 'danger'
+    };
+    return severityMap[status] || 'info';
+}
+
+// 獲取狀態標籤文字
+function getStatusLabel(status: string): string {
+    const labelMap: Record<string, string> = {
+        'pending': '待確認',
+        'confirmed': '已確認',
+        'cancelled': '已取消'
+    };
+    return labelMap[status] || status;
+}
+
+// 格式化日期
+function formatDate(date: Date): string {
+    return formatDateTime(date);
+}
+
+// 加載儀表板數據
+async function loadDashboardData(): Promise<void> {
+    try {
+        // 模擬 API 請求
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // 更新數據
+        dashboardData.value = {
+            todayBookings: 12,
+            bookingTrend: 5.2,
+            monthlyRevenue: 2450,
+            revenueTrend: 8.7,
+            totalCourses: 24,
+            activeCourses: 18,
+            cancellationRate: 3.2,
+            cancellationTrend: -1.5
+        };
+    } catch (error) {
+        console.error('加載儀表板數據失敗:', error);
+        showError('加載失敗');
+    }
+}
+
 // 初始化
 onMounted(() => {
-    // 實際應用中，這裡應該調用 API 獲取儀表板數據
-    console.log('儀表板已加載');
+    loadDashboardData();
 });
 </script>
 

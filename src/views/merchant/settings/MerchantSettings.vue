@@ -274,9 +274,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import { z } from 'zod';
-import { useToast } from 'primevue/usetoast';
+import { showSuccess, showError, showInfo } from '@/utils/toastHelper';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import Card from 'primevue/card';
@@ -286,8 +286,6 @@ import Button from 'primevue/button';
 import Editor from 'primevue/editor';
 import Password from 'primevue/password';
 import InputSwitch from 'primevue/inputswitch';
-
-const toast = useToast();
 
 // 商家資訊
 const merchantInfo = reactive({
@@ -416,12 +414,7 @@ async function saveBasicInfo(): Promise<void> {
     // 模擬 API 請求
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    toast.add({
-      severity: 'success',
-      summary: '保存成功',
-      detail: '商家基本資料已更新',
-      life: 3000
-    });
+    showSuccess('基本資料已儲存', '儲存成功');
   } catch (error) {
     if (error instanceof z.ZodError) {
       // 處理驗證錯誤
@@ -432,20 +425,10 @@ async function saveBasicInfo(): Promise<void> {
         }
       });
       
-      toast.add({
-        severity: 'error',
-        summary: '驗證失敗',
-        detail: '請檢查並填寫所有必填欄位',
-        life: 3000
-      });
+      showError('請檢查並填寫所有必填欄位', '驗證失敗');
     } else {
       console.error('保存基本資料失敗:', error);
-      toast.add({
-        severity: 'error',
-        summary: '保存失敗',
-        detail: '無法保存商家基本資料，請稍後再試',
-        life: 3000
-      });
+      showError('無法保存基本資料，請稍後再試', '保存失敗');
     }
   } finally {
     saving.value = false;
@@ -460,37 +443,35 @@ async function saveBrandInfo(): Promise<void> {
     // 模擬 API 請求
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    toast.add({
-      severity: 'success',
-      summary: '保存成功',
-      detail: '商家品牌資訊已更新',
-      life: 3000
-    });
+    showSuccess('品牌設定已儲存', '儲存成功');
   } catch (error) {
     console.error('保存品牌資訊失敗:', error);
-    toast.add({
-      severity: 'error',
-      summary: '保存失敗',
-      detail: '無法保存商家品牌資訊，請稍後再試',
-      life: 3000
-    });
+    showError('無法保存品牌資訊，請稍後再試', '保存失敗');
   } finally {
     saving.value = false;
   }
 }
 
 // 上傳 Logo
-function uploadLogo(): void {
-  // 實際應用中應該調用文件上傳 API
-  // 這裡使用模擬數據
-  merchantInfo.logo = 'https://via.placeholder.com/200x200?text=Logo';
+async function uploadLogo(): Promise<void> {
+  try {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    showSuccess('Logo 已上傳', '上傳成功');
+  } catch (error) {
+    console.error('Logo 上傳失敗:', error);
+    showError('Logo 上傳失敗，請稍後再試', '上傳失敗');
+  }
 }
 
 // 上傳封面圖片
-function uploadCoverImage(): void {
-  // 實際應用中應該調用文件上傳 API
-  // 這裡使用模擬數據
-  merchantInfo.coverImage = 'https://via.placeholder.com/1200x400?text=Cover+Image';
+async function uploadCoverImage(): Promise<void> {
+  try {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    showSuccess('封面圖片已上傳', '上傳成功');
+  } catch (error) {
+    console.error('封面圖片上傳失敗:', error);
+    showError('封面圖片上傳失敗，請稍後再試', '上傳失敗');
+  }
 }
 
 // 清除密碼錯誤訊息
@@ -513,12 +494,7 @@ async function changePassword(): Promise<void> {
     // 模擬 API 請求
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    toast.add({
-      severity: 'success',
-      summary: '變更成功',
-      detail: '密碼已成功變更',
-      life: 3000
-    });
+    showSuccess('密碼已變更', '變更成功');
     
     // 重置表單
     passwordForm.currentPassword = '';
@@ -535,12 +511,7 @@ async function changePassword(): Promise<void> {
       });
     } else {
       console.error('變更密碼失敗:', error);
-      toast.add({
-        severity: 'error',
-        summary: '變更失敗',
-        detail: '無法變更密碼，請確認目前密碼是否正確',
-        life: 3000
-      });
+      showError('無法變更密碼，請確認目前密碼是否正確', '變更失敗');
     }
   } finally {
     changingPassword.value = false;
@@ -555,24 +526,14 @@ async function toggleTwoFactor(event: Event): Promise<void> {
     // 模擬 API 請求
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    toast.add({
-      severity: 'success',
-      summary: enabled ? '已啟用雙重驗證' : '已停用雙重驗證',
-      detail: enabled ? '您的帳號現在受到雙重驗證保護' : '雙重驗證已停用，建議保持啟用以提高安全性',
-      life: 3000
-    });
+    showSuccess(enabled ? '已啟用雙重驗證' : '已停用雙重驗證', enabled ? '啟用成功' : '停用成功');
   } catch (error) {
     console.error('切換雙重驗證失敗:', error);
     
     // 還原狀態
     twoFactorEnabled.value = !enabled;
     
-    toast.add({
-      severity: 'error',
-      summary: '操作失敗',
-      detail: '無法變更雙重驗證設定，請稍後再試',
-      life: 3000
-    });
+    showError('無法變更雙重驗證設定，請稍後再試', '操作失敗');
   }
 }
 
@@ -584,20 +545,10 @@ async function saveNotificationSettings(): Promise<void> {
     // 模擬 API 請求
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    toast.add({
-      severity: 'success',
-      summary: '保存成功',
-      detail: '通知設定已更新',
-      life: 3000
-    });
+    showSuccess('通知設定已儲存', '儲存成功');
   } catch (error) {
     console.error('保存通知設定失敗:', error);
-    toast.add({
-      severity: 'error',
-      summary: '保存失敗',
-      detail: '無法保存通知設定，請稍後再試',
-      life: 3000
-    });
+    showError('無法保存通知設定，請稍後再試', '儲存失敗');
   } finally {
     saving.value = false;
   }

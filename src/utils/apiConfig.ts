@@ -25,6 +25,8 @@ export const API_ROUTES = {
         FAVORITES: (userId: number) => `/users/${userId}/favorites`,
         ADD_FAVORITE: (userId: number) => `/users/${userId}/favorites`,
         REMOVE_FAVORITE: (userId: number, courseId: number) => `/users/${userId}/favorites/${courseId}`,
+        CREATE: '/courses',
+        UPDATE: (id: number) => `/courses/${id}`,
     },
     BOOKING: {
         LIST: (userId: number) => `/users/${userId}/bookings`,
@@ -37,6 +39,9 @@ export const API_ROUTES = {
         DETAIL: (id: number | 'me') => `/merchants/${id}`,
         COURSES: (id: number | 'me') => `/merchants/${id}/courses`,
         UPDATE: (id: number) => `/merchants/${id}`,
+        STATS: (id: number | 'me') => `/merchants/${id}/stats`,
+        INSTRUCTORS: (id: number | 'me') => `/merchants/${id}/instructors`,
+        INSTRUCTOR_DETAIL: (id: number | 'me', instructorId: number) => `/merchants/${id}/instructors/${instructorId}`,
     },
     PURCHASE: {
         HISTORY: (userId: number) => `/users/${userId}/purchase-history`,

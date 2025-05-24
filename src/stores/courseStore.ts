@@ -67,9 +67,11 @@ export const useCourseStore = defineStore('course', () => {
     error.value = null;
 
     try {
-      const data = await CourseService.getCourse(keyword, regions, categories);
-      allCourses.value = data;
-      return { success: true, data };
+      const result = await CourseService.getCourse(keyword, regions, categories);
+      if (result.success && result.data) {
+        allCourses.value = result.data;
+      }
+      return result;
     } catch (err) {
       return errorHandler.handleApiError(err, ERROR_MESSAGES.COURSE_ERROR);
     } finally {
@@ -86,10 +88,16 @@ export const useCourseStore = defineStore('course', () => {
     error.value = null;
 
     try {
-      const { course, sessions } = await CourseService.fetchCourseDetail(courseId);
-      currentCourse.value = course;
-      courseSession.value = sessions;
-      return { success: true, data: course };
+      const result = await CourseService.fetchCourseDetail(courseId);
+      if (result.success && result.data) {
+        currentCourse.value = result.data;
+        // 获取课程时段
+        const sessionsResult = await CourseService.getSessionsForCourse(courseId);
+        if (sessionsResult.success && sessionsResult.data) {
+          courseSession.value = sessionsResult.data;
+        }
+      }
+      return result;
     } catch (err) {
       return errorHandler.handleApiError(err, ERROR_MESSAGES.COURSE_ERROR);
     } finally {
@@ -202,9 +210,60 @@ export const useCourseStore = defineStore('course', () => {
     return favoriteCourses.value.some(c => c.id === courseId);
   };
 
+  /**
+   * 創建新課程
+   * @param course 課程數據
+   */
+  const createCourse = async (course: CourseDetailDTO): Promise<Result<CourseDetailDTO>> => {
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      const result = await CourseService.createCourse(course);
+      if (result.success && result.data) {
+        // 更新課程列表
+        allCourses.value = [result.data, ...allCourses.value];
+      }
+      return result;
+    } catch (err) {
+      return errorHandler.handleApiError(err, ERROR_MESSAGES.COURSE_ERROR);
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  /**
+   * 更新課程
+   * @param courseId 課程ID
+   * @param course 課程數據
+   */
+  const updateCourse = async (courseId: number, course: CourseDetailDTO): Promise<Result<CourseDetailDTO>> => {
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      const result = await CourseService.updateCourse(courseId, course);
+      if (result.success && result.data) {
+        // 更新課程列表中的對應課程
+        const index = allCourses.value.findIndex(c => c.id === courseId);
+        if (index !== -1) {
+          allCourses.value[index] = result.data;
+        }
+        // 如果當前正在查看的課程被更新，也更新當前課程
+        if (currentCourse.value?.id === courseId) {
+          currentCourse.value = result.data;
+        }
+      }
+      return result;
+    } catch (err) {
+      return errorHandler.handleApiError(err, ERROR_MESSAGES.COURSE_ERROR);
+    } finally {
+      isLoading.value = false;
+    }
+  };
 
   return {
-    // 状态
+    // 狀態
     allCourses,
     myBookings,
     favoriteCourses,
@@ -230,5 +289,7 @@ export const useCourseStore = defineStore('course', () => {
     addFavoriteCourse,
     removeFavoriteCourse,
     isFavorite,
+    createCourse,
+    updateCourse,
   };
 }); 
