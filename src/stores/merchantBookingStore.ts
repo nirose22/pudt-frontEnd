@@ -6,14 +6,24 @@ import { BookingStatus } from '@/enums/BookingStatus';
 import { showSuccess, showError } from '@/utils/toastHelper';
 import { useMerchantStore } from './merchantStore';
 import type { BookingQuery } from '@/services/MerchantBookingService';
+import { errorHandler } from '@/utils/errorHandler';
+import { ERROR_MESSAGES } from '@/utils/apiConfig';
 
 export const useMerchantBookingStore = defineStore('merchantBooking', () => {
     const bookings = ref<MerchantBookingDetail[]>([]);
     const selectedBooking = ref<MerchantBookingDetail | null>(null);
     const loading = ref(false);
+    const error = ref<string | null>(null);
     const merchantStore = useMerchantStore();
-    const merchantId = merchantStore.profile!.id;
+    const merchantId = computed(() => merchantStore.profile?.id);
 
+    // 檢查商家 ID 是否存在
+    function checkMerchantId(): number {
+        if (!merchantId.value) {
+            throw new Error('商家資料未載入');
+        }
+        return merchantId.value;
+    }
 
     const filters = ref({
         search: '',
@@ -54,16 +64,21 @@ export const useMerchantBookingStore = defineStore('merchantBooking', () => {
     // 加載預約列表
     async function loadBookings(): Promise<void> {
         loading.value = true;
+        error.value = null;
         try {
             const query: BookingQuery = {
                 status: filters.value.status ?? undefined,
                 date: filters.value.dateRange?.start?.toISOString()
             }
-            const response = await MerchantBookingService.getMerchantBookings(merchantId, query);
+            const response = await MerchantBookingService.getMerchantBookings(checkMerchantId(), query);
+            if (!response.success) {
+                throw new Error(response.message || ERROR_MESSAGES.BOOKING_ERROR);
+            }
             bookings.value = response.data || [];
-        } catch (error) {
-            showError('加載預約列表失敗');
-            console.error('加載預約列表失敗:', error);
+        } catch (err) {
+            error.value = err instanceof Error ? err.message : ERROR_MESSAGES.BOOKING_ERROR;
+            showError(error.value);
+            console.error('加載預約列表失敗:', err);
         } finally {
             loading.value = false;
         }
@@ -72,13 +87,18 @@ export const useMerchantBookingStore = defineStore('merchantBooking', () => {
     // 加載預約詳情
     async function loadBookingDetail(id: number): Promise<void> {
         loading.value = true;
+        error.value = null;
         try {
-            const response = await MerchantBookingService.getBookingDetail(merchantId, id);
+            const response = await MerchantBookingService.getBookingDetail(checkMerchantId(), id);
+            if (!response.success) {
+                throw new Error(response.message || ERROR_MESSAGES.BOOKING_ERROR);
+            }
             selectedBooking.value = response.data || null;
-        } catch (error) {
-            showError('加載預約詳情失敗');
-            console.error('加載預約詳情失敗:', error);
-            throw error;
+        } catch (err) {
+            error.value = err instanceof Error ? err.message : ERROR_MESSAGES.BOOKING_ERROR;
+            showError(error.value);
+            console.error('加載預約詳情失敗:', err);
+            throw err;
         } finally {
             loading.value = false;
         }
@@ -89,13 +109,18 @@ export const useMerchantBookingStore = defineStore('merchantBooking', () => {
         bookingId: number,
         status: BookingStatus
     ): Promise<void> {
+        error.value = null;
         try {
-            await MerchantBookingService.updateBookingStatus(merchantId, bookingId, status);
+            const response = await MerchantBookingService.updateBookingStatus(checkMerchantId(), bookingId, status);
+            if (!response.success) {
+                throw new Error(response.message || ERROR_MESSAGES.BOOKING_ERROR);
+            }
             await loadBookingDetail(bookingId);
             showSuccess('預約狀態已更新');
-        } catch (error) {
-            showError('更新預約狀態失敗');
-            throw error;
+        } catch (err) {
+            error.value = err instanceof Error ? err.message : ERROR_MESSAGES.BOOKING_ERROR;
+            showError(error.value);
+            throw err;
         }
     }
 
@@ -104,16 +129,21 @@ export const useMerchantBookingStore = defineStore('merchantBooking', () => {
         bookingId: number,
         notes: string
     ): Promise<void> {
+        error.value = null;
         try {
-            await MerchantBookingService.updateBookingNotes(merchantId, bookingId, notes);
+            const response = await MerchantBookingService.updateBookingNotes(checkMerchantId(), bookingId, notes);
+            if (!response.success) {
+                throw new Error(response.message || ERROR_MESSAGES.BOOKING_ERROR);
+            }
             if (selectedBooking.value) {
-                selectedBooking.value.merchantNotes = notes;
+                selectedBooking.value.notes = notes;
             }
             showSuccess('預約備註已更新');
-        } catch (error) {
-            showError('更新預約備註失敗');
-            console.error('更新預約備註失敗:', error);
-            throw error;
+        } catch (err) {
+            error.value = err instanceof Error ? err.message : ERROR_MESSAGES.BOOKING_ERROR;
+            showError(error.value);
+            console.error('更新預約備註失敗:', err);
+            throw err;
         }
     }
 
@@ -123,18 +153,23 @@ export const useMerchantBookingStore = defineStore('merchantBooking', () => {
         content: string,
         options: { email: boolean; sms: boolean }
     ): Promise<void> {
+        error.value = null;
         try {
-            await MerchantBookingService.sendMessage(merchantId, bookingId, content, options);
+            const response = await MerchantBookingService.sendMessage(checkMerchantId(), bookingId, content, options);
+            if (!response.success) {
+                throw new Error(response.message || ERROR_MESSAGES.BOOKING_ERROR);
+            }
             showSuccess('訊息已發送');
-        } catch (error) {
-            showError('發送訊息失敗');
-            console.error('發送訊息失敗:', error);
-            throw error;
+        } catch (err) {
+            error.value = err instanceof Error ? err.message : ERROR_MESSAGES.BOOKING_ERROR;
+            showError(error.value);
+            console.error('發送訊息失敗:', err);
+            throw err;
         }
     }
 
     // 設置過濾條件
-    function setFilters(newFilters: typeof filters.value): void {
+    function setFilters(newFilters: Partial<typeof filters.value>): void {
         filters.value = { ...filters.value, ...newFilters };
     }
 
@@ -151,6 +186,7 @@ export const useMerchantBookingStore = defineStore('merchantBooking', () => {
         bookings,
         selectedBooking,
         loading,
+        error,
         filters,
         filteredBookings,
         loadBookings,

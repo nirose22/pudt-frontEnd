@@ -1,5 +1,5 @@
 import type { Result } from '@/types';
-import type { Order, OrderItem } from '@/types/order';
+import type { Order } from '@/types/order';
 import type { ExtendedPurchaseItem } from '@/types/purchase';
 import { CardType } from '@/enums/Cards';
 import { apiClient } from '@/utils/api';

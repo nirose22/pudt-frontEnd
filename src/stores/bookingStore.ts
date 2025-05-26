@@ -75,10 +75,13 @@ export const useBookingStore = defineStore('booking', () => {
                 return false
             }
             
-            // 从 BookingService 获取预约记录
-            const data = await BookingService.getUserBookings(userId)
-            bookings.value = data
-            return true
+            const result = await BookingService.getBookings(userId)
+            if (result.success && result.data) {
+                bookings.value = result.data
+                return true
+            }
+            error.value = result.message || ERROR_MESSAGES.BOOKING_ERROR
+            return false
         } catch (err) {
             error.value = err instanceof Error ? err.message : ERROR_MESSAGES.BOOKING_ERROR
             return false
@@ -93,14 +96,12 @@ export const useBookingStore = defineStore('booking', () => {
         error.value = null
         
         try {
-            // 从 BookingService 获取课程预约详情
-            const { bookingStatus } = await BookingService.fetchCourseBookingDetail(courseId)
+            const result = await BookingService.checkAvailability(courseId, 0)
+            if (!result.success) {
+                return result
+            }
             
-            // 更新 course store 中的数据
             await courseStore.loadCourseDetail(courseId)
-            
-            // 保存冲突时间槽
-            conflictSlots.value = bookingStatus.conflictSlots
             
             return {
                 success: true,
@@ -130,22 +131,17 @@ export const useBookingStore = defineStore('booking', () => {
             if (!currentCourse || !slot || !userStore.profile) {
                 return errorHandler.handleBusinessError(null, '課程信息不完整或未登錄')
             }
-            // TODO: 
-            // 调用 BookingService 创建预约
-            const result = await BookingService.createBooking(
-                userStore.profile.id,
-                courseId,
-                slotId
-            )
+
+            const result = await BookingService.createBooking(courseId, slotId)
             
-            if (result.success) {
+            if (result.success && result.data) {
                 // 1. 扣点
                 userStore.adjustPoints(-currentCourse.points)
                 // 2. 减座位
                 courseStore.updateAvailableSeats(slotId, -1)
                 // 3. 添加到本地预约记录
                 const newBook: Booking = {
-                    id: Date.now(),
+                    id: result.data.id,
                     courseId,
                     sessionId: slotId,
                     points: currentCourse.points,
@@ -179,13 +175,12 @@ export const useBookingStore = defineStore('booking', () => {
         error.value = null
         
         try {
-            const idx = bookings.value.findIndex(b => b.id === id)
-            if (idx === -1) {
+            const booking = bookings.value.find(b => b.id === id)
+            if (!booking) {
                 return errorHandler.handleBusinessError(null, '預約不存在')
             }
             
-            const bk = bookings.value[idx]
-            if (bk.status === BookingStatus.Cancelled) {
+            if (booking.status === BookingStatus.Cancelled) {
                 return errorHandler.handleBusinessError(null, '課程已被取消')
             }
             
@@ -194,12 +189,12 @@ export const useBookingStore = defineStore('booking', () => {
             
             if (result.success) {
                 // 更新本地数据
-                bk.status = BookingStatus.Cancelled
+                booking.status = BookingStatus.Cancelled
                 
                 // 还原点数
                 const course = courseStore.currentCourse
-                if (course && course.id === bk.courseId) {
-                    userStore.adjustPoints(bk.points)
+                if (course && course.id === booking.courseId) {
+                    userStore.adjustPoints(booking.points)
                 }
             }
             return result

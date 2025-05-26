@@ -10,7 +10,7 @@ export type BookingQuery = {
     date?: string
 }
 
-export class UserBookingService {
+export class BookingService {
     static async getBookings(userId: number, query?: BookingQuery): Promise<Result<Booking[]>> {
         const queryString = buildQueryString(query || {})
         const url = `${API_ROUTES.BOOKING.LIST(userId)}${queryString}`

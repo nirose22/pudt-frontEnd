@@ -16,11 +16,11 @@
                     <div class="flex justify-between items-start">
                         <div>
                             <h4 class="font-medium text-lg text-sky-700">{{ booking.courseTitle }}</h4>
-                            <div class="text-sm text-gray-500 mt-1">{{ formatDateString(booking.createdAt.toISOString()) }} {{ booking.time }}</div>
+                            <div class="text-sm text-gray-500 mt-1">{{ formatDateString(booking.createdAt.toISOString()) }} {{ booking.start }}</div>
                             <div class="text-sm text-gray-500">{{ booking.merchantName || booking.location }}</div>
                         </div>
-                        <Tag :value="getTimeLeftLabel(booking.createdAt, booking.start || '')" 
-                            :severity="getTimeLeftSeverity(booking.createdAt, booking.time || '')" />
+                        <Tag :value="getTimeLeftLabel(booking.createdAt)" 
+                            :severity="getTimeLeftSeverity(booking.createdAt)" />
                     </div>
                     <div class="mt-3 flex justify-end gap-2">
                         <Button icon="pi pi-map-marker" text rounded aria-label="查看地圖" 
@@ -441,16 +441,16 @@ function getUpcomingBorderClass(booking: Booking): string {
 }
 
 // 获取剩余时间标签
-function getTimeLeftLabel(date: Date, time: string): string {
+function getTimeLeftLabel(date: Date): string {
     const daysLeft = getDaysLeft(date);
     
-    if (daysLeft === 0) return 'u4f15u5929';
-    if (daysLeft === 1) return 'u660eu5929';
-    return `${daysLeft} u5929u5f6c`;
+    if (daysLeft === 0) return '今天';
+    if (daysLeft === 1) return '明天';
+    return `${daysLeft} 天后`;
 }
 
 // 获取剩余时间严重性
-function getTimeLeftSeverity(date: Date, time: string): string {
+function getTimeLeftSeverity(date: Date): string {
     const daysLeft = getDaysLeft(date);
     
     if (daysLeft <= 1) return 'danger';

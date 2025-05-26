@@ -85,4 +85,12 @@ export const ERROR_MESSAGES = {
     PURCHASE_ERROR: '購買記錄獲取失敗，請稍後重試',
     POINTS_ERROR: '點數操作失敗，請稍後重試',
     ATTENDANCE_ERROR: '出勤記錄操作失敗',
+    USER_ERROR: '用戶操作失敗',
+    AUTH: {
+        LOGIN_ERROR: '登錄失敗，請檢查您的賬號密碼',
+        GOOGLE_LOGIN_ERROR: 'Google 登錄失敗',
+        FACEBOOK_LOGIN_ERROR: 'Facebook 登錄失敗',
+        REGISTER_ERROR: '註冊失敗，請稍後重試',
+        LOGOUT_ERROR: '登出失敗'
+    }
 }
