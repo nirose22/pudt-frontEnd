@@ -12,7 +12,7 @@
             </div>
 
             <Steps :model="steps" :activeIndex="currentStep" />
-            
+
             <!-- 步驟 1: 基本資料 -->
             <div v-if="currentStep === 0" class="mt-8">
                 <h2 class="text-xl font-semibold mb-4">基本資料</h2>
@@ -20,63 +20,36 @@
                     <div class="space-y-4">
                         <div>
                             <IftaLabel>
-                                <InputText 
-                                    id="name" 
-                                    v-model="formData.name" 
-                                    class="w-full"
-                                    placeholder="請輸入您的姓名"
-                                    :class="{ 'p-invalid': errors.name }"
-                                />
-                                <label for="name">姓名</label>
+                                <InputText id="name" v-model="formData.name" class="w-full" placeholder="請輸入您的姓名"
+                                    :class="{ 'p-invalid': errors.name }" />
+                                <label for="name">名稱</label>
                             </IftaLabel>
                             <small v-if="errors.name" class="p-error">{{ errors.name }}</small>
                         </div>
-
                         <div>
                             <IftaLabel>
-                                <InputText 
-                                    id="email" 
-                                    v-model="formData.email" 
-                                    type="email" 
-                                    class="w-full"
-                                    placeholder="請輸入電子郵件"
-                                    :class="{ 'p-invalid': errors.email }"
-                                />
+                                <InputText id="email" v-model="formData.email" type="email" class="w-full"
+                                    placeholder="請輸入電子郵件" :class="{ 'p-invalid': errors.email }" />
                                 <label for="email">電子郵件</label>
                             </IftaLabel>
                             <small v-if="errors.email" class="p-error">{{ errors.email }}</small>
                         </div>
-                        
                         <div>
                             <IftaLabel>
-                                <Password 
-                                    id="password" 
-                                    v-model="formData.password" 
-                                    :feedback="true" 
-                                    :toggleMask="true"
-                                    inputClass="w-full" 
-                                    class="w-full"
-                                    placeholder="請設定密碼"
-                                    :class="{ 'p-invalid': errors.password }"
-                                />
+                                <Password id="password" v-model="formData.password" :feedback="true" :toggleMask="true"
+                                    inputClass="w-full" class="w-full" placeholder="請設定密碼"
+                                    :class="{ 'p-invalid': errors.password }" />
                                 <label for="password">密碼</label>
                             </IftaLabel>
                             <small v-if="errors.password" class="p-error">{{ errors.password }}</small>
                             <small class="text-gray-500">密碼需至少包含 8 個字符，且包含字母和數字</small>
                         </div>
-                        
+
                         <div>
                             <IftaLabel>
-                                <Password 
-                                    id="confirmPassword" 
-                                    v-model="formData.confirmPassword" 
-                                    :feedback="false" 
-                                    :toggleMask="true"
-                                    inputClass="w-full" 
-                                    class="w-full"
-                                    placeholder="請再次輸入密碼"
-                                    :class="{ 'p-invalid': errors.confirmPassword }"
-                                />
+                                <Password id="confirmPassword" v-model="formData.confirmPassword" :feedback="false"
+                                    :toggleMask="true" inputClass="w-full" class="w-full" placeholder="請再次輸入密碼"
+                                    :class="{ 'p-invalid': errors.confirmPassword }" />
                                 <label for="confirmPassword">確認密碼</label>
                             </IftaLabel>
                             <small v-if="errors.confirmPassword" class="p-error">{{ errors.confirmPassword }}</small>
@@ -84,15 +57,8 @@
 
                         <div>
                             <IftaLabel>
-                                <InputNumber 
-                                    id="age" 
-                                    v-model="formData.age" 
-                                    class="w-full"
-                                    placeholder="請輸入您的年齡"
-                                    :min="1" 
-                                    :max="120"
-                                    :class="{ 'p-invalid': errors.age }"
-                                />
+                                <InputNumber id="age" v-model="formData.age" class="w-full" placeholder="請輸入您的年齡"
+                                    :min="1" :max="120" :class="{ 'p-invalid': errors.age }" />
                                 <label for="age">年齡</label>
                             </IftaLabel>
                             <small v-if="errors.age" class="p-error">{{ errors.age }}</small>
@@ -101,47 +67,34 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <IftaLabel>
-                                    <Select 
-                                        id="gender" 
-                                        v-model="formData.gender" 
-                                        :options="genderOptions" 
-                                        optionLabel="name"
-                                        optionValue="value"
-                                        placeholder="請選擇性別（選填）" 
-                                        class="w-full"
-                                    />
+                                    <Select id="gender" v-model="formData.gender" :options="genderOptions"
+                                        optionLabel="name" optionValue="value" placeholder="請選擇性別（選填）" class="w-full" />
                                     <label for="gender">性別</label>
                                 </IftaLabel>
                             </div>
-                            
+
                             <div>
                                 <IftaLabel>
-                                    <Select 
-                                        id="location" 
-                                        v-model="formData.location" 
-                                        :options="locationOptions" 
-                                        optionLabel="name"
-                                        optionValue="value"
-                                        placeholder="請選擇地區（選填）" 
-                                        class="w-full"
-                                    />
+                                    <Select id="location" v-model="formData.location" :options="locationOptions"
+                                        optionLabel="name" optionValue="value" placeholder="請選擇地區（選填）" class="w-full" />
                                     <label for="location">地區</label>
                                 </IftaLabel>
                             </div>
                         </div>
-                        
+
                         <div class="flex justify-end pt-4">
-                            <Button type="submit" label="下一步" severity="info" icon="pi pi-arrow-right" iconPos="right" />
+                            <Button type="submit" label="下一步" severity="info" icon="pi pi-arrow-right"
+                                iconPos="right" />
                         </div>
                     </div>
                 </Form>
             </div>
-            
+
             <!-- 步驟 2: 興趣選擇 -->
             <div v-else-if="currentStep === 1" class="mt-8">
                 <h2 class="text-xl font-semibold mb-4">選擇您感興趣的類別</h2>
                 <p class="text-gray-600 mb-6">這將幫助我們為您推薦更符合興趣的課程（最多選擇 4 個）</p>
-                
+
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
                     <div v-for="(category, key) in MainCategoryLabel" :key="key"
                         class="p-3 border rounded-lg cursor-pointer transition-all hover:shadow-md"
@@ -153,13 +106,15 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="flex justify-between pt-4">
-                    <Button type="button" label="返回" outlined severity="secondary" icon="pi pi-arrow-left" @click="currentStep--" />
-                    <Button type="button" label="完成註冊" severity="success" icon="pi pi-check" @click="submitRegistration" />
+                    <Button type="button" label="返回" outlined severity="secondary" icon="pi pi-arrow-left"
+                        @click="currentStep--" />
+                    <Button type="button" label="完成註冊" severity="success" icon="pi pi-check"
+                        @click="submitRegistration" />
                 </div>
             </div>
-            
+
             <!-- 步驟 3: 註冊完成 -->
             <div v-else class="mt-8 text-center">
                 <div class="mb-6">
@@ -171,7 +126,7 @@
                     <Button type="button" label="開始探索" severity="success" @click="goToHomePage" />
                 </div>
             </div>
-            
+
             <div class="text-center mt-8">
                 <p class="text-sm text-gray-600">
                     已有帳號？
@@ -200,6 +155,8 @@ import Select from 'primevue/select';
 import Button from 'primevue/button';
 import IftaLabel from 'primevue/iftalabel';
 import { useAuthStore } from '@/stores/authStore';
+import { UserGender, UserGenderLabel } from '@/enums/User';
+import { RegionCode, RegionLabelMap } from '@/enums/RegionCode';
 
 const router = useRouter();
 const toast = useToast();
@@ -217,22 +174,23 @@ const loading = ref(false);
 
 // 性別選項
 const genderOptions = [
-    { name: '男', value: 'male' },
-    { name: '女', value: 'female' },
-    { name: '其他', value: 'other' },
-    { name: '不願透露', value: 'notSpecified' }
-];
+    { name: UserGenderLabel.MALE, value: UserGender.Male },
+    { name: UserGenderLabel.FAMALE, value: UserGender.Female },
+    { name: UserGenderLabel.OTHER, value: UserGender.Other },
+]
 
 // 地區選項
 const locationOptions = [
-    { name: '台北市', value: 'taipei' },
-    { name: '新北市', value: 'newTaipei' },
-    { name: '桃園市', value: 'taoyuan' },
-    { name: '台中市', value: 'taichung' },
-    { name: '台南市', value: 'tainan' },
-    { name: '高雄市', value: 'kaohsiung' },
-    { name: '新竹縣/市', value: 'hsinchu' },
-    { name: '其他', value: 'other' }
+    { name: RegionLabelMap.TPE, value:  RegionCode.TPE},
+    { name: RegionLabelMap.KHH, value:  RegionCode.KHH},
+    { name: RegionLabelMap.TNN, value:  RegionCode.TNN},
+    { name: RegionLabelMap.TCH, value:  RegionCode.TCH},
+    { name: RegionLabelMap.HSZ, value:  RegionCode.HSZ},
+    { name: RegionLabelMap.TAO, value:  RegionCode.TAO},
+    { name: RegionLabelMap.ILA, value:  RegionCode.ILA},
+    { name: RegionLabelMap.HUA, value:  RegionCode.HUA},
+    { name: RegionLabelMap.TTT, value:  RegionCode.TTT},
+    { name: RegionLabelMap.PIF, value:  RegionCode.PIF},
 ];
 
 // 類別圖標映射
@@ -264,9 +222,9 @@ const registerSchema = z.object({
         .min(1, '請輸入您的姓名'),
     email: z.string()
         .min(1, '請輸入電子郵件')
-        .email('請輸入有效的電子郵件地址'),    password: z.string()
-        .min(8, '密碼至少需要 8 個字符')
-        .regex(/^(?=.*[A-Za-z])(?=.*\d)/, '密碼需包含字母和數字'),
+        .email('請輸入有效的電子郵件地址'), password: z.string()
+            .min(8, '密碼至少需要 8 個字符')
+            .regex(/^(?=.*[A-Za-z])(?=.*\d)/, '密碼需包含字母和數字'),
     confirmPassword: z.string()
         .min(1, '請確認您的密碼'),
     age: z.number({
@@ -284,13 +242,13 @@ const nextStep = () => {
         // 手動驗證表單數據
         registerSchema.parse(formData);
         console.log('formData', formData);
-        
+
         // 驗證通過，清空錯誤並前進到下一步
         Object.keys(errors).forEach(key => delete errors[key]);
         currentStep.value++;
     } catch (validationError: any) {
         console.log('validationError', validationError);
-        
+
         // 處理驗證錯誤
         if (validationError.errors) {
             validationError.errors.forEach((err: any) => {
@@ -336,9 +294,9 @@ const submitRegistration = async () => {
         });
         return;
     }
-    
+
     loading.value = true;
-    
+
     try {
         // 註冊用戶資料
         const userData = {
@@ -350,18 +308,18 @@ const submitRegistration = async () => {
             location: formData.location || undefined,
             interests: formData.interests
         };
-        
+
         // 在實際應用中直接調用 authStore.register
         const result = await authStore.register(userData);
-        
+
         if (result.success) {
             // 保存用戶偏好到本地存儲，以便在首頁使用
             localStorage.setItem('userInterests', JSON.stringify(formData.interests));
             localStorage.setItem('userAge', formData.age?.toString() || '');
-            
+
             // 進入完成步驟
             currentStep.value++;
-            
+
             toast.add({
                 severity: 'success',
                 summary: '註冊成功',
@@ -403,4 +361,4 @@ const goToHomePage = () => {
 :deep(.p-inputtext.p-invalid) {
     border-color: var(--red-500);
 }
-</style> 
+</style>

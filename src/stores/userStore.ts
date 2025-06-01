@@ -3,7 +3,7 @@ import { reactive, computed, toRefs } from 'vue'
 import type { User, Course, Result } from '@/types'
 import { UserRole } from '@/enums/User'
 import { calculateUserLevel, calculateNextLevelProgress } from '@/utils/userLevelUtils'
-import { userService } from '@/services/userService'
+import { userService } from '@/services/UserService'
 import { errorHandler } from '@/utils/errorHandler'
 import { ERROR_MESSAGES } from '@/utils/apiConfig'
 

@@ -1,6 +1,6 @@
 // API 基础配置
 export const API_CONFIG = {
-    BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
+    BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:8080/',
     TIMEOUT: 10000,
     HEADERS: {
         'Content-Type': 'application/json',
@@ -18,15 +18,22 @@ export const API_ROUTES = {
         PROFILE: (id: number | 'me') => `/users/${id}`,
     },
     COURSE: {
-        LIST: '/courses',
-        DETAIL: (id: number) => `/courses/${id}/detail`,
-        SESSIONS: (id: number) => `/courses/${id}/sessions`,
-        IMAGES: (id: number) => `/courses/${id}/images`,
-        FAVORITES: (userId: number) => `/users/${userId}/favorites`,
-        ADD_FAVORITE: (userId: number) => `/users/${userId}/favorites`,
-        REMOVE_FAVORITE: (userId: number, courseId: number) => `/users/${userId}/favorites/${courseId}`,
-        CREATE: '/courses',
-        UPDATE: (id: number) => `/courses/${id}`,
+        // 課程基本操作
+        LIST: '/courses',                           // GET - 獲取課程列表
+        DETAIL: (id: number) => `/courses/${id}`,   // GET - 獲取課程詳情（移除多餘的 /detail）
+        CREATE: '/courses',                         // POST - 創建課程
+        UPDATE: (id: number) => `/courses/${id}`,   // PUT - 更新課程
+        DELETE: (id: number) => `/courses/${id}`,   // DELETE - 刪除課程
+        // 課程子資源
+        SESSIONS: (id: number) => `/courses/${id}/sessions`,     // GET - 獲取課程章節
+        IMAGES: (id: number) => `/courses/${id}/images`,         // GET - 獲取課程圖片
+        ENROLLMENTS: (id: number) => `/courses/${id}/enrollments`, // GET - 獲取課程報名情況
+    },
+    FAVORITES: {
+        LIST: (userId: number) => `/users/${userId}/favorites`,
+        ADD: '/favorites',
+        REMOVE: (id: number) => `/favorites/${id}`,
+        CHECK: '/favorites/check',
     },
     BOOKING: {
         LIST: (userId: number) => `/users/${userId}/bookings`,

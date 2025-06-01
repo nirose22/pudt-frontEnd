@@ -380,7 +380,7 @@ provide('purchaseData', {
         return purchaseStore.purchaseHistory.map(item => ({
             id: item.id,
             date: item.createdAt.toISOString().split('T')[0],
-            cardType: CardType.Basic,
+            cardType: item.cardType as s CardType,
             amount: item.total,
             points: 0,
             status: item.status,
@@ -395,7 +395,7 @@ provide('purchaseData', {
         return purchaseStore.byStatus(OrderStatus.Pending).map(item => ({
             id: item.id,
             date: item.createdAt.toISOString().split('T')[0],
-            cardType: CardType.Basic,
+            cardType: item.cardType as CardType,
             amount: item.total,
             points: 0,
             status: item.status,

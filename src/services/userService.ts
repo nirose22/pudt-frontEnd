@@ -15,7 +15,7 @@ export const userService = {
 
     async fetchFavoriteCourses(userId: number): Promise<Result<Course[]>> {
         try {
-            const data = await apiClient.get<Course[]>(API_ROUTES.COURSE.FAVORITES(userId))
+            const data = await apiClient.get<Course[]>(API_ROUTES.FAVORITES.LIST(userId))
             return { success: true, data }
         } catch (error) {
             return errorHandler.handleApiError(error, ERROR_MESSAGES.COURSE_ERROR)
@@ -24,7 +24,7 @@ export const userService = {
 
     async addFavorite(userId: number, courseId: number): Promise<Result<boolean>> {
         try {
-            await apiClient.post(API_ROUTES.COURSE.ADD_FAVORITE(userId), { courseId })
+            await apiClient.post(API_ROUTES.FAVORITES.ADD, { courseId })
             return { success: true }
         } catch (error) {
             return errorHandler.handleApiError(error, ERROR_MESSAGES.COURSE_ERROR)
@@ -33,7 +33,7 @@ export const userService = {
 
     async removeFavorite(userId: number, courseId: number): Promise<Result<boolean>> {
         try {
-            await apiClient.delete(API_ROUTES.COURSE.REMOVE_FAVORITE(userId, courseId))
+            await apiClient.delete(API_ROUTES.FAVORITES.REMOVE(courseId))
             return { success: true }
         } catch (error) {
             return errorHandler.handleApiError(error, ERROR_MESSAGES.COURSE_ERROR)

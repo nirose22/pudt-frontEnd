@@ -24,11 +24,7 @@ const showLoginDialog = ref(false)
 watch(
   () => route.meta.requiresAuth,
   (requiresAuth) => {
-    console.log(1212);
-    
     if (requiresAuth && !authStore.isLoggedIn) {
-      console.log(1111);
-      
       showLoginDialog.value = true;
     }
   },

@@ -3,7 +3,7 @@ import { defineStore } from "pinia"
 import { ref, computed } from "vue"
 import { useUserStore } from "./userStore"
 import type { Result } from "@/types"
-import { pointService } from '@/services/pointService'
+import { pointService } from '@/services/PointService'
 
 /**
  * 點數管理 Store - 管理會員點數、點數歷史和課卡

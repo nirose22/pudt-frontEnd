@@ -16,18 +16,15 @@ const api: AxiosInstance = axios.create({
 });
 
 // 自動附帶 JWT Token
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
+const getAuthToken = () => localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+
+api.interceptors.request.use((config) => {
+  const token = getAuthToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-);
+  return config;
+});
 
 // 簡易錯誤攔截（可擴充）
 api.interceptors.response.use(

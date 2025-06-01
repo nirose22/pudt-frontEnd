@@ -30,21 +30,21 @@ export class CourseService {
     /* ----------------- Favorites ----------------- */
     static getUserFavorites(userId: number) {
         return request<Course[]>(
-            () => apiClient.get(API_ROUTES.COURSE.FAVORITES(userId)),
+            () => apiClient.get(API_ROUTES.FAVORITES.LIST(userId)),
             ERROR_MESSAGES.COURSE_ERROR
         )
     }
 
     static addFavorite(userId: number, courseId: number) {
         return request<void>(
-            () => apiClient.post(API_ROUTES.COURSE.ADD_FAVORITE(userId), { courseId }),
+            () => apiClient.post(API_ROUTES.FAVORITES.ADD, { courseId }),
             ERROR_MESSAGES.COURSE_ERROR
         )
     }
 
     static removeFavorite(userId: number, courseId: number) {
         return request<void>(
-            () => apiClient.delete(API_ROUTES.COURSE.REMOVE_FAVORITE(userId, courseId)),
+            () => apiClient.delete(API_ROUTES.FAVORITES.REMOVE(courseId)),
             ERROR_MESSAGES.COURSE_ERROR
         )
     }

@@ -4,7 +4,7 @@ import { ref, computed } from 'vue'
 import { UserRole } from '@/enums/User'
 import { useUserStore } from './userStore'
 import type { Result } from '@/types'
-import { authApi } from '@/services/authApi'
+import { authApi } from '@/services/AuthApi'
 
 export interface LoginCredentials {
 	account: string

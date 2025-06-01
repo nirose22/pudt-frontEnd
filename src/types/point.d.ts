@@ -64,4 +64,9 @@ export interface PointStats {
   totalPoints: number; // 總點數
   settledPoints: number; // 已結算點數
   pendingPoints: number; // 待結算點數
+  settlementHistory: {
+    date: string;
+    amount: number;
+    status: string;
+  }[];
 }

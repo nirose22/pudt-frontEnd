@@ -13,10 +13,9 @@ export const UserRoleLabel: Record<UserRole, string> = {
 }
 
 export enum UserGender {
-  Male = 'M',
-  Female = 'F',
-  Other = 'O',
-  NotDisclosed = 'ND'
+  Male = 'MALE',
+  Female = 'FAMALE',
+  Other = 'OTHER',
 }
 
 
@@ -24,6 +23,5 @@ export const UserGenderLabel: Record<UserGender, string> = {
   [UserGender.Male]: '男',
   [UserGender.Female]: '女',
   [UserGender.Other]: '其他',
-  [UserGender.NotDisclosed]: '不願透露'
 }
 
