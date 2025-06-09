@@ -12,7 +12,7 @@ export const authApi = {
             console.error('登錄失敗:', error)
             return {
                 success: false,
-                message: error instanceof Error ? error.message : '登錄失敗，請檢查您的賬號密碼'
+                message: '登錄失敗，請檢查您的賬號密碼'
             }
         }
     },

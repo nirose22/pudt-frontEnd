@@ -1,17 +1,30 @@
 import { UserGender } from '@/enums/User';
 
 export interface User {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  points: number;
-  avatarUrl?: string;
-  createdAt: Date;
-  lastLogin?: Date;
-  address?: string;
-  birthday?: Date;
-  gender?: UserGender;
+  id: number
+  name: string
+  email: string
+  points: number
+  avatarUrl?: string
+  address: string
+  birthday?: string
+  gender?: Gender
+  regionCode?: RegionCode
+  createdAt: string
+  lastLogin?: string
+  role?: UserRole
+}
+
+export interface UserProfile {
+  userId: number
+  name?: string
+  interests: MainCategory[]
+  preferredRegions: RegionCode[]
+  timePreferences: Record<number, number>
+  activityLevel: number
+  priceSensitivity: number
+  profileGeneratedAt: string
+  validityHours: number
 }
 
 export interface UserSetting {

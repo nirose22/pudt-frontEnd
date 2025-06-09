@@ -6,6 +6,7 @@ import type { Result } from '@/types'
 import { CourseService } from '@/services/CourseService'
 import { errorHandler } from '@/utils/errorHandler'
 import { ERROR_MESSAGES } from '@/utils/apiConfig'
+import { useUserStore } from './userStore'
 
 interface State {
   allCourses: Course[]
@@ -24,6 +25,9 @@ interface State {
  * 2. 專注狀態管理，資料請求全部委派 CourseService
  */
 export const useCourseStore = defineStore('course', () => {
+  const userStore = useUserStore();
+  const userId = computed(() => userStore.userId);
+
   /* ---------- state ---------- */
   const state = reactive<State>({
     currentCourse: null,
@@ -49,7 +53,7 @@ export const useCourseStore = defineStore('course', () => {
       })
       .slice(0, 6)
   )
-  const recommendedCourses = computed(() => state.allCourses.filter(c => c.recommended).slice(0, 6))
+  const recommendedCourses = computed(() => CourseService.getRecommendedCourses(userId.value, 6))
   const hasAvailableSeats = computed(() => !!state.selectedSession && state.selectedSession.seatsLeft > 0)
 
   /* ---------- utilities ---------- */

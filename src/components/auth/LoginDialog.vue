@@ -1,4 +1,5 @@
 <template>
+    <Toast position="top-right" group="global" />
     <Dialog v-model:visible="visible" modal :style="{ width: '450px' }" :closable="true" class="login-dialog"
         @hide="onHide">
         <template #header>
@@ -79,6 +80,7 @@ import Divider from 'primevue/divider'
 import Checkbox from 'primevue/checkbox'
 import Button from 'primevue/button'
 import { showError, showSuccess } from '@/utils/toastHelper'
+import { userService } from '@/services/UserService'
 
 
 const visible = defineModel<boolean>('visible', { required: true })
@@ -87,7 +89,6 @@ const router = useRouter()
 const authStore = useAuthStore()
 const loading = ref(false)
 const rememberMe = ref(false)
-
 
 const initialValues = ref({
     account: '',
@@ -112,6 +113,9 @@ const onFormSubmit = async (e: any) => {
             if (authRes.success) {
                 showSuccess('登入成功')
                 visible.value = false
+                console.log(authRes.data);
+                
+                // userService.fetchProfile(id)
             } else {
                 showError(authRes.message ?? '登入失敗')
             }

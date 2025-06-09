@@ -38,7 +38,7 @@
                         <CourseCarousel title="最新上架" :items="latestCourses" :loading="isCoursesLoading"
                             :is-loading="isLoading" @select-course="selectCourse" />
                     </TabPanel>
-                    <TabPanel value="recommended" v-if="isLoggedIn">
+                    <TabPanel value="recommended">
                         <CourseCarousel title="為您推薦的課程" :items="recommendedCourses" :loading="isCoursesLoading"
                             :is-loading="isLoading" @select-course="selectCourse" />
                     </TabPanel>
@@ -68,13 +68,10 @@ import CourseCarousel from '@/components/modal/CourseCarousel.vue';
 import { useUserStore } from '@/stores/userStore';
 import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
-import { useConfirm } from 'primevue/useconfirm';
 import type { Course } from '@/types/course';
 import { CourseService } from '@/services/CourseService';
 import { useBookingStore } from '@/stores/bookingStore';
-import { MainCategory } from '@/enums/CourseCategory';
 import { showError, initToast } from '@/utils/toastHelper';
-import { initConfirm } from '@/utils/confirmHelper';
 
 // 一次性解構 userStore
 const { isLoggedIn } = useUserStore();
@@ -93,7 +90,6 @@ onMounted(() => {
 const isCoursesLoading = ref(false);
 const loadingMap = ref<Map<number, boolean>>(new Map());
 const searchQuery = ref('');
-const allCourses = ref<Course[]>([]);
 const selectedCourseId = ref<number>(0);
 
 // 標籤頁配置
@@ -105,117 +101,49 @@ const tabs = [
 ];
 
 // 熱門課程 - 按參與人數排序
-const popularCourses = computed(() => {
-    return [...allCourses.value]
-        .sort((a, b) => (b.joinCount || 0) - (a.joinCount || 0))
-        .slice(0, 6);
-});
+const popularCourses = ref<Course[]>([]);
+const latestCourses = ref<Course[]>([]);
+const recommendedCourses = ref<Course[]>([]);
 
-// 最新上架課程 - 按創建日期排序
-const latestCourses = computed(() => {
-    return [...allCourses.value]
-        .sort((a, b) => {
-            const aDate = a.createdAt;
-            const bDate = b.createdAt;
-            if (aDate && bDate) {
-                return bDate.getTime() - aDate.getTime();
-            }
-            return b.id - a.id;
-        })
-        .slice(0, 6);
-});
-
-// TODO: 推薦課程 - 使用 API 獲取推薦課程
-// const res = await api.get(`/api/courses/recommendations?age=${age}&tags=${interests.join(',')}`)
-const recommendedCourses = computed(() => {
-    // 如果沒有推薦課程，顯示熱門課程
-    if (!allCourses.value.filter(c => c.recommended).length) {
-        return popularCourses.value;
-    }
-
-    return allCourses.value
-        .filter(course => course.recommended)
-        .slice(0, 6);
-});
-
-// 判断课程是否正在加载
-function isLoading(courseId: number): boolean {
-    return loadingMap.value.get(courseId) === true;
-}
-
-// 模拟获取课程数据，包括推薦課程
-async function fetchCourses() {
+// 获取课程数据
+const fetchCourses = async () => {
     isCoursesLoading.value = true;
     try {
-        // 获取课程数据
-        const courses = await CourseService.getCourse();
-
-        // 添加推薦標記（實際應用中應由後端返回）
-        const userAge = localStorage.getItem('userAge');
-        // 优先使用 userStore 的兴趣标签，如果不存在则尝试从 localStorage 获取
-        const userInterests = userStore.interests || [];
-        let age: number | null = null;
-        let interests: string[] = userInterests;
-
-        try {
-            if (userAge) {
-                age = parseInt(userAge);
-            }
-            
-            // 如果 userStore 中没有兴趣标签，则尝试从 localStorage 获取
-            if (interests.length === 0) {
-                const localInterests = localStorage.getItem('userInterests');
-                if (localInterests) {
-                    interests = JSON.parse(localInterests);
-                }
-            }
-        } catch (e) {
-            console.error('解析用戶偏好錯誤', e);
+        // 获取热门课程
+        const popularResult = await CourseService.getPopularCourses(6);
+        
+        if (Array.isArray(popularResult)) {
+            popularCourses.value = popularResult;
+            console.log(popularCourses.value);
         }
-
-        if (interests.length > 0 || age) {
-            fetchRecommendations(age, interests);
-        } else {
-            allCourses.value = courses;
+        // 获取最新课程
+        const latestResult = await CourseService.getLatestCourses(6);
+        if (Array.isArray(latestResult)) {
+            latestCourses.value = latestResult;
+            console.log(latestCourses.value);
         }
+        
+        // 如果用户已登录，获取推荐课程
+        const recommendedResult = await CourseService.getRecommendedCourses(userStore.userId, 6);
+        console.log(recommendedResult);
+        
+        if (Array.isArray(recommendedResult)) {
+            recommendedCourses.value = recommendedResult;
+        }
+        console.log(recommendedCourses.value);
+        
     } catch (error) {
-        console.error('獲取課程數據失敗:', error);
-        showError('無法載入課程數據，請稍後再試', '獲取課程失敗');
+        console.error('获取课程数据失败:', error);
+        showError('获取课程数据失败，请稍后重试', '错误');
     } finally {
         isCoursesLoading.value = false;
     }
 }
 
-// 模擬 API 請求推薦課程
-async function fetchRecommendations(age: number | null, interests: string[]) {
-    // TODO: 推薦課程 
-    //  實際應用：const res = await api.get(`/api/courses/recommendations?age=${age}&tags=${interests.join(',')}`)
-    console.log(`請求推薦課程: age=${age}, interests=${interests.join(',')}`);
-
-    // 模擬後端處理邏輯
-    const courses = await CourseService.getCourse();
-    courses.forEach(course => {
-        // 標記推薦課程，這部分邏輯在實際應用中應在後端處理
-        course.recommended = false;
-
-        if (interests.length > 0) {
-            // 標記推薦課程（實際邏輯應在後端）
-            const courseTitle = course.title.toLowerCase();
-            interests.forEach(interest => {
-                if (interest === MainCategory.SportsFitness && /瑜[珈|伽]|健身|運動|滑板|游泳|健康/.test(courseTitle)) {
-                    course.recommended = true;
-                } else if (interest === MainCategory.CookingCuisine && /料理|烹飪|烘[焙|培]|甜點|廚藝|美食/.test(courseTitle)) {
-                    course.recommended = true;
-                } else if (interest === MainCategory.ArtDesign && /藝術|設計|繪畫|攝影|插畫|陶藝|手作/.test(courseTitle)) {
-                    course.recommended = true;
-                } // ... 其他分類匹配邏輯，實際應在後端處理
-            });
-        }
-    });
-
-    allCourses.value = courses;
+// 判断课程是否正在加载
+function isLoading(courseId: number): boolean {
+    return loadingMap.value.get(courseId) === true;
 }
-
 // 跳转到搜索页面
 function loadMoreCourses() {
     router.push({ name: 'Search' });

@@ -1,6 +1,7 @@
 import { RegionCode } from '@/enums/RegionCode'
 import { Merchant } from './merchant'
 import { CourseStatus } from '@/enums/Course'
+import { MainCategory, SubCategory } from '@/enums/Category'
 
 /* ---------- 課程基礎類型 ---------- */
 export interface BaseCourse {
@@ -16,9 +17,11 @@ export interface BaseCourse {
 export interface Course extends BaseCourse {
   merchantId: number          // FK -> Merchant.id
   coverUrl?: string           // 封面圖片
-  region?: RegionCode         // 地區碼
+  region: RegionCode          // 地區碼
   createdAt: Date             // 創建時間
   categories?: string[]       // 課程分類列表
+  mainCategory?: MainCategory // 主分類
+  subCategory?: SubCategory   // 子分類
   joinCount?: number          // 參與人數
   recommended?: boolean       // 是否推薦
 }

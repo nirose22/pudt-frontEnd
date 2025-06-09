@@ -3,40 +3,39 @@ import { errorHandler } from './errorHandler'
 import { ERROR_MESSAGES } from './apiConfig'
 
 /**
- * 統一封裝 API 請求，處理錯誤並返回標準化結果
- * @param fn API 請求函數
- * @param errorMessage 錯誤提示信息
+ * 统一封装 API 请求，处理错误并返回标准化结果
+ * @param fn API 请求函数
+ * @param errorMessage 错误提示信息
  * @returns Promise<Result<T>>
  */
 export async function request<T>(
-    fn: () => Promise<T>,
-    errorMessage: string = ERROR_MESSAGES.SERVER_ERROR
+    fn: () => Promise<any>,
 ): Promise<Result<T>> {
-    try {
-        const data = await fn()
-        return { success: true, data } as Result<T>
-    } catch (error) {
-        return errorHandler.handleApiError(error, errorMessage)
+    const data = await fn().then(res => res.data);
+    if (data.success) {
+        return data.data;
+    } else {
+        return errorHandler.handleApiError(new Error(data.message), data.message || ERROR_MESSAGES.SERVER_ERROR)
     }
 }
 
 /**
- * 構建查詢字符串
- * @param params 查詢參數對象
- * @returns 查詢字符串
+ * 构建查询字符串
+ * @param params 查询参数对象
+ * @returns 查询字符串
  */
 export function buildQueryString(params: Record<string, string | string[] | undefined>): string {
     const searchParams = new URLSearchParams()
-    
+
     Object.entries(params).forEach(([key, value]) => {
         if (value === undefined) return
         if (Array.isArray(value)) {
-            if (value.length) searchParams.append(key, value.join(','))
+            value.length && searchParams.append(key, value.join(','))
         } else {
             searchParams.append(key, value)
         }
     })
-    
+
     const queryString = searchParams.toString()
     return queryString ? `?${queryString}` : ''
 } 
