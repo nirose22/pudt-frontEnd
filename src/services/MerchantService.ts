@@ -1,4 +1,4 @@
-import { apiClient } from '@/utils/api'
+import  api from '@/utils/api';
 import { API_ROUTES, ERROR_MESSAGES } from '@/utils/apiConfig'
 import type { Merchant, MerchantStats, Instructor, Course, Result } from '@/types'
 import { request } from '@/utils/requestHelper'
@@ -12,7 +12,7 @@ export class MerchantService {
      */
     static async fetchMerchant(id?: MerchantId): Promise<Result<Merchant>> {
         return request<Merchant>(
-            () => apiClient.get(API_ROUTES.MERCHANT.DETAIL(id ?? 'me')),
+            () => api.get(API_ROUTES.MERCHANT.DETAIL(id ?? 'me')),
             ERROR_MESSAGES.MERCHANT_ERROR
         )
     }
@@ -24,7 +24,7 @@ export class MerchantService {
      */
     static async updateMerchant(id: MerchantId, payload: Partial<Merchant>): Promise<Result<Merchant>> {
         return request<Merchant>(
-            () => apiClient.put(API_ROUTES.MERCHANT.DETAIL(id), payload),
+            () => api.put(API_ROUTES.MERCHANT.DETAIL(id), payload),
             ERROR_MESSAGES.MERCHANT_ERROR
         )
     }
@@ -35,7 +35,7 @@ export class MerchantService {
      */
     static async fetchMerchantCourses(id?: MerchantId): Promise<Result<Course[]>> {
         return request<Course[]>(
-            () => apiClient.get(API_ROUTES.MERCHANT.COURSES(id ?? 'me')),
+            () => api.get(API_ROUTES.MERCHANT.COURSES(id ?? 'me')),
             ERROR_MESSAGES.MERCHANT_ERROR
         )
     }
@@ -46,7 +46,7 @@ export class MerchantService {
      */
     static async fetchMerchantStats(id?: MerchantId): Promise<Result<MerchantStats>> {
         return request<MerchantStats>(
-            () => apiClient.get(API_ROUTES.MERCHANT.STATS(id ?? 'me')),
+            () => api.get(API_ROUTES.MERCHANT.STATS(id ?? 'me')),
             ERROR_MESSAGES.MERCHANT_ERROR
         )
     }
@@ -57,7 +57,7 @@ export class MerchantService {
      */
     static async fetchInstructors(id?: MerchantId): Promise<Result<Instructor[]>> {
         return request<Instructor[]>(
-            () => apiClient.get(API_ROUTES.MERCHANT.INSTRUCTORS(id ?? 'me')),
+            () => api.get(API_ROUTES.MERCHANT.INSTRUCTORS(id ?? 'me')),
             ERROR_MESSAGES.MERCHANT_ERROR
         )
     }
@@ -72,7 +72,7 @@ export class MerchantService {
         payload: Omit<Instructor, 'id' | 'merchantId'>
     ): Promise<Result<Instructor>> {
         return request<Instructor>(
-            () => apiClient.post(API_ROUTES.MERCHANT.INSTRUCTORS(id), payload),
+            () => api.post(API_ROUTES.MERCHANT.INSTRUCTORS(id), payload),
             ERROR_MESSAGES.MERCHANT_ERROR
         )
     }
@@ -89,7 +89,7 @@ export class MerchantService {
         payload: Partial<Instructor>
     ): Promise<Result<Instructor>> {
         return request<Instructor>(
-            () => apiClient.put(API_ROUTES.MERCHANT.INSTRUCTOR_DETAIL(id, instructorId), payload),
+            () => api.put(API_ROUTES.MERCHANT.INSTRUCTOR_DETAIL(id, instructorId), payload),
             ERROR_MESSAGES.MERCHANT_ERROR
         )
     }
@@ -101,7 +101,7 @@ export class MerchantService {
      */
     static async deleteInstructor(id: MerchantId, instructorId: number): Promise<Result<void>> {
         return request<void>(
-            () => apiClient.delete(API_ROUTES.MERCHANT.INSTRUCTOR_DETAIL(id, instructorId)),
+            () => api.delete(API_ROUTES.MERCHANT.INSTRUCTOR_DETAIL(id, instructorId)),
             ERROR_MESSAGES.MERCHANT_ERROR
         )
     }

@@ -155,7 +155,7 @@ export const useUserStore = defineStore('user', () => {
   /* ---------- actions (保留並增強原有) ---------- */
   async function fetchProfile(id?: number) {
     if (state.isLoading) return
-    
+    console.log('fetchProfile', id);
     state.isLoading = true
     
     try {

@@ -13,6 +13,7 @@ export interface User {
   createdAt: string
   lastLogin?: string
   role?: UserRole
+  token?: string
 }
 
 export interface UserProfile {

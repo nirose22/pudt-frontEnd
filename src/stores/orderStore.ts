@@ -10,7 +10,7 @@ import type { PointTxn } from '@/types/point'
 import type { UnpaidItem } from '@/types/purchase'
 import { errorHandler } from '@/utils/errorHandler'
 import { ERROR_MESSAGES, API_ROUTES } from '@/utils/apiConfig'
-import apiClient from '@/utils/api'
+import api from '@/utils/api'
 
 /**
  * 購買記錄 Store - 管理會員購買歷史和未付清項目
@@ -57,7 +57,7 @@ export const usePurchaseStore = defineStore('purchase', () => {
   const fetchHistory = async (userId?: number): Promise<Result<Order[]>> => {
     loading.value.history = true
     try {
-      const data = await apiClient.get<Order[]>(API_ROUTES.PURCHASE.HISTORY(userId ?? userStore.profile?.id ?? 0))
+      const data = await api.get<Order[]>(API_ROUTES.PURCHASE.HISTORY(userId ?? userStore.profile?.id ?? 0))
       OrderHistory.value = data
       return { success: true, data }
     } catch (error) {
@@ -80,7 +80,7 @@ export const usePurchaseStore = defineStore('purchase', () => {
   const fetchUnpaid = async (userId?: number): Promise<Result<UnpaidItem[]>> => {
     loading.value.unpaid = true
     try {
-      const data = await apiClient.get<UnpaidItem[]>(API_ROUTES.PURCHASE.UNPAID(userId ?? userStore.profile?.id ?? 0))
+      const data = await api.get<UnpaidItem[]>(API_ROUTES.PURCHASE.UNPAID(userId ?? userStore.profile?.id ?? 0))
       unpaidItems.value = data
       return { success: true, data }
     } catch (error) {
@@ -97,7 +97,7 @@ export const usePurchaseStore = defineStore('purchase', () => {
    */
   const payUnpaidItem = async (itemId: number, amount: number): Promise<Result<void>> => {
     try {
-      await apiClient.post(API_ROUTES.PURCHASE.PAY_UNPAID(itemId), { amount })
+      await api.post(API_ROUTES.PURCHASE.PAY_UNPAID(itemId), { amount })
 
       const itemIndex = unpaidItems.value.findIndex(item => item.id === itemId)
       if (itemIndex >= 0) {
@@ -137,7 +137,7 @@ export const usePurchaseStore = defineStore('purchase', () => {
         return errorHandler.handleBusinessError(null, '課卡不存在')
       }
     
-      await apiClient.post(API_ROUTES.POINTS.BUY, { cardId })
+      await api.post(API_ROUTES.POINTS.BUY, { cardId })
       
       const adjustResult = userStore.adjustPoints(selectedCard.points)
       if (!adjustResult.success) {

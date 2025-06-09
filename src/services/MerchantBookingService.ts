@@ -1,4 +1,4 @@
-import { apiClient } from '@/utils/api';
+import  api from '@/utils/api';
 import type { MerchantBookingDetail } from '@/types/booking';
 import { BookingStatus } from '@/enums/BookingStatus';
 import type { Result } from '@/types';
@@ -31,7 +31,7 @@ export class MerchantBookingService {
     ): Promise<Result<MerchantBookingDetail[]>> {
         const queryString = buildQueryString(query);
         const url = `${API_ROUTES.MERCHANT.BOOKINGS(merchantId)}${queryString}`;
-        return request<MerchantBookingDetail[]>(() => apiClient.get(url), ERROR_MESSAGES.BOOKING_ERROR);
+        return request<MerchantBookingDetail[]>(() => api.get(url), ERROR_MESSAGES.BOOKING_ERROR);
     }
 
     /** 單筆訂單詳情 */
@@ -40,7 +40,7 @@ export class MerchantBookingService {
         bookingId: number
     ): Promise<Result<MerchantBookingDetail>> {
         return request<MerchantBookingDetail>(
-            () => apiClient.get(API_ROUTES.MERCHANT.BOOKING_DETAIL(merchantId, bookingId)),
+            () => api.get(API_ROUTES.MERCHANT.BOOKING_DETAIL(merchantId, bookingId)),
             ERROR_MESSAGES.BOOKING_ERROR
         );
     }
@@ -52,7 +52,7 @@ export class MerchantBookingService {
         status: BookingStatus
     ): Promise<Result<void>> {
         return request<void>(
-            () => apiClient.put(API_ROUTES.MERCHANT.BOOKING_STATUS(merchantId, bookingId), { status }),
+            () => api.put(API_ROUTES.MERCHANT.BOOKING_STATUS(merchantId, bookingId), { status }),
             ERROR_MESSAGES.BOOKING_ERROR
         );
     }
@@ -64,7 +64,7 @@ export class MerchantBookingService {
         notes: string
     ): Promise<Result<void>> {
         return request<void>(
-            () => apiClient.put(API_ROUTES.MERCHANT.BOOKING_NOTES(merchantId, bookingId), { notes }),
+            () => api.put(API_ROUTES.MERCHANT.BOOKING_NOTES(merchantId, bookingId), { notes }),
             ERROR_MESSAGES.BOOKING_ERROR
         );
     }
@@ -77,7 +77,7 @@ export class MerchantBookingService {
         options: SendOption = {}
     ): Promise<Result<void>> {
         return request<void>(
-            () => apiClient.post(API_ROUTES.MERCHANT.BOOKING_MESSAGE(merchantId, bookingId), {
+            () => api.post(API_ROUTES.MERCHANT.BOOKING_MESSAGE(merchantId, bookingId), {
                 content,
                 options
             }),

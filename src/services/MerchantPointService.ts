@@ -1,6 +1,6 @@
 import type { PointTransaction, PointStats } from '@/types/point';
 import type { Result } from '@/types';
-import { apiClient } from '@/utils/api';
+import  api from '@/utils/api';
 import { API_ROUTES, ERROR_MESSAGES } from '@/utils/apiConfig';
 import { request } from '@/utils/requestHelper';
 
@@ -12,7 +12,7 @@ export const MerchantPointService = {
      */
     async getPointsStats(merchantId: number): Promise<Result<PointStats>> {
         return request<PointStats>(
-            () => apiClient.get(API_ROUTES.MERCHANT.POINTS_STATS(merchantId)),
+            () => api.get(API_ROUTES.MERCHANT.POINTS_STATS(merchantId)),
             ERROR_MESSAGES.POINTS_ERROR
         );
     },
@@ -24,7 +24,7 @@ export const MerchantPointService = {
      */
     async getTransactions(merchantId: number): Promise<Result<PointTransaction[]>> {
         return request<PointTransaction[]>(
-            () => apiClient.get(API_ROUTES.MERCHANT.POINTS_TRANSACTIONS(merchantId)),
+            () => api.get(API_ROUTES.MERCHANT.POINTS_TRANSACTIONS(merchantId)),
             ERROR_MESSAGES.POINTS_ERROR
         );
     },
@@ -46,7 +46,7 @@ export const MerchantPointService = {
         }
     ): Promise<Result<void>> {
         return request<void>(
-            () => apiClient.post(API_ROUTES.MERCHANT.POINTS_SETTLEMENT(merchantId), {
+            () => api.post(API_ROUTES.MERCHANT.POINTS_SETTLEMENT(merchantId), {
                 amount,
                 bankInfo
             }),

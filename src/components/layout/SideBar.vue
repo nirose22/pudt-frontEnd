@@ -20,7 +20,7 @@
             </div>
             <div class="flex flex-col">
                 <Divider />
-                <template v-if="!authStore.isLoggedIn">
+                <template v-if="!isLoggedIn">
                     <div class="menu-item" @click="showLoginDialog = true">
                         <i class="pi pi-user"></i>
                         <span>登入</span>
@@ -60,6 +60,7 @@ import Avatar from 'primevue/avatar';
 import { showError } from '@/utils/toastHelper';
 
 const visibleMenu = defineModel<boolean>('visible', { required: true });
+const { isLoggedIn } = useUserStore();
 
 const userStore = useUserStore();
 const authStore = useAuthStore();
@@ -87,14 +88,6 @@ const menuItems = [
     { id: 'bookings', label: '預約行程管理', icon: 'pi-calendar', path: '/profile/bookings' },
     { id: 'history', label: '活動紀錄', icon: 'pi-history', path: '/profile/history' },
 ];
-
-const isLoggedIn = () => {
-    if (!authStore.isLoggedIn) {
-        showError('請先登入', '錯誤', { group: 'sidebar' });
-        return false;
-    }
-    return true;
-}
 </script>
 <style scoped>
 @reference "tailwindcss";

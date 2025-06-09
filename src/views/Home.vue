@@ -74,7 +74,6 @@ import { useBookingStore } from '@/stores/bookingStore';
 import { showError, initToast } from '@/utils/toastHelper';
 
 // 一次性解構 userStore
-const { isLoggedIn } = useUserStore();
 const userStore = useUserStore();
 
 const visible = ref(false);
@@ -111,27 +110,25 @@ const fetchCourses = async () => {
     try {
         // 获取热门课程
         const popularResult = await CourseService.getPopularCourses(6);
+        console.log(popularResult);
         
-        if (Array.isArray(popularResult)) {
-            popularCourses.value = popularResult;
-            console.log(popularCourses.value);
+        if (popularResult.success && popularResult.data) {
+            popularCourses.value = popularResult.data;
         }
+        
         // 获取最新课程
         const latestResult = await CourseService.getLatestCourses(6);
-        if (Array.isArray(latestResult)) {
-            latestCourses.value = latestResult;
-            console.log(latestCourses.value);
+        if (latestResult.success && latestResult.data) {
+            latestCourses.value = latestResult.data;
         }
         
         // 如果用户已登录，获取推荐课程
-        const recommendedResult = await CourseService.getRecommendedCourses(userStore.userId, 6);
-        console.log(recommendedResult);
-        
-        if (Array.isArray(recommendedResult)) {
-            recommendedCourses.value = recommendedResult;
+        if (userStore.userId) {
+            const recommendedResult = await CourseService.getRecommendedCourses(userStore.userId, 6);
+            if (recommendedResult.success && recommendedResult.data) {
+                recommendedCourses.value = recommendedResult.data;
+            }
         }
-        console.log(recommendedCourses.value);
-        
     } catch (error) {
         console.error('获取课程数据失败:', error);
         showError('获取课程数据失败，请稍后重试', '错误');

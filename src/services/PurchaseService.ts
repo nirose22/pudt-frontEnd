@@ -2,7 +2,7 @@ import type { Result } from '@/types';
 import type { Order } from '@/types/order';
 import type { ExtendedPurchaseItem } from '@/types/purchase';
 import { CardType } from '@/enums/Cards';
-import { apiClient } from '@/utils/api';
+import  api from '@/utils/api';
 import { API_ROUTES, ERROR_MESSAGES } from '@/utils/apiConfig';
 import { request } from '@/utils/requestHelper';
 
@@ -17,7 +17,7 @@ export const PurchaseService = {
      */
     async getPurchaseHistory(userId: number): Promise<Result<ExtendedPurchaseItem[]>> {
         return request<ExtendedPurchaseItem[]>(
-            () => apiClient.get(API_ROUTES.PURCHASE.HISTORY(userId)),
+            () => api.get(API_ROUTES.PURCHASE.HISTORY(userId)),
             ERROR_MESSAGES.PURCHASE_ERROR
         );
     },
@@ -50,7 +50,7 @@ export const PurchaseService = {
      */
     async downloadInvoice(invoiceNo: string): Promise<Result<void>> {
         return request<void>(
-            () => apiClient.get(API_ROUTES.PURCHASE.INVOICE(invoiceNo)),
+            () => api.get(API_ROUTES.PURCHASE.INVOICE(invoiceNo)),
             ERROR_MESSAGES.PURCHASE_ERROR
         );
     }

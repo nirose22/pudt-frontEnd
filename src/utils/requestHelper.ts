@@ -5,17 +5,33 @@ import { ERROR_MESSAGES } from './apiConfig'
 /**
  * 统一封装 API 请求，处理错误并返回标准化结果
  * @param fn API 请求函数
- * @param errorMessage 错误提示信息
  * @returns Promise<Result<T>>
  */
 export async function request<T>(
-    fn: () => Promise<any>,
+    fn: () => Promise<Result<T>>
 ): Promise<Result<T>> {
-    const data = await fn().then(res => res.data);
-    if (data.success) {
-        return data.data;
-    } else {
-        return errorHandler.handleApiError(new Error(data.message), data.message || ERROR_MESSAGES.SERVER_ERROR)
+    try {
+        const response = await fn().then(res => res.data) as Result<T>;
+        if (response.success) {
+            console.log(response);
+            
+            return response;
+        } else {
+            console.log("*****************");
+            console.log(response);
+            console.log("*****************");
+            
+            return errorHandler.handleApiError(
+                new Error(response.message), 
+                response.message || ERROR_MESSAGES.SERVER_ERROR,
+                response.code
+            );
+        }
+    } catch (error) {
+        return errorHandler.handleApiError(
+            error instanceof Error ? error : new Error(ERROR_MESSAGES.SERVER_ERROR),
+            ERROR_MESSAGES.SERVER_ERROR
+        );
     }
 }
 

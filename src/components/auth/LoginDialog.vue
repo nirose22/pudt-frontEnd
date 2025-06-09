@@ -80,13 +80,13 @@ import Divider from 'primevue/divider'
 import Checkbox from 'primevue/checkbox'
 import Button from 'primevue/button'
 import { showError, showSuccess } from '@/utils/toastHelper'
-import { userService } from '@/services/UserService'
-
+import { useUserStore } from '@/stores/userStore'
 
 const visible = defineModel<boolean>('visible', { required: true })
 
 const router = useRouter()
 const authStore = useAuthStore()
+const userStore = useUserStore()
 const loading = ref(false)
 const rememberMe = ref(false)
 
@@ -113,9 +113,7 @@ const onFormSubmit = async (e: any) => {
             if (authRes.success) {
                 showSuccess('登入成功')
                 visible.value = false
-                console.log(authRes.data);
-                
-                // userService.fetchProfile(id)
+                router.push('/');
             } else {
                 showError(authRes.message ?? '登入失敗')
             }

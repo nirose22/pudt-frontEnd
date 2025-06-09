@@ -11,11 +11,12 @@ export const errorHandler = {
      * @param message 錯誤消息
      * @returns 標準化的錯誤結果
      */
-        handleApiError<T>(error: unknown, message: string): Result<T> {
+    handleApiError<T>(error: unknown, message: string, code?: number): Result<T> {
         console.error(message, error);
         return {
             success: false,
             message: message,
+            code: code,
             data: null as unknown as T
         };
     },
