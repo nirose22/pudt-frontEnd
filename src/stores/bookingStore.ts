@@ -94,19 +94,9 @@ export const useBookingStore = defineStore('booking', () => {
     const loadCourseBookingDetail = async (courseId: number): Promise<Result> => {
         loading.value = true
         error.value = null
-        
         try {
-            const result = await BookingService.checkAvailability(courseId, 0)
-            if (!result.success) {
-                return result
-            }
-            
-            await courseStore.loadCourseDetail(courseId)
-            
-            return {
-                success: true,
-                message: '課程預約詳情加載成功'
-            }
+            const res = await courseStore.loadCourseDetail(courseId)
+            return res;
         } catch (err) {
             return errorHandler.handleApiError(err, ERROR_MESSAGES.BOOKING_ERROR)
         } finally {

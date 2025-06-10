@@ -72,6 +72,7 @@ import type { Course } from '@/types/course';
 import { CourseService } from '@/services/CourseService';
 import { useBookingStore } from '@/stores/bookingStore';
 import { showError, initToast } from '@/utils/toastHelper';
+import { useCourseStore } from '@/stores/courseStore';
 
 // 一次性解構 userStore
 const userStore = useUserStore();
@@ -111,17 +112,17 @@ const fetchCourses = async () => {
         // 获取热门课程
         const popularResult = await CourseService.getPopularCourses(6);
         console.log(popularResult);
-        
+
         if (popularResult.success && popularResult.data) {
             popularCourses.value = popularResult.data;
         }
-        
+
         // 获取最新课程
         const latestResult = await CourseService.getLatestCourses(6);
         if (latestResult.success && latestResult.data) {
             latestCourses.value = latestResult.data;
         }
-        
+
         // 如果用户已登录，获取推荐课程
         if (userStore.userId) {
             const recommendedResult = await CourseService.getRecommendedCourses(userStore.userId, 6);
@@ -154,13 +155,16 @@ async function selectCourse(course: Course) {
     loadingMap.value.set(courseId, true);
 
     try {
-        const result = await bookingStore.loadCourseBookingDetail(courseId);
-        if (result.success) {
-            visible.value = true;
-        } else {
-            showError(result.message || '加載課程詳情失敗', '無法查看課程');
-        }
-    } catch (error: unknown) {
+        console.log('loadCourseDetail', courseId);
+        
+        await useCourseStore().loadCourseDetail(courseId).then(res => {
+            if (res.success && res.data) {
+                visible.value = true;
+            } else {
+                showError(res.message || '加載課程詳情失敗', '無法查看課程');
+            }
+        })
+        } catch (error: unknown) {
         console.error('加載課程詳情失敗:', error);
         showError(bookingStore.error || '加載課程詳情時出錯，請稍後再試', '錯誤');
     } finally {

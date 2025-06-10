@@ -2,10 +2,7 @@ import { defineStore } from 'pinia'
 import { reactive, computed, toRefs } from 'vue'
 import type { Course, CourseDetailDTO, CourseSession } from '@/types/course'
 import type { Booking } from '@/types/booking'
-import type { Result } from '@/types'
 import { CourseService } from '@/services/CourseService'
-import { errorHandler } from '@/utils/errorHandler'
-import { ERROR_MESSAGES } from '@/utils/apiConfig'
 import { useUserStore } from './userStore'
 
 interface State {
@@ -56,54 +53,39 @@ export const useCourseStore = defineStore('course', () => {
   const recommendedCourses = computed(() => CourseService.getRecommendedCourses(userId.value, 6))
   const hasAvailableSeats = computed(() => !!state.selectedSession && state.selectedSession.seatsLeft > 0)
 
-  /* ---------- utilities ---------- */
-  async function withLoading<T>(fn: () => Promise<Result<T>>): Promise<T | undefined> {
-    state.loading = true
-    state.error = null
-    try {
-      const res = await fn()
-      if (!res.success) throw new Error(res.message || '操作失敗')
-      return res.data
-    } catch (e) {
-      state.error = e instanceof Error ? e.message : ERROR_MESSAGES.COURSE_ERROR
-      errorHandler.handleBusinessError(e, state.error)
-      return undefined
-    } finally {
-      state.loading = false
-    }
-  }
-
   /* ---------- actions ---------- */
   async function fetchCourses(keyword?: string, regions?: string[], categories?: string[]) {
-    const data = await withLoading(() => CourseService.getCourse(keyword, regions, categories))
-    if (data) state.allCourses = data
+    const data = await CourseService.getCourse(keyword, regions, categories)
+    if (data.success && data.data) state.allCourses = data.data
   }
 
   async function loadCourseDetail(courseId: number) {
-    const detail = await withLoading(() => CourseService.fetchCourseDetail(courseId))
-    if (detail) {
-      state.currentCourse = detail
-      const sessions = await withLoading(() => CourseService.getSessionsForCourse(courseId))
-      if (sessions) state.courseSession = sessions
+    const detail = await CourseService.fetchCourseDetail(courseId)
+    console.log('loadCourseDetail', detail);
+    if (detail.success && detail.data) {
+      state.currentCourse = detail.data
+      const sessions = await CourseService.getSessionsForCourse(courseId)
+      if (sessions.success && sessions.data) state.courseSession = sessions.data
     }
+    return detail;
   }
 
   async function fetchFavoriteCourses(userId: number) {
-    const list = await withLoading(() => CourseService.getUserFavorites(userId))
-    if (list) state.favoriteCourses = list
+    const list = await CourseService.getUserFavorites(userId)
+    if (list.success && list.data) state.favoriteCourses = list.data
   }
 
   async function addFavoriteCourse(courseId: number, userId: number) {
-    const ok = await withLoading(() => CourseService.addFavorite(userId, courseId))
-    if (ok !== undefined) {
+    const ok = await CourseService.addFavorite(userId, courseId)
+    if (ok.success) {
       const course = state.allCourses.find(c => c.id === courseId)
       if (course && !state.favoriteCourses.some(c => c.id === courseId)) state.favoriteCourses.push(course)
     }
   }
 
   async function removeFavoriteCourse(courseId: number, userId: number) {
-    const ok = await withLoading(() => CourseService.removeFavorite(userId, courseId))
-    if (ok !== undefined) state.favoriteCourses = state.favoriteCourses.filter(c => c.id !== courseId)
+    const ok = await CourseService.removeFavorite(userId, courseId)
+    if (ok.success) state.favoriteCourses = state.favoriteCourses.filter(c => c.id !== courseId)
   }
 
   function isFavorite(courseId: number) {
@@ -111,16 +93,16 @@ export const useCourseStore = defineStore('course', () => {
   }
 
   async function createCourse(course: CourseDetailDTO) {
-    const created = await withLoading(() => CourseService.createCourse(course))
-    if (created) state.allCourses.unshift(created)
+    const created = await CourseService.createCourse(course)
+    if (created.success && created.data) state.allCourses.unshift(created.data)
   }
 
   async function updateCourse(courseId: number, course: CourseDetailDTO) {
-    const updated = await withLoading(() => CourseService.updateCourse(courseId, course))
-    if (updated) {
+    const updated = await CourseService.updateCourse(courseId, course)
+    if (updated.success && updated.data) {
       const idx = state.allCourses.findIndex(c => c.id === courseId)
-      if (idx !== -1) state.allCourses[idx] = updated
-      if (state.currentCourse?.id === courseId) state.currentCourse = updated
+      if (idx !== -1) state.allCourses[idx] = updated.data
+      if (state.currentCourse?.id === courseId) state.currentCourse = updated.data
     }
   }
 

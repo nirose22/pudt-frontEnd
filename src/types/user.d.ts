@@ -6,7 +6,7 @@ export interface User {
   email: string
   points: number
   avatarUrl?: string
-  address: string
+  address?: string
   birthday?: string
   gender?: Gender
   regionCode?: RegionCode

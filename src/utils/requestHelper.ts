@@ -10,29 +10,15 @@ import { ERROR_MESSAGES } from './apiConfig'
 export async function request<T>(
     fn: () => Promise<Result<T>>
 ): Promise<Result<T>> {
-    try {
-        const response = await fn().then(res => res.data) as Result<T>;
-        if (response.success) {
-            console.log(response);
-            
-            return response;
-        } else {
-            console.log("*****************");
-            console.log(response);
-            console.log("*****************");
-            
-            return errorHandler.handleApiError(
-                new Error(response.message), 
-                response.message || ERROR_MESSAGES.SERVER_ERROR,
-                response.code
-            );
-        }
-    } catch (error) {
+    return await fn().then(res => {
+        return res.data as unknown as Result<T>;
+    }).catch(error => {
         return errorHandler.handleApiError(
-            error instanceof Error ? error : new Error(ERROR_MESSAGES.SERVER_ERROR),
-            ERROR_MESSAGES.SERVER_ERROR
+            new Error(error.response.data.message),
+            error.response.data.message || ERROR_MESSAGES.SERVER_ERROR,
+            error.response.data.code
         );
-    }
+    });
 }
 
 /**

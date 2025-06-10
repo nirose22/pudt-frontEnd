@@ -6,6 +6,7 @@ import { useUserStore } from './userStore'
 import type { Result, User } from '@/types'
 import { authApi } from '@/services/AuthApi'
 import { request } from '@/utils/requestHelper'
+import { API_CONFIG } from '@/utils/apiConfig'
 
 export interface LoginCredentials {
 	account: string
@@ -38,12 +39,13 @@ export const useAuthStore = defineStore('auth', () => {
 			token.value = res.data.token || null;
 			role.value = UserRole.User;
 			useUserStore().fetchProfile(res.data.id);
+			useUserStore().fetchBehaviorProfile(res.data.id)
 		}
 		return res;
 	}
 
 	async function loginWithGoogle(): Promise<Result<User>> {
-		const res = await request<User>(() => authApi.loginWithGoogle());
+		const res = await authApi.loginWithGoogle();
 		if (res.success && res.data) {
 			token.value = res.data.token || null;
 			role.value = res.data.role as UserRole;
@@ -55,7 +57,7 @@ export const useAuthStore = defineStore('auth', () => {
 	}
 
 	async function loginWithFacebook(): Promise<Result<User>> {
-		const res = await request<User>(() => authApi.loginWithFacebook());
+		const res = await authApi.loginWithFacebook();
 		if (res.success && res.data) {
 			token.value = res.data.token || null;
 			role.value = res.data.role as UserRole;
@@ -67,7 +69,7 @@ export const useAuthStore = defineStore('auth', () => {
 	}
 
 	async function register(data: RegisterData): Promise<Result<User>> {
-		const res = await request<User>(() => authApi.register(data));
+		const res = await authApi.register(data);
 		if (res.success && res.data) {
 			token.value = res.data.token || null;
 			role.value = res.data.role as UserRole;
@@ -82,8 +84,9 @@ export const useAuthStore = defineStore('auth', () => {
 	}
 
 	async function logout(): Promise<Result<void>> {
-		const res = await request<void>(() => authApi.logout());
+		const res = await authApi.logout();
 		if (res.success) {
+			useUserStore().clearUserData();
 			token.value = null;
 			role.value = null;
 		}
@@ -102,7 +105,7 @@ export const useAuthStore = defineStore('auth', () => {
 	}
 }, {
 	persist: {
-		key: 'auth',
+		key: API_CONFIG.AUTH.TOKEN_KEY,
 		storage: localStorage,
 		pick: ['token', 'role']
 	}

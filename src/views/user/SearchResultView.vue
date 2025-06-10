@@ -289,17 +289,18 @@ import { useLoadingMap } from '@/composables/useLoadingMap';
 import { RegionLabelMap } from '@/enums/RegionCode';
 import { showError, showInfo, initToast } from '@/utils/toastHelper';
 import { useToast } from 'primevue/usetoast';
+import { useAuthStore } from '@/stores/authStore';
 
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 const userStore = useUserStore();
-const isLoggedIn = computed(() => userStore.isLoggedIn);
+const { isLoggedIn } = useAuthStore();
 
 // 使用 composables
 const courseStore = useCourseStore();
 const availableCourses = computed(() => courseStore.allCourses);
-const isCoursesLoading = computed(() => courseStore.isLoading);
+const isCoursesLoading = computed(() => courseStore.loading);
 const coursesLoadError = computed(() => courseStore.error);
 const popularCourses = computed(() => courseStore.popularCourses);
 const latestCourses = computed(() => courseStore.latestCourses);

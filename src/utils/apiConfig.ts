@@ -71,6 +71,7 @@ export const API_ROUTES = {
 export const ERROR_MESSAGES = {
     NETWORK_ERROR: '網絡連接失敗，請檢查您的網絡設置',
     COURSE_ERROR: '課程操作失敗，請稍後重試',
+    BOOKING_ERROR: '預約操作失敗，請稍後重試',
     TIMEOUT: '請求超時，請稍後重試',
     SERVER_ERROR: '服務器錯誤，請稍後重試',
     UNAUTHORIZED: '未授權，請重新登錄',

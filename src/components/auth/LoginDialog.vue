@@ -80,13 +80,11 @@ import Divider from 'primevue/divider'
 import Checkbox from 'primevue/checkbox'
 import Button from 'primevue/button'
 import { showError, showSuccess } from '@/utils/toastHelper'
-import { useUserStore } from '@/stores/userStore'
 
 const visible = defineModel<boolean>('visible', { required: true })
 
 const router = useRouter()
 const authStore = useAuthStore()
-const userStore = useUserStore()
 const loading = ref(false)
 const rememberMe = ref(false)
 
@@ -106,19 +104,19 @@ const onFormSubmit = async (e: any) => {
     if (e.valid) {
         loading.value = true
         try {
-            const authRes = await authStore.login({
+            const res = await authStore.login({
                 ...e.values,
                 rememberMe: rememberMe.value
             })
-            if (authRes.success) {
-                showSuccess('登入成功')
+            if (res.success) {
+                showSuccess(res.message || '登入成功')
                 visible.value = false
-                router.push('/');
+                setTimeout(() => {
+                    // window.location.reload()
+                }, 500)
             } else {
-                showError(authRes.message ?? '登入失敗')
+                showError(res.message || '登入失敗')
             }
-        } catch (error) {
-            showError('登入失敗', error instanceof Error ? error.message : '未知錯誤')
         } finally {
             loading.value = false
         }

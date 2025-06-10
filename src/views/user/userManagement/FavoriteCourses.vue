@@ -133,11 +133,13 @@ import DataView from 'primevue/dataview';
 import type { Course } from '@/types/course';
 import { showSuccess, showError, showInfo, initToast } from '@/utils/toastHelper';
 import { generateMockCourses } from '@/services/MockService';
+import { useAuthStore } from '@/stores/authStore';
 
 const userStore = useUserStore();
 const router = useRouter();
 const toast = useToast();
 const loading = ref(false);
+const { isLoggedIn } = useAuthStore();
 
 // 視圖控制
 const layout = ref('grid');
@@ -191,7 +193,7 @@ onMounted(async () => {
 	// 加載收藏課程
 	loading.value = true;
 	try {
-		if (userStore.isLoggedIn && (!userStore.favoriteCourses || userStore.favoriteCourses.length === 0)) {
+		if (isLoggedIn && (!userStore.favoriteCourses || userStore.favoriteCourses.length === 0)) {
 			await userStore.fetchFavoriteCourses();
 
 			// 如果没有收藏课程数据，生成 mock 数据（仅用于演示）
@@ -221,10 +223,10 @@ const removeFavorite = async (courseId: number) => {
 	try {
 		// 使用 userStore 的 removeFavorite 方法
 		const result = await userStore.removeFavorite(courseId);
-		if (result.success) {
+		if (result?.success) {
 			showSuccess('課程已從收藏中移除', '成功');
 		} else {
-			showError(result.message || '移除收藏失敗', '錯誤');
+			showError(result?.message || '移除收藏失敗', '錯誤');
 		}
 	} catch (error) {
 		showError(error as string, '錯誤');

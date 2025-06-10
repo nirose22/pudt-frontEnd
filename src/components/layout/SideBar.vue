@@ -4,6 +4,7 @@
             <BaseLogo class="h-full w-25" />
         </template>
         <Toast position="top-center" group="sidebar" />
+        <ConfirmDialog style="width: 450px;" />
         <div class="flex flex-col h-full  justify-between">
             <div class="flex flex-col">
                 <ul class="py-2 text-gray-700">
@@ -40,8 +41,7 @@
                             <span>{{ profile?.name }}</span>
                         </div>
                     </RouterLink>
-                    <div v-if="profile?.id" class="menu-item" @click="authStore.logout">
-                        <i class="pi pi-user"></i>
+                    <div v-if="isLoggedIn" class="menu-item" @click="logout">
                         <span>登出</span>
                     </div>
                 </template>
@@ -57,10 +57,12 @@ import { ref, computed, type Ref, inject } from 'vue';
 import { useUserStore } from '@/stores/userStore';
 import { useAuthStore } from '@/stores/authStore';
 import Avatar from 'primevue/avatar';
-import { showError } from '@/utils/toastHelper';
+
+import ConfirmDialog from 'primevue/confirmdialog';
+import { useConfirm } from 'primevue/useconfirm';
 
 const visibleMenu = defineModel<boolean>('visible', { required: true });
-const { isLoggedIn } = useUserStore();
+const { isLoggedIn } = useAuthStore();
 
 const userStore = useUserStore();
 const authStore = useAuthStore();
@@ -77,6 +79,21 @@ const menuDt = ref({
         class: 'text-red-500 hover:text-red-700'
     }
 })
+
+const confirm = useConfirm();
+
+const logout = async () => {
+    confirm.require({
+        message: '確定要登出嗎？',
+        header: '登出確認',
+        icon: 'pi pi-exclamation-triangle',
+        acceptClass: 'p-button-warning',
+        accept: async () => {
+            await authStore.logout();
+            // window.location.reload();
+        }
+    });
+}
 
 const showLoginDialog = inject('showLoginDialog') as Ref<boolean>;
 

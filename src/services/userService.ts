@@ -2,95 +2,46 @@ import api from '@/utils/api'
 import { API_ROUTES } from '@/utils/apiConfig'
 import type { User, Course, Result, UserProfile } from '@/types'
 import type { MainCategory } from '@/enums'
+import { request } from '@/utils/requestHelper'
 
 export const userService = {
   async fetchProfile(id?: number): Promise<Result<User>> {
-    try {
-      const response = await api.get(API_ROUTES.USER.PROFILE(id || 'me'))
-      return { success: true, data: response.data }
-    } catch (error) {
-      return { success: false, message: '獲取用戶資料失敗' }
-    }
+    return request<User>(() => api.get(API_ROUTES.USER.PROFILE(id || 'me')))
   },
 
   async fetchFavoriteCourses(userId: number): Promise<Result<Course[]>> {
-    try {
-      const response = await api.get(API_ROUTES.USER.FAVORITES(userId))
-      return { success: true, data: response.data }
-    } catch (error) {
-      return { success: false, message: '獲取收藏課程失敗' }
-    }
+    return request<Course[]>(() => api.get(API_ROUTES.USER.FAVORITES(userId)))
   },
 
   async addFavorite(userId: number, courseId: number): Promise<Result<boolean>> {
-    try {
-      await api.post(`${API_ROUTES.USER.FAVORITES(userId)}/${courseId}`)
-      return { success: true, data: true }
-    } catch (error) {
-      return { success: false, message: '添加收藏失敗' }
-    }
+    return request<boolean>(() => api.post(`${API_ROUTES.USER.FAVORITES(userId)}/${courseId}`))
   },
 
   async removeFavorite(userId: number, courseId: number): Promise<Result<boolean>> {
-    try {
-      await api.delete(`${API_ROUTES.USER.FAVORITES(userId)}/${courseId}`)
-      return { success: true, data: true }
-    } catch (error) {
-      return { success: false, message: '取消收藏失敗' }
-    }
+    return request<boolean>(() => api.delete(`${API_ROUTES.USER.FAVORITES(userId)}/${courseId}`))
   },
 
   async updateProfile(userId: number, data: Partial<User>): Promise<Result<User>> {
-    try {
-      const response = await api.put(API_ROUTES.USER.PROFILE(userId), data)
-      return { success: true, data: response.data }
-    } catch (error) {
-      return { success: false, message: '更新用戶資料失敗' }
-    }
+    return request<User>(() => api.put(API_ROUTES.USER.PROFILE(userId), data))
   },
 
   async fetchBehaviorProfile(userId: number): Promise<Result<UserProfile>> {
-    try {
-      const response = await api.get(API_ROUTES.USER.BEHAVIOR(userId))
-      return { success: true, data: response.data }
-    } catch (error) {
-      return { success: false, message: '獲取行為資料失敗' }
-    }
+    return request<UserProfile>(() => api.get(API_ROUTES.USER.BEHAVIOR(userId)))
   },
 
   async fetchUserInterests(userId: number): Promise<Result<MainCategory[]>> {
-    try {
-      const response = await api.get(API_ROUTES.USER.INTERESTS(userId))
-      return { success: true, data: response.data }
-    } catch (error) {
-      return { success: false, message: '獲取用戶興趣失敗' }
-    }
+    return request<MainCategory[]>(() => api.get(API_ROUTES.USER.INTERESTS(userId)))
   },
 
   async updateAddress(userId: number, address: string): Promise<Result<boolean>> {
-    try {
-      await api.put(API_ROUTES.USER.ADDRESS(userId), { address })
-      return { success: true, data: true }
-    } catch (error) {
-      return { success: false, message: '更新地址失敗' }
-    }
+    return request<boolean>(() => api.put(API_ROUTES.USER.ADDRESS(userId), { address }))
   },
 
-  async logout(userId: number): Promise<Result<boolean>> {
-    try {
-      await api.post(API_ROUTES.AUTH.LOGOUT)
-      return { success: true, data: true }
-    } catch (error) {
-      return { success: false, message: '登出失敗' }
-    }
+  async logout(): Promise<Result<boolean>> {
+    return request<boolean>(() => api.post(API_ROUTES.AUTH.LOGOUT))
   },
 
   async updateUserInterests(userId: number, interests: MainCategory[]): Promise<Result<boolean>> {
-    try {
-      await api.put(API_ROUTES.USER.INTERESTS(userId), interests)
-      return { success: true, data: true }
-    } catch (error) {
-      return { success: false, message: '更新興趣失敗' }
-    }
+    return request<boolean>(() => api.put(API_ROUTES.USER.INTERESTS(userId), interests))
   }
 }
