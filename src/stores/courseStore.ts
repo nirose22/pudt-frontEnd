@@ -11,7 +11,6 @@ interface State {
   favoriteCourses: Course[]
   currentCourse: CourseDetailDTO | null
   courseSession: CourseSession[]
-  selectedSession: CourseSession | null
   loading: boolean
   error: string | null
 }
@@ -32,7 +31,6 @@ export const useCourseStore = defineStore('course', () => {
     myBookings: [],
     favoriteCourses: [],
     courseSession: [],
-    selectedSession: null,
     loading: false,
     error: null
   })
@@ -51,7 +49,7 @@ export const useCourseStore = defineStore('course', () => {
       .slice(0, 6)
   )
   const recommendedCourses = computed(() => CourseService.getRecommendedCourses(userId.value, 6))
-  const hasAvailableSeats = computed(() => !!state.selectedSession && state.selectedSession.seatsLeft > 0)
+
 
   /* ---------- actions ---------- */
   async function fetchCourses(keyword?: string, regions?: string[], categories?: string[]) {
@@ -61,11 +59,9 @@ export const useCourseStore = defineStore('course', () => {
 
   async function loadCourseDetail(courseId: number) {
     const detail = await CourseService.fetchCourseDetail(courseId)
-    console.log('loadCourseDetail', detail);
     if (detail.success && detail.data) {
       state.currentCourse = detail.data
-      const sessions = await CourseService.getSessionsForCourse(courseId)
-      if (sessions.success && sessions.data) state.courseSession = sessions.data
+      state.courseSession = detail.data.sessions
     }
     return detail;
   }
@@ -75,22 +71,26 @@ export const useCourseStore = defineStore('course', () => {
     if (list.success && list.data) state.favoriteCourses = list.data
   }
 
-  async function addFavoriteCourse(courseId: number, userId: number) {
-    const ok = await CourseService.addFavorite(userId, courseId)
-    if (ok.success) {
-      const course = state.allCourses.find(c => c.id === courseId)
-      if (course && !state.favoriteCourses.some(c => c.id === courseId)) state.favoriteCourses.push(course)
+  async function toggleFavoriteCourse(courseId: number) {
+    const result = await CourseService.toggleFavorite(courseId);
+    if (result.success) {
+      // 更新本地收藏列表狀態
+      const index = state.favoriteCourses.findIndex(c => c.id === courseId);
+      if (index >= 0) {
+        // 從收藏中移除
+        state.favoriteCourses.splice(index, 1);
+      } else if (state.currentCourse && state.currentCourse.id === courseId) {
+        state.favoriteCourses.push(state.currentCourse);
+      }
+
+      // 更新當前課程的收藏狀態
+      if (state.currentCourse && state.currentCourse.id === courseId) {
+        state.currentCourse.isFavorite = index < 0;
+      }
     }
+    return result;
   }
 
-  async function removeFavoriteCourse(courseId: number, userId: number) {
-    const ok = await CourseService.removeFavorite(userId, courseId)
-    if (ok.success) state.favoriteCourses = state.favoriteCourses.filter(c => c.id !== courseId)
-  }
-
-  function isFavorite(courseId: number) {
-    return state.favoriteCourses.some(c => c.id === courseId)
-  }
 
   async function createCourse(course: CourseDetailDTO) {
     const created = await CourseService.createCourse(course)
@@ -115,18 +115,6 @@ export const useCourseStore = defineStore('course', () => {
     return false
   }
 
-  function getSessionById(sessionId: number) {
-    return state.courseSession.find(s => s.id === sessionId) || null
-  }
-
-  function selectSession(sessionId: number) {
-    const slot = getSessionById(sessionId)
-    if (slot) {
-      state.selectedSession = slot
-      return true
-    }
-    return false
-  }
 
   /* ---------- expose ---------- */
   return {
@@ -134,17 +122,12 @@ export const useCourseStore = defineStore('course', () => {
     popularCourses,
     latestCourses,
     recommendedCourses,
-    hasAvailableSeats,
     fetchCourses,
     loadCourseDetail,
     fetchFavoriteCourses,
-    addFavoriteCourse,
-    removeFavoriteCourse,
-    isFavorite,
+    toggleFavoriteCourse,
     createCourse,
     updateCourse,
     updateAvailableSeats,
-    getSessionById,
-    selectSession
   }
 })

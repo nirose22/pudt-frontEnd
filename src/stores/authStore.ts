@@ -5,7 +5,6 @@ import { UserRole } from '@/enums/User'
 import { useUserStore } from './userStore'
 import type { Result, User } from '@/types'
 import { authApi } from '@/services/AuthApi'
-import { request } from '@/utils/requestHelper'
 import { API_CONFIG } from '@/utils/apiConfig'
 
 export interface LoginCredentials {

@@ -35,6 +35,7 @@ export const API_ROUTES = {
         SESSIONS: (id: number) => `/courses/${id}/sessions`,
         IMAGES: (id: number) => `/courses/${id}/images`,
         ENROLLMENTS: (id: number) => `/courses/${id}/enrollments`,
+        FAVORITE: (courseId: number) => `/courses/${courseId}/favorite`,
     },
     USER: {
         PROFILE: (id: number | 'me') => `/users/${id}`,

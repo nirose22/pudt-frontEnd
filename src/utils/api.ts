@@ -12,8 +12,8 @@ const api: AxiosInstance = axios.create({
 api.interceptors.request.use(
   (config) => {
     // 從 pinia 持久化存儲中讀取 token
-    // authStore 使用 persist 配置，key 為 'auth'，存儲格式為 {token: 'xxx', role: 'xxx'}
     const authData = localStorage.getItem(API_CONFIG.AUTH.TOKEN_KEY)
+    console.log(authData);
     let token = null
     
     if (authData) {
@@ -24,12 +24,8 @@ api.interceptors.request.use(
         console.warn('解析 auth 數據失敗:', error)
       }
     }
-    
-    console.log('從 localStorage 獲取的 token:', token);
-    
     if (token) {
       config.headers[API_CONFIG.AUTH.HEADER] = `${API_CONFIG.AUTH.TOKEN_PREFIX} ${token}`
-      console.log('設置 Authorization header:', config.headers[API_CONFIG.AUTH.HEADER]);
     }
     return config
   },

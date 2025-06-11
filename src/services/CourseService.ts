@@ -1,5 +1,5 @@
 import type { Course, CourseDetailDTO, CourseSession } from '@/types/course'
-import type { PhotoItem, Result } from '@/types'
+import type { Photo, Result } from '@/types'
 import api from '@/utils/api';
 import { API_ROUTES } from '@/utils/apiConfig'
 import { request, buildQueryString } from '@/utils/requestHelper'
@@ -67,17 +67,17 @@ export class CourseService {
         return request<Course[]>(() => api.get(API_ROUTES.USER.FAVORITES(userId)))
     }
 
-    static addFavorite(userId: number, courseId: number): Promise<Result<void>> {
-        return request<void>(() => api.post(API_ROUTES.USER.FAVORITES(userId), { courseId }))
-    }
-
-    static removeFavorite(userId: number, courseId: number): Promise<Result<void>> {
-        return request<void>(() => api.delete(API_ROUTES.USER.FAVORITES(userId), { data: { courseId } }))
+    static toggleFavorite(courseId: number): Promise<Result<void>> {
+        if (!courseId || typeof courseId !== 'number') {
+            console.error('CourseService.toggleFavorite: 無效的 courseId', courseId, typeof courseId);
+            throw new Error('無效的課程ID');
+        }
+        return request<void>(() => api.post(API_ROUTES.COURSE.FAVORITE(courseId)))
     }
 
     /* ----------------- Images ----------------- */
-    static getCourseImages(courseId: number): Promise<Result<PhotoItem[]>> {
-        return request<PhotoItem[]>(() => api.get(API_ROUTES.COURSE.IMAGES(courseId)))
+    static getCourseImages(courseId: number): Promise<Result<Photo[]>> {
+        return request<Photo[]>(() => api.get(API_ROUTES.COURSE.IMAGES(courseId)))
     }
 
     /* ----------------- CRUD ----------------- */

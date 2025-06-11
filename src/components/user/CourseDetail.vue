@@ -17,10 +17,10 @@
                         <Galleria :value="galleryImages" :responsiveOptions="responsiveOptions" :numVisible="4" :circular="true"
                             containerStyle="width: 100%" :showItemNavigatorsOnHover="true" :showItemNavigators="true">
                             <template #item="slotProps">
-                                <img :src="slotProps.item.imageSrc" :alt="slotProps.item.alt" class="w-full h-full object-cover" />
+                                <img :src="slotProps.item.url" :alt="slotProps.item.alt" class="w-full h-full object-cover" />
                             </template>
                             <template #thumbnail="slotProps">
-                                <img :src="slotProps.item.thumbnail" :alt="slotProps.item.alt" class="block" />
+                                <img :src="slotProps.item.thumbnailUrl" :alt="slotProps.item.alt" class="block" />
                             </template>
                         </Galleria>
                     </div>
@@ -32,7 +32,7 @@
                             <!-- 收藏按鈕 -->
                             <Button rounded text 
                                 :icon="isFavorite ? 'pi pi-heart-fill' : 'pi pi-heart'" 
-                                :class="{ 'text-red-500': isFavorite, 'hover:bg-red-50': !isFavorite, 'w-10 h-10': true }"
+                                :class="{ 'text-red-400!': isFavorite, 'hover:bg-red-50': !isFavorite, 'w-10 h-10': true }"
                                 @click="toggleFavorite" :loading="favoriteLoading" aria-label="收藏課程" />
                         </div>
                         
@@ -62,24 +62,26 @@
                             <Chip label="新課程" class="!bg-green-100 !text-green-700 !border-none" v-if="isNewCourse" />
                         </div>
                         
-                        <div v-if="userProfile" class="flex items-center justify-between p-4 rounded-lg bg-sky-50 border border-sky-100 mt-auto">
+                        <div class="flex items-center justify-between p-4 rounded-lg bg-sky-50 border border-sky-100 mt-auto">
                             <div>
                                 <p class="text-lg font-medium text-sky-700">
                                     點數: {{ currentCourse.points }} 點
                                 </p>
-                                <p class="text-sm text-sky-600">
-                                    您目前有 {{ userPoints }} 點
-                                </p>
+                                <template v-if="useAuthStore().isLoggedIn">
+                                    <p class="text-sm text-sky-600">
+                                        您目前有 {{ userProfile.points }} 點
+                                    </p>
+                                </template>
+                                <template v-else>
+                                    <p class="text-sm text-sky-600">
+                                        請先<Button text class="p-0 underline text-sky-600 focus:shadow-none" @click="showLoginDialog = true">登入</Button>以查看點數
+                                    </p>
+                                </template>
                             </div>
                             <div class="flex items-center gap-2">
                                 <Button icon="pi pi-share-alt" text rounded severity="secondary"
                                     @click="shareCourse" class="hover:bg-sky-100" />
                             </div>
-                        </div>
-                        <div v-else class="bg-gray-50 p-4 rounded-lg text-center border border-gray-100">
-                            <p class="text-gray-700">
-                                請先<Button text class="p-0 underline text-sky-600 focus:shadow-none" @click="router.push('/login')">登入</Button>以查看點數
-                            </p>
                         </div>
                     </div>
                 </div>
@@ -123,41 +125,113 @@
                         <h2 class="text-xl font-semibold text-sky-700 flex items-center">
                             <i class="pi pi-calendar mr-2"></i>選擇預約時間
                         </h2>
-                        <!-- 日期選擇 -->
+                        <!-- 日期範圍選擇 -->
                         <div class="w-full md:w-auto">
-                            <DatePicker v-model="selectedDate" inputId="date" showIcon iconDisplay="input"
-                                variant="filled" class="w-full md:w-64" placeholder="選擇日期"
-                                :pt="{
-                                    input: { class: 'border border-gray-300 rounded-lg p-3 hover:border-sky-500 focus:border-sky-500' },
-                                    root: { class: 'w-full' }
-                                }" />
+                            <DateRangeFilter 
+                                v-model:startDate="startDate"
+                                v-model:endDate="endDate"
+                                :showControls="false"
+                                :autoApply="true"
+                                :defaultRangeDays="7"
+                                @change="handleDateRangeChange"
+                            />
                         </div>
                     </div>
                     <Divider />
+                    
                     <!-- 時間選擇 -->
                     <div class="mt-4">
                         <h3 class="text-lg font-medium text-gray-700 mb-4">可預約時段</h3>
-                        <template v-if="filteredTimeSlots.length === 0">
+                        <template v-if="groupedTimeSlots.length === 0">
                             <div class="flex flex-col items-center justify-center py-10 bg-gray-50 rounded-lg border border-gray-100">
                                 <i class="pi pi-calendar-times text-4xl text-gray-400 mb-4"></i>
                                 <p class="text-gray-600 text-center">
                                     目前沒有可預約時段<br>
-                                    <span class="text-sm text-gray-500">請選擇其他日期</span>
+                                    <span class="text-sm text-gray-500">請選擇其他日期範圍</span>
                                 </p>
                             </div>
                         </template>
-                        <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                            <button v-for="slot in filteredTimeSlots" :key="slot.id"
-                                :class="['time-slot-btn', { 'time-slot-selected': selectedSession?.id === slot.id }]"
-                                :disabled="slot.seatsLeft === 0" @click="selectTimeSlot(slot)">
-                                <span class="text-base font-medium">{{ formatTimeSlot(slot) }}</span>
-                                <span class="block text-xs mt-1">
-                                    剩餘: {{ slot.seatsLeft }}/{{ slot.seats }}
-                                </span>
-                                <span v-if="slot.seatsLeft === 0" class="text-xs mt-1 font-medium text-red-500">
-                                    已滿
-                                </span>
-                            </button>
+                        
+                        <!-- 按日期分組顯示時段 -->
+                        <div v-else class="space-y-6">
+                            <div v-for="group in groupedTimeSlots" :key="group.date" class="bg-gray-50 rounded-lg p-4">
+                                <div class="flex items-center mb-4">
+                                    <div class="bg-sky-100 rounded-full px-3 py-1 mr-3">
+                                        <i class="pi pi-calendar text-sky-600 mr-1"></i>
+                                        <span class="text-sky-700 font-medium text-sm">
+                                            {{ formatDateHeader(group.date) }}
+                                        </span>
+                                    </div>
+                                    <div class="text-gray-500 text-sm">
+                                        {{ group.slots.length }} 個時段可預約
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <div v-for="slot in group.slots" :key="slot.id"
+                                        :class="['time-slot-card', { 'time-slot-card-selected': selectedSession?.id === slot.id }]"
+                                        @click="selectTimeSlot(slot)">
+                                        
+                                        <!-- 講師頭像區域 -->
+                                        <div class="flex items-center gap-3 mb-2">
+                                            <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                                                <img v-if="getInstructorInfo(slot).avatarUrl && getInstructorInfo(slot).avatarUrl?.trim() !== ''" 
+                                                     :src="getInstructorInfo(slot).avatarUrl" 
+                                                     :alt="getInstructorInfo(slot).name"
+                                                     class="w-full h-full object-cover bg-gray-200"
+                                                     @error="(e) => handleImageError(e, slot.id)">
+                                                <div v-else 
+                                                     class="w-full h-full bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center">
+                                                    <i class="pi pi-user text-white text-sm"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="font-medium text-gray-800 text-sm truncate">
+                                                    {{ getInstructorInfo(slot).name }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- 時間資訊 -->
+                                        <div class="bg-white p-1 mb-1">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex items-center gap-2">
+                                                    <i class="pi pi-clock text-sky-600 text-sm"></i>
+                                                    <span class="font-medium text-gray-800">
+                                                        {{ formatTime(slot.start) }}
+                                                    </span>
+                                                </div>
+                                                <div class="text-sm text-gray-500">
+                                                    {{ calculateDuration(slot.start, slot.end) }} 分鐘
+                                                </div>
+                                            </div>
+                                            <div class="text-xs text-gray-500 mt-1">
+                                                至 {{ formatTime(slot.end) }}
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- 座位資訊 -->
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-2">
+                                                <i class="pi pi-users text-gray-500 text-sm"></i>
+                                                <span class="text-sm text-gray-600">
+                                                    剩餘 {{ slot.seatsLeft }}/{{ slot.seats }}
+                                                </span>
+                                            </div>
+                                            <div v-if="slot.seatsLeft === 0" 
+                                                class="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full font-medium">
+                                                已滿
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- 選中狀態指示器 -->
+                                        <div v-if="selectedSession?.id === slot.id" 
+                                            class="absolute top-2 right-2 w-6 h-6 bg-sky-500 rounded-full flex items-center justify-center">
+                                            <i class="pi pi-check text-white text-xs"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -170,7 +244,7 @@
                         <Button text rounded 
                             :icon="isFavorite ? 'pi pi-heart-fill' : 'pi pi-heart'" 
                             :class="{
-                                'text-red-600': isFavorite,
+                                'text-red-400!': isFavorite,
                                 'hover:bg-red-50': !isFavorite
                             }" @click="toggleFavorite" :loading="favoriteLoading" aria-label="收藏課程" />
                         <Button text rounded icon="pi pi-share-alt" class="hover:bg-sky-50"
@@ -178,7 +252,7 @@
                     </div>
                     <div class="text-lg font-bold text-gray-800">
                         <p v-if="selectedSession">
-                            已選擇: {{ selectedSession.date.toLocaleDateString() }} {{ formatTimeSlot(selectedSession) }}
+                            已選擇: {{ formatSelectedDate(selectedSession.date) }} {{ formatTimeSlot(selectedSession) }}
                         </p>
                         <p v-else>
                             請選擇預約時段
@@ -196,7 +270,7 @@
                                 {{
                                     !selectedSession
                                         ? '請選擇時段'
-                                        : !currentCourse || userPoints < (currentCourse.points) ? '點數不足' : '立即預約' 
+                                        : !currentCourse || userProfile.points < (currentCourse.points) ? '點數不足' : '立即預約' 
                                 }}
                             </span>
                         </Button>
@@ -216,36 +290,48 @@ import { useConfirm } from 'primevue/useconfirm';
 import Rating from 'primevue/rating';
 import Chip from 'primevue/chip';
 import Galleria from 'primevue/galleria';
-import DatePicker from 'primevue/datepicker';
 import Divider from 'primevue/divider';
 import Dialog from 'primevue/dialog';
 import ConfirmDialog from 'primevue/confirmdialog';
-import { isSameDate } from '@/utils/dateUtils';
 import { useUserStore } from '@/stores/userStore';
 import { useBookingStore } from '@/stores/bookingStore';
-import type { CourseSession, Result } from '@/types';
+import { useAuthStore } from '@/stores/authStore';
+import type { CourseSession } from '@/types';
 import { useRouter } from 'vue-router';
 import { UserRole } from '@/enums/User';
 import { showSuccess, showError, showInfo, initToast } from '@/utils/toastHelper';
+import DateRangeFilter from '@/components/common/DateRangeFilter.vue';
+import { inject, type Ref } from 'vue';
+import { CourseService } from '@/services/CourseService';
 
 const props = defineProps<{
     courseId: number
 }>();
 
 const visible = defineModel<boolean>('visible', { required: true });
-
+const showLoginDialog = inject('showLoginDialog') as Ref<boolean>;
 const router = useRouter();
 const courseStore = useCourseStore();
 const userStore = useUserStore();
 const bookingStore = useBookingStore();
-
 const toast = useToast();
 const confirm = useConfirm();
+const selectedSession = ref<CourseSession | null>(null);
 
 // 使用 computed 确保 currentCourse 有值
-const { currentCourse, selectedSession, courseSession } = storeToRefs(courseStore);
-const { points: userPoints, profile: userProfile } = storeToRefs(userStore);
+const { currentCourse, courseSession } = storeToRefs(courseStore);
+const { user: userProfile } = storeToRefs(userStore);
+const selectedDate = ref(new Date());
 
+// 日期范围
+const startDate = ref(new Date(Date.now()));
+const endDate = ref(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)); // 默认7天后
+
+
+// 在組件掛載時，如果有 courseId 并且當前沒有加載課程或者課程ID與傳入ID不同，則加載課程詳情
+onMounted(async () => {
+    initToast(toast);
+});
 // 添加一個新的計算屬性來安全處理商家評分
 const merchantRating = computed(() => {
     return currentCourse.value?.merchant?.rating || 0;
@@ -258,20 +344,19 @@ const galleryImages = computed(() => {
     return currentCourse.value.images
 });
 
-// 监听 visible 和 courseId 属性变化，加载课程详情
+// 監聽 visible 和 courseId 屬性變化
 watch(
     [() => visible.value, () => props.courseId],
     async ([newVisible, newCourseId]) => {
         if (newVisible && newCourseId && (!currentCourse.value || currentCourse.value.id !== newCourseId)) {
             try {
-                // 使用新的 bookingStore.loadCourseBookingDetail 方法
-                const result = await bookingStore.loadCourseBookingDetail(newCourseId);
+                const result = await courseStore.loadCourseDetail(newCourseId);
                 if (!result.success) {
-                    showError(result.message || '加载课程详情失败', '加载失败');
+                    showError(result.message || '加載課程詳情失敗', '加載失敗');
                 }
             } catch (error) {
-                console.error('加载课程详情错误:', error);
-                showError('加载课程详情时发生错误', '错误');
+                console.error('加載課程詳情錯誤:', error);
+                showError('加載課程詳情時發生錯誤', '錯誤');
             }
         }
     },
@@ -287,43 +372,80 @@ const courseDlg = ref({
 // 商家信息展示控制
 const responsiveOptions = ref([
     {
-        breakpoint: '1300px',
+        breakpoint: '1200px',
         numVisible: 3
     },
     {
         breakpoint: '575px',
-        numVisible: 1
+        numVisible: 2
     }
 ]);
 
-// 日期時間選擇
-const selectedDate = ref(new Date());
 
-// 监听 courseSession 变化，设置初始日期
-watch(() => courseStore.courseSession, (newVal) => {
-    if (newVal && newVal.length > 0) {
-        selectedDate.value = newVal[0].date || new Date();
-    }
-}, { immediate: true });
+// 处理日期范围变更
+const handleDateRangeChange = (dateRange: { start: Date; end: Date }) => {
+    startDate.value = dateRange.start;
+    endDate.value = dateRange.end;
+};
 
-const filteredTimeSlots = computed(() => {
-    if (!courseSession.value || courseSession.value.length === 0) return [];
-
-    return courseSession.value.filter(slot => {
-        if (!slot.date || !selectedDate.value) return false;
-        return isSameDate(
-            slot.date instanceof Date ? slot.date : new Date(slot.date),
-            selectedDate.value
-        );
+// 格式化日期标题
+const formatDateHeader = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('zh-TW', {
+        month: 'long',
+        day: 'numeric',
+        weekday: 'short'
     });
-});
+};
+
+// 统一的时间格式化函数
+const formatTime = (time: Date | string): string => {
+    try {
+        if (typeof time === 'string') {
+            // 如果是时间字符串格式如 "14:30"
+            if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(time)) {
+                return time.substring(0, 5); // 只取 HH:mm 部分
+            }
+            // 尝试解析为日期
+            const date = new Date(time);
+            if (!isNaN(date.getTime())) {
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+            return time;
+        } else if (time instanceof Date && !isNaN(time.getTime())) {
+            return time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        return '';
+    } catch (error) {
+        console.error('时间格式化错误:', error, time);
+        return '';
+    }
+};
+
+// 计算课程时长
+const calculateDuration = (start: Date | string, end: Date | string): number => {
+    const parseTime = (time: Date | string): Date => {
+        if (time instanceof Date) return time;
+        return new Date(time);
+    };
+
+    const startTime = parseTime(start);
+    const endTime = parseTime(end);
+    
+    if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+        return 60; // 默认60分钟
+    }
+    
+    const diffTime = Math.abs(endTime.getTime() - startTime.getTime());
+    return Math.ceil(diffTime / (1000 * 60));
+};
 
 // 選擇時段
 const selectTimeSlot = (slot: CourseSession) => {
     if (slot.seatsLeft === 0) return;
-    console.log(slot);
-
-    courseStore.selectSession(slot.id);
+    
+    // 直接使用傳入的 slot，而不是重新查找
+    selectedSession.value = slot;
 };
 
 // 新增計算屬性，檢查是否可以預約
@@ -332,7 +454,7 @@ const canBook = computed(() => {
 
     if (selectedSession.value.seatsLeft <= 0) return false;
 
-    if (userPoints.value < currentCourse.value.points) return false;
+    if (userProfile.value?.points < currentCourse.value.points) return false;
 
     return true;
 });
@@ -341,12 +463,12 @@ const canBook = computed(() => {
 const handleBooking = async () => {
     if (!canBook.value || !selectedSession.value || !selectedDate.value || !currentCourse.value) return;
 
-    if (userPoints.value < currentCourse.value.points) {
+    if (userProfile.value?.points < currentCourse.value.points) {
         showError('請先購買點數', '點數不足');
         return;
     }
 
-    if (!userProfile?.id) {
+    if (!userProfile.value?.id) {
         confirm.require({
             message: '請先登入',
             header: '提示',
@@ -354,7 +476,7 @@ const handleBooking = async () => {
             rejectLabel: '稍後登入',
             rejectClass: 'p-button-secondary',
             accept: () => {
-                router.push('/login')
+                showLoginDialog.value = true;
             },
             reject: () => {
                 console.log('reject');
@@ -377,7 +499,7 @@ const handleBooking = async () => {
 
                 if (result && 'success' in result && result.success) {
                     showSuccess('已成功預約一門課程', '預約成功！');
-                    courseStore.selectSession(0);
+                    selectedSession.value = null;
                 } else {
                     // 確保傳遞的是字串型別
                     const errorMessage = result && 'reason' in result && typeof result.reason === 'string'
@@ -395,14 +517,22 @@ const handleBooking = async () => {
 
 // 收藏相關
 const favoriteLoading = ref(false);
-const isFavorite = computed(() => {
-    if (!currentCourse.value) return false;
-    return courseStore.isFavorite(currentCourse.value.id);
-});
+
+const isFavorite = computed(() => currentCourse.value?.isFavorite || false);
 
 // 切換收藏狀態
 const toggleFavorite = async () => {
-    if (!currentCourse.value) return;
+    if (!currentCourse.value) {
+        console.error('toggleFavorite: currentCourse 為空');
+        showError('課程資料未載入', '錯誤');
+        return;
+    }
+
+    if (!currentCourse.value.id) {
+        console.error('toggleFavorite: currentCourse.id 為空', currentCourse.value);
+        showError('課程ID無效', '錯誤');
+        return;
+    }
     
     if (userStore.displayName === UserRole.Guest) {
         // 用戶未登入時的處理
@@ -418,14 +548,15 @@ const toggleFavorite = async () => {
 
     favoriteLoading.value = true;
     try {
-        if (isFavorite.value) {
-            // 取消收藏
-            await courseStore.removeFavoriteCourse(currentCourse.value.id, userId);
-            showSuccess('已從收藏中移除', '成功');
-        } else {
-            // 添加收藏
-            await courseStore.addFavoriteCourse(currentCourse.value.id, userId);
-            showSuccess('已加入收藏', '成功');
+        const result = await CourseService.toggleFavorite(currentCourse.value.id);
+        if (result) {
+            if (isFavorite.value) {
+                showSuccess(result.message || '已從收藏中移除', '成功');
+                currentCourse.value.isFavorite = false;
+            } else {
+                showSuccess(result.message || '已加入收藏', '成功');
+                currentCourse.value.isFavorite = true;
+            }
         }
     } catch (error) {
         showError('操作失敗，請稍後再試', '錯誤');
@@ -435,66 +566,14 @@ const toggleFavorite = async () => {
     }
 };
 
-// 在组件挂载时，如果有 courseId 并且当前没有加载课程或者课程ID与传入ID不同，则加载课程详情
-onMounted(async () => {
-    // 初始化 toast
-    initToast(toast);
-
-    if (props.courseId && (!currentCourse.value || currentCourse.value.id !== props.courseId)) {
-        try {
-            // 使用新的 bookingStore.loadCourseBookingDetail 方法
-            const result = await bookingStore.loadCourseBookingDetail(props.courseId);
-            if (!result.success) {
-                showError(result.message || '加载课程详情失败', '加载失败');
-            }
-        } catch (error) {
-            console.error('加载课程详情错误:', error);
-            showError('加载课程详情时发生错误', '错误');
-        }
-    }
-});
 
 const shareCourse = () => {
-    // navigator.clipboard.writeText(window.location.href);
     showSuccess('已成功分享課程', '分享成功！');
 };
 
-// 格式化时间槽显示
-const formatTimeSlot = (slot: CourseSession) => {
+// 格式化时间槽显示（用于底部显示）
+const formatTimeSlot = (slot: CourseSession): string => {
     if (!slot) return '';
-
-    // 處理不同類型的時間格式
-    const formatTime = (time: Date | string) => {
-        if (typeof time === 'string') {
-            // 尝试将字符串解析为日期
-            try {
-                // 检查是否只有时间部分（例如 "14:30"）
-                if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(time)) {
-                    // 如果是时间字符串，直接返回
-                    return time;
-                }
-
-                const date = new Date(time);
-                if (isNaN(date.getTime())) {
-                    console.error('无效时间字符串:', time);
-                    return time; // 返回原始字符串
-                }
-                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            } catch (error) {
-                console.error('时间格式化错误:', error);
-                return time; // 返回原始字符串
-            }
-        }
-        if (time instanceof Date) {
-            if (isNaN(time.getTime())) {
-                console.error('无效时间对象:', time);
-                return '时间无效';
-            }
-            return time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        }
-        return '';
-    };
-
     return `${formatTime(slot.start)} - ${formatTime(slot.end)}`;
 };
 
@@ -506,6 +585,85 @@ const isNewCourse = computed(() => {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays <= 7; // 7天內的新課程
 });
+
+const groupedTimeSlots = computed(() => {
+    if (!courseSession.value || courseSession.value.length === 0) return [];
+
+    // 过滤在日期范围内的时段
+    const filteredSlots = courseSession.value.filter(slot => {
+        if (!slot.date || !startDate.value || !endDate.value) return false;
+        
+        const slotDate = slot.date instanceof Date ? slot.date : new Date(slot.date);
+        return slotDate >= startDate.value && slotDate <= endDate.value;
+    });
+
+    // 按日期分组
+    const grouped: { [date: string]: CourseSession[] } = {};
+    
+    filteredSlots.forEach(slot => {
+        const slotDate = slot.date instanceof Date ? slot.date : new Date(slot.date);
+        const dateKey = slotDate.toDateString(); // 使用 toDateString 作为 key
+        
+        if (!grouped[dateKey]) {
+            grouped[dateKey] = [];
+        }
+        grouped[dateKey].push(slot);
+    });
+
+    // 转换为数组并排序
+    return Object.entries(grouped)
+        .map(([dateKey, slots]) => ({
+            date: dateKey,
+            slots: slots.sort((a, b) => {
+                const aStart = typeof a.start === 'string' ? a.start : a.start.getTime();
+                const bStart = typeof b.start === 'string' ? b.start : b.start.getTime();
+                return aStart < bStart ? -1 : 1;
+            })
+        }))
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+});
+
+const getInstructorInfo = (slot: CourseSession) => {
+    // 默认讲师信息
+    const defaultInfo = { 
+        name: '專業講師', 
+        avatarUrl: undefined as string | undefined, 
+        bio: undefined as string | undefined 
+    };
+    
+    if (!currentCourse.value || !slot.instructorId) {
+        return defaultInfo;
+    }
+    
+    return {
+        name: slot.instructorName,
+        avatarUrl: slot.instructorAvatar,
+        bio: undefined as string | undefined 
+    };
+};
+
+const handleImageError = (event: Event, slotId: number) => {
+    const target = event.target as HTMLImageElement;
+    if (target?.parentNode) {
+        // 隐藏图片并显示默认图标
+        target.style.display = 'none';
+        console.warn(`讲师头像加载失败，时段ID: ${slotId}`);
+    }
+};
+
+// 安全的日期格式化函數
+const formatSelectedDate = (date: Date | string): string => {
+    try {
+        const dateObj = date instanceof Date ? date : new Date(date);
+        if (isNaN(dateObj.getTime())) {
+            return '無效日期';
+        }
+        return dateObj.toLocaleDateString();
+    } catch (error) {
+        console.error('日期格式化錯誤:', error);
+        return '無效日期';
+    }
+};
 </script>
 
 <style>
@@ -532,6 +690,30 @@ const isNewCourse = computed(() => {
     @apply bg-sky-50 border-sky-300;
 }
 
+/* 新的时段卡片样式 */
+.time-slot-card {
+    @apply relative bg-white border border-gray-200 rounded-xl p-4 cursor-pointer
+           transition-all duration-200 hover:shadow-md hover:border-sky-300;
+}
+
+.time-slot-card:hover {
+    @apply transform -translate-y-1;
+}
+
+.time-slot-card:disabled,
+.time-slot-card[disabled] {
+    @apply bg-gray-50 text-gray-400 cursor-not-allowed hover:shadow-none 
+           border-gray-200 hover:transform-none;
+}
+
+.time-slot-card-selected {
+    @apply bg-sky-50 border-sky-500 shadow-lg;
+}
+
+.time-slot-card-selected:hover {
+    @apply bg-sky-100 border-sky-600;
+}
+
 .fixed-booking-bar {
     @apply fixed bottom-0 left-0 right-0 bg-white z-10 py-4 border-t border-gray-200 shadow-lg;
 }
@@ -543,6 +725,5 @@ const isNewCourse = computed(() => {
 .booking-btn:not(:disabled):hover {
     @apply transform -translate-y-1;
 }
-
 
 </style>

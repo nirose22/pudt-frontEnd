@@ -1,5 +1,6 @@
 import { BookingStatus } from '@/enums/BookingStatus';
 import { ActivityKind } from '@/enums/Activity';
+import { InstructorDTO } from './course';
 
 // 课程记录接口
 export interface CourseRecord {
@@ -8,11 +9,7 @@ export interface CourseRecord {
   courseTitle: string;
   courseType: string;
   location: string;
-  instructor?: {
-    name: string;
-    avatar?: string;
-    title?: string;
-  };
+  instructor?: InstructorDTO;
   date: string;
   time: string;
   points: number;
@@ -37,10 +34,7 @@ export interface AbsenceRecord {
 export interface RatingRecord {
   id: number;
   courseTitle: string;
-  instructor?: {
-    name: string;
-    avatar?: string;
-  };
+  instructor?: InstructorDTO;
   date: string;
   rating: number;
   comment?: string;

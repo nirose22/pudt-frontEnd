@@ -89,20 +89,6 @@ export const useBookingStore = defineStore('booking', () => {
             loading.value = false
         }
     }
-    
-    // 加载课程预约详情
-    const loadCourseBookingDetail = async (courseId: number): Promise<Result> => {
-        loading.value = true
-        error.value = null
-        try {
-            const res = await courseStore.loadCourseDetail(courseId)
-            return res;
-        } catch (err) {
-            return errorHandler.handleApiError(err, ERROR_MESSAGES.BOOKING_ERROR)
-        } finally {
-            loading.value = false
-        }
-    }
 
     // 预约课程
     async function book(courseId: number, slotId: number): Promise<Result> {
@@ -202,7 +188,6 @@ export const useBookingStore = defineStore('booking', () => {
         loading,
         error,
         fetchBookings,
-        loadCourseBookingDetail,
         canBook,
         book,
         cancel

@@ -123,12 +123,9 @@ const fetchCourses = async () => {
             latestCourses.value = latestResult.data;
         }
 
-        // 如果用户已登录，获取推荐课程
-        if (userStore.userId) {
-            const recommendedResult = await CourseService.getRecommendedCourses(userStore.userId, 6);
-            if (recommendedResult.success && recommendedResult.data) {
-                recommendedCourses.value = recommendedResult.data;
-            }
+        const recommendedResult = await CourseService.getRecommendedCourses(userStore.userId, 6);
+        if (recommendedResult.success && recommendedResult.data) {
+            recommendedCourses.value = recommendedResult.data;
         }
     } catch (error) {
         console.error('获取课程数据失败:', error);
@@ -150,27 +147,7 @@ function loadMoreCourses() {
 async function selectCourse(course: Course) {
     const courseId = course.id;
     selectedCourseId.value = courseId;
-
-    // 标记为加载中
-    loadingMap.value.set(courseId, true);
-
-    try {
-        console.log('loadCourseDetail', courseId);
-        
-        await useCourseStore().loadCourseDetail(courseId).then(res => {
-            if (res.success && res.data) {
-                visible.value = true;
-            } else {
-                showError(res.message || '加載課程詳情失敗', '無法查看課程');
-            }
-        })
-        } catch (error: unknown) {
-        console.error('加載課程詳情失敗:', error);
-        showError(bookingStore.error || '加載課程詳情時出錯，請稍後再試', '錯誤');
-    } finally {
-        // 标记加载完成
-        loadingMap.value.set(courseId, false);
-    }
+    visible.value = true;
 }
 
 function handleSearch() {

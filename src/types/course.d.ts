@@ -2,6 +2,7 @@ import { RegionCode } from '@/enums/RegionCode'
 import { Merchant } from './merchant'
 import { CourseStatus } from '@/enums/Course'
 import { MainCategory, SubCategory } from '@/enums/Category'
+import { Photo } from './photo'
 
 /* ---------- 課程基礎類型 ---------- */
 export interface BaseCourse {
@@ -42,16 +43,29 @@ export interface TimeRange {
 export interface CourseSession extends TimeRange {
   id: number
   courseId: number
-  date: Date                  // 上課日期
+  date: Date              // 上課日期
   seats: number               // 總席位
   seatsLeft: number           // 剩餘席位
+
+  instructorId?: number       // 講師ID (可選)
+  instructorName?: string   // 講師姓名
+  instructorAvatar?: string // 講師頭像
+}
+
+/* 講師資料傳輸對象 */
+export interface InstructorDTO {
+  id: number                  // 講師ID
+  name: string                // 講師姓名
+  avatarUrl?: string          // 講師頭像
+  bio?: string                // 講師介紹
 }
 
 /* 課程詳情數據傳輸對象 */
 export interface CourseDetailDTO extends Course {
   merchant: Merchant
   sessions: CourseSession[]
-  images: PhotoItem[]
+  images: Photo[]
+  isFavorite?: boolean
 }
 
 /**
