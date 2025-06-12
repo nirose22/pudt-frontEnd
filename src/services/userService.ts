@@ -13,14 +13,6 @@ export const userService = {
     return request<Course[]>(() => api.get(API_ROUTES.USER.FAVORITES(userId)))
   },
 
-  async addFavorite(userId: number, courseId: number): Promise<Result<boolean>> {
-    return request<boolean>(() => api.post(`${API_ROUTES.USER.FAVORITES(userId)}/${courseId}`))
-  },
-
-  async removeFavorite(userId: number, courseId: number): Promise<Result<boolean>> {
-    return request<boolean>(() => api.delete(`${API_ROUTES.USER.FAVORITES(userId)}/${courseId}`))
-  },
-
   async updateProfile(userId: number, data: Partial<User>): Promise<Result<User>> {
     return request<User>(() => api.put(API_ROUTES.USER.PROFILE(userId), data))
   },

@@ -35,7 +35,7 @@ export const useBookingStore = defineStore('booking', () => {
     /* ---------- can-book logic ---------- */
     function canBook(courseId: number, slotId: number): boolean {
         const currentCourse = courseStore.currentCourse
-        const slot = courseStore.getSessionById(slotId)
+        const slot = courseStore.courseSession.find(s => s.id === slotId)
         
         if (!currentCourse || !slot) {
             return false
@@ -102,7 +102,7 @@ export const useBookingStore = defineStore('booking', () => {
             }
 
             const currentCourse = courseStore.currentCourse
-            const slot = courseStore.getSessionById(slotId)
+            const slot = courseStore.courseSession.find(s => s.id === slotId)
             
             if (!currentCourse || !slot || !userStore.profile) {
                 return errorHandler.handleBusinessError(null, '課程信息不完整或未登錄')

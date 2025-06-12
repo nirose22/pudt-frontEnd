@@ -43,10 +43,16 @@ export const API_ROUTES = {
         INTERESTS: (userId: number) => `/users/${userId}/interests`,
         BEHAVIOR: (userId: number) => `/users/${userId}/behavior`,
         ADDRESS: (userId: number) => `/users/${userId}/address`,
-        BOOKINGS: (userId: number) => `/users/${userId}/bookings`,
         PURCHASE_HISTORY: (userId: number) => `/users/${userId}/purchase-history`,
         UNPAID_ITEMS: (userId: number) => `/users/${userId}/unpaid-items`,
         ABSENCES: (userId: number | string) => `/users/${userId}/absences`,
+    },
+    BOOKING: {
+        LIST: (queryString: string) => `/booking/${queryString}`,
+        DETAIL: (id: number) => `/booking/${id}`,
+        CREATE: '/booking',
+        CANCEL: (id: number) => `/booking/${id}`,
+        CHECK: '/booking/check',
     },
     ACTIVITY: {
         RECORD: '/activities',

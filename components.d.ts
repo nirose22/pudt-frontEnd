@@ -16,7 +16,6 @@ declare module 'vue' {
     CourseDetail: typeof import('./src/components/user/CourseDetail.vue')['default']
     DateRangeFilter: typeof import('./src/components/common/DateRangeFilter.vue')['default']
     Footer: typeof import('./src/components/layout/Footer.vue')['default']
-    GlobalLoginDialog: typeof import('./src/components/auth/GlobalLoginDialog.vue')['default']
     Header: typeof import('./src/components/layout/Header.vue')['default']
     HistoryDialog: typeof import('./src/components/user/HistoryDialog.vue')['default']
     InterestsSelectionDialog: typeof import('./src/components/user/InterestsSelectionDialog.vue')['default']

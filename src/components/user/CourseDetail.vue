@@ -534,7 +534,7 @@ const toggleFavorite = async () => {
         return;
     }
     
-    if (userStore.displayName === UserRole.Guest) {
+    if (userStore.user.role === UserRole.Guest) {
         // 用戶未登入時的處理
         showInfo('請先登入以使用收藏功能', '提示');
         return;
@@ -548,7 +548,7 @@ const toggleFavorite = async () => {
 
     favoriteLoading.value = true;
     try {
-        const result = await CourseService.toggleFavorite(currentCourse.value.id);
+        const result = await courseStore.toggleFavoriteCourse(currentCourse.value.id);
         if (result) {
             if (isFavorite.value) {
                 showSuccess(result.message || '已從收藏中移除', '成功');
