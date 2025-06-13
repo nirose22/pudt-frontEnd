@@ -25,7 +25,7 @@ export function inRange<T>(start: Date, end: Date, data: T[], getDate?: (item: T
 
 export function byDate<T>(data: T[], getDate?: (item: T) => Date): Record<string, T[]> {
     return data.reduce<Record<string, T[]>>((map, item) => {
-        // 如果提供了获取日期的函数，则使用它，否则假设有 date 属性
+        // 如果提供了獲取日期的函數，則使用它，否則假設有 date 屬性
         const dateObj = getDate ? getDate(item) : (item as any).date;
         const date = formatDateKey(new Date(dateObj));
         
@@ -42,9 +42,9 @@ export function isWithinInterval(date: Date, interval: { start: Date; end: Date 
 }
 
 /**
- * 格式化日期为 YYYY/MM/DD 格式
- * @param date 日期对象或日期字符串
- * @returns 格式化后的日期字符串
+ * 格式化日期為 YYYY/MM/DD 格式
+ * @param date 日期對象或日期字符串
+ * @returns 格式化後的日期字符串
  */
 export function formatDate(date: Date | string): string {
     const d = new Date(date);
@@ -56,9 +56,9 @@ export function formatDate(date: Date | string): string {
 }
 
 /**
- * 格式化时间为 HH:MM 格式
- * @param date 日期对象或日期字符串
- * @returns 格式化后的时间字符串
+ * 格式化時間為 HH:MM 格式
+ * @param date 日期對象或日期字符串
+ * @returns 格式化後的時間字符串
  */
 export function formatTime(date: Date | string): string {
     const d = new Date(date);
@@ -69,9 +69,9 @@ export function formatTime(date: Date | string): string {
 }
 
 /**
- * 格式化日期和时间为 YYYY/MM/DD HH:MM 格式
- * @param date 日期对象或日期字符串
- * @returns 格式化后的日期时间字符串
+ * 格式化日期和時間為 YYYY/MM/DD HH:MM 格式
+ * @param date 日期對象或日期字符串
+ * @returns 格式化後的日期時間字符串
  */
 export function formatDateTime(date: Date | string): string {
     const d = new Date(date);
@@ -85,21 +85,21 @@ export function formatDateTime(date: Date | string): string {
 }
 
 /**
- * 格式化为自定义格式的日期时间
- * @param date 日期对象或日期字符串
- * @param format 自定义格式，支持以下占位符：
+ * 格式化為自定義格式的日期時間
+ * @param date 日期對象或日期字符串
+ * @param format 自定義格式，支持以下占位符：
  *  - YYYY: 年份（4位）
- *  - MM: 月份（2位，补0）
- *  - M: 月份（不补0）
- *  - DD: 日期（2位，补0）
- *  - D: 日期（不补0）
- *  - HH: 小时（24小时制，2位，补0）
- *  - H: 小时（24小时制，不补0）
- *  - mm: 分钟（2位，补0）
- *  - m: 分钟（不补0）
- *  - ss: 秒（2位，补0）
- *  - s: 秒（不补0）
- * @returns 格式化后的字符串
+ *  - MM: 月份（2位，補0）
+ *  - M: 月份（不補0）
+ *  - DD: 日期（2位，補0）
+ *  - D: 日期（不補0）
+ *  - HH: 小時（24小時制，2位，補0）
+ *  - H: 小時（24小時制，不補0）
+ *  - mm: 分鐘（2位，補0）
+ *  - m: 分鐘（不補0）
+ *  - ss: 秒（2位，補0）
+ *  - s: 秒（不補0）
+ * @returns 格式化後的字符串
  */
 export function formatCustom(date: Date | string, format: string): string {
     const dateObj = date instanceof Date ? date : new Date(date);
@@ -126,9 +126,9 @@ export function formatCustom(date: Date | string, format: string): string {
 }
 
 /**
- * 格式化为相对时间（例如：刚刚、10分钟前、1小时前等）
- * @param date 日期对象或日期字符串
- * @returns 相对时间字符串
+ * 格式化為相對時間（例如：剛剛、10分鐘前、1小時前等）
+ * @param date 日期對象或日期字符串
+ * @returns 相對時間字符串
  */
 export function formatRelativeTime(date: Date | string): string {
     const dateObj = date instanceof Date ? date : new Date(date);

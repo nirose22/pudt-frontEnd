@@ -105,41 +105,40 @@ const popularCourses = ref<Course[]>([]);
 const latestCourses = ref<Course[]>([]);
 const recommendedCourses = ref<Course[]>([]);
 
-// 获取课程数据
-const fetchCourses = async () => {
-    isCoursesLoading.value = true;
+// 獲取課程數據
+const loadCourses = async () => {
     try {
-        // 获取热门课程
+        // 獲取熱門課程
         const popularResult = await CourseService.getPopularCourses(6);
-        console.log(popularResult);
-
-        if (popularResult.success && popularResult.data) {
+        if (popularResult.success && Array.isArray(popularResult.data)) {
             popularCourses.value = popularResult.data;
         }
 
-        // 获取最新课程
+        // 獲取最新課程
         const latestResult = await CourseService.getLatestCourses(6);
-        if (latestResult.success && latestResult.data) {
+        if (latestResult.success && Array.isArray(latestResult.data)) {
             latestCourses.value = latestResult.data;
         }
 
-        const recommendedResult = await CourseService.getRecommendedCourses(userStore.userId, 6);
-        if (recommendedResult.success && recommendedResult.data) {
+        // 獲取為您推薦的課程
+        const recommendedResult = await CourseService.getRecommendedCourses(6);
+        if (recommendedResult.success && Array.isArray(recommendedResult.data)) {
             recommendedCourses.value = recommendedResult.data;
         }
     } catch (error) {
-        console.error('获取课程数据失败:', error);
-        showError('获取课程数据失败，请稍后重试', '错误');
+        console.error('獲取課程數據失敗:', error);
+        showError('獲取課程數據失敗，請稍後重試', '錯誤');
     } finally {
         isCoursesLoading.value = false;
     }
-}
+};
 
-// 判断课程是否正在加载
-function isLoading(courseId: number): boolean {
-    return loadingMap.value.get(courseId) === true;
-}
-// 跳转到搜索页面
+// 判斷課程是否正在載入
+const isLoading = (courseId: number) => {
+    return loadingMap.value.has(courseId);
+};
+
+// 跳轉到搜尋頁面
 function loadMoreCourses() {
     router.push({ name: 'Search' });
 }
@@ -161,7 +160,7 @@ function handleSearch() {
 
 // 組件掛載時載入課程數據
 onMounted(async () => {
-    await fetchCourses();
+    await loadCourses();
 });
 
 </script>

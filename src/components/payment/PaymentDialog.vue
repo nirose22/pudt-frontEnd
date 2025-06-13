@@ -28,7 +28,7 @@
                 </div>
             </div>
 
-            <!-- 付款方式选择 -->
+            <!-- 付款方式選擇 -->
             <div>
                 <h3 class="font-medium mb-2">選擇付款方式</h3>
                 <div class="grid grid-cols-2 gap-2">
@@ -47,7 +47,7 @@
                 </div>
             </div>
 
-            <!-- 信用卡表单 -->
+            <!-- 信用卡表單 -->
             <div v-if="selectedMethod === PaymentMethod.CreditCard" class="space-y-3">
                 <InputText v-model="cardNumber" placeholder="卡號" class="w-full" />
                 <div class="flex gap-2">
@@ -57,7 +57,7 @@
                 <InputText v-model="cardHolder" placeholder="持卡人姓名" class="w-full" />
             </div>
 
-            <!-- 银行转账信息 -->
+            <!-- 銀行轉帳信息 -->
             <div v-if="selectedMethod === PaymentMethod.BankTransfer" class="p-3 border rounded-lg bg-blue-50">
                 <p class="font-medium text-blue-700 mb-2">銀行轉帳資訊</p>
                 <p class="mb-1">戶名：PUDT課程平台</p>
@@ -75,7 +75,7 @@
                 />
             </div>
 
-            <!-- 行动支付选项 -->
+            <!-- 行動支付選項 -->
             <div v-if="selectedMethod === PaymentMethod.MobilePayment" class="p-3 border rounded-lg bg-green-50">
                 <div class="flex justify-center mb-3">
                     <div class="h-32 w-32 bg-gray-200 flex items-center justify-center">
@@ -96,7 +96,7 @@
                 </div>
             </div>
 
-            <!-- 现金付款提示 -->
+            <!-- 現金付款提示 -->
             <div v-if="selectedMethod === PaymentMethod.Cash" class="p-3 border rounded-lg bg-yellow-50">
                 <p class="font-medium text-yellow-700 mb-2">現金付款說明</p>
                 <p class="mb-1">請於課程開始前30分鐘至現場櫃檯繳交現金。</p>
@@ -155,7 +155,7 @@ const emit = defineEmits<{
 const toast = useToast();
 const selectedMethod = ref<PaymentMethod | null>(null);
 
-// 信用卡表单数据
+// 信用卡表單數據
 const cardNumber = ref('');
 const cardExpiry = ref('');
 const cardCVC = ref('');
@@ -185,10 +185,10 @@ const paymentMethods = [
     }
 ];
 
-// 关闭对话框
+// 關閉對話框
 const closeDialog = () => {
     emit('update:visible', false);
-    // 重置表单
+    // 重置表單
     selectedMethod.value = null;
     cardNumber.value = '';
     cardExpiry.value = '';
@@ -196,7 +196,7 @@ const closeDialog = () => {
     cardHolder.value = '';
 };
 
-// 检查是否可以进行支付
+// 檢查是否可以進行支付
 const canProceed = () => {
     if (!selectedMethod.value) return false;
     
@@ -207,7 +207,7 @@ const canProceed = () => {
     return true;
 };
 
-// 获取支付按钮的文本
+// 獲取支付按鈕的文本
 const getPayButtonLabel = () => {
     if (!selectedMethod.value) return '確認付款';
     
@@ -225,11 +225,11 @@ const getPayButtonLabel = () => {
     }
 };
 
-// 处理付款
+// 處理付款
 const handlePayment = () => {
     if (!selectedMethod.value || !props.paymentItem) return;
     
-    // 模拟支付处理
+    // 模擬支付處理
     setTimeout(() => {
         // 支付成功
         toast.add({ 
@@ -239,18 +239,18 @@ const handlePayment = () => {
             life: 3000 
         });
         
-        // 通知父组件支付完成
+        // 通知父組件支付完成
         emit('payment-completed', { 
             itemId: props.paymentItem!.id, 
             method: selectedMethod.value! 
         });
         
-        // 关闭对话框
+        // 關閉對話框
         closeDialog();
     }, 1500);
 };
 
-// 文件上传处理
+// 文件上傳處理
 const onUpload = () => {
     toast.add({ 
         severity: 'info', 
@@ -260,7 +260,7 @@ const onUpload = () => {
     });
 };
 
-// 格式化日期显示
+// 格式化日期顯示
 const formatDate = (date: Date | undefined): string => {
     if (!date) return '';
     return formatDateString(date.toISOString());
@@ -268,7 +268,7 @@ const formatDate = (date: Date | undefined): string => {
 </script>
 
 <style scoped>
-/* 样式调整 */
+/* 樣式調整 */
 :deep(.p-fileupload-buttonbar) {
     padding: 0;
 }

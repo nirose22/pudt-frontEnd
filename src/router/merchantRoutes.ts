@@ -10,7 +10,7 @@ const merchantRoutes: RouteRecordRaw[] = [
     meta: { requiresMerchantAuth: true, role: UserRole.Merchant },
     children: [
       {
-        path: '',
+        path: 'dashboard',
         redirect: { name: 'MerchantDashboard' }
       },
       {

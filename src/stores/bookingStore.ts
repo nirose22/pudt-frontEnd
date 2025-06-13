@@ -5,7 +5,7 @@ import type { Result } from '@/types'
 import type { Booking } from '@/types/booking'
 import { BookingStatus } from '@/enums/BookingStatus'
 import { useUserStore } from './userStore'
-import { BookingService } from '@/services/UserBookingService'
+import { type BookingQuery, BookingService } from '@/services/UserBookingService'
 import { useCourseStore } from './courseStore'
 import { errorHandler } from '@/utils/errorHandler'
 import { ERROR_MESSAGES } from '@/utils/apiConfig'
@@ -17,126 +17,78 @@ export const useBookingStore = defineStore('booking', () => {
     const bookings = ref<Booking[]>([])
     const loading = ref(false)
     const error = ref<string | null>(null)
-    const conflictSlots = ref<number[]>([])
 
     /* ---------- getters ---------- */
-    // 按状态过滤预约
+    // 按狀態過濾預約
     const byStatus = (s: BookingStatus) => bookings.value.filter(b => b.status === s);
 
-    /* ---------- helpers ---------- */
-    function hasTimeConflict(date: Date, sessionId: number) {
-        return bookings.value.some(
-            b =>
-                b.sessionId === sessionId &&
-                b.status !== BookingStatus.Cancelled
-        )
-    }
-
     /* ---------- can-book logic ---------- */
-    function canBook(courseId: number, slotId: number): boolean {
+    function canBook(courseId: number, sessionId: number): boolean {
         const currentCourse = courseStore.currentCourse
-        const slot = courseStore.courseSession.find(s => s.id === slotId)
+        const slot = courseStore.courseSession.find(s => s.id === sessionId)
         
         if (!currentCourse || !slot) {
             return false
         }
         
-        // 检查座位数
+        // 檢查座位數
         if (slot.seatsLeft <= 0) {
             return false
         }
-        
-        // 检查时间冲突
-        if (hasTimeConflict(slot.date, slotId)) {
-            return false
-        }
-        
-        // 检查是否在冲突时间槽列表中
-        if (conflictSlots.value.includes(slotId)) {
-            return false
-        }
-        
         return true
     }
 
     /* ---------- actions ---------- */
-    // 获取用户的预约记录
-    const fetchBookings = async (userId?: number): Promise<boolean> => {
+    // 獲取用戶的預約記錄
+    const fetchBookings = async (query?: BookingQuery): Promise<Result> => {
         loading.value = true
         error.value = null
-        
-        try {
-            if (!userId && userStore.profile) {
-                userId = userStore.profile.id
-            }
-            
-            if (!userId) {
-                error.value = ERROR_MESSAGES.UNAUTHORIZED
-                return false
-            }
-            
-            const result = await BookingService.getBookings(userId)
-            if (result.success && result.data) {
-                bookings.value = result.data
-                return true
-            }
-            error.value = result.message || ERROR_MESSAGES.BOOKING_ERROR
-            return false
-        } catch (err) {
-            error.value = err instanceof Error ? err.message : ERROR_MESSAGES.BOOKING_ERROR
-            return false
-        } finally {
-            loading.value = false
+        const result = await BookingService.getBookings(userStore.profile.userId, query);
+        if (result.success && result.data) {
+            bookings.value = result.data
         }
+        loading.value = false;
+        return result;
     }
 
-    // 预约课程
-    async function book(courseId: number, slotId: number): Promise<Result> {
+    // 預約課程
+    async function book(courseId: number, sessionId: number): Promise<Result> {
         loading.value = true
         error.value = null
         
         try {
-            // 检查是否可以预约
-            if (!canBook(courseId, slotId)) {
+            // 檢查是否可以預約
+            if (!canBook(courseId, sessionId)) {
                 return errorHandler.handleBusinessError(null, '無法預約該課程時段')
             }
-
             const currentCourse = courseStore.currentCourse
-            const slot = courseStore.courseSession.find(s => s.id === slotId)
-            
-            if (!currentCourse || !slot || !userStore.profile) {
-                return errorHandler.handleBusinessError(null, '課程信息不完整或未登錄')
-            }
-
-            const result = await BookingService.createBooking(courseId, slotId)
-            
+            const slot = courseStore.courseSession.find(s => s.id === sessionId)
+            const result = await BookingService.createBooking(courseId, sessionId)
             if (result.success && result.data) {
-                // 1. 扣点
-                userStore.adjustPoints(-currentCourse.points)
-                // 2. 减座位
-                courseStore.updateAvailableSeats(slotId, -1)
-                // 3. 添加到本地预约记录
+                // 1. 扣點
+                userStore.adjustPoints(-currentCourse!.points)
+                // 2. 減座位
+                courseStore.updateAvailableSeats(sessionId, -1)
+                // 3. 添加到本地預約記錄
                 const newBook: Booking = {
                     id: result.data.id,
                     courseId,
-                    sessionId: slotId,
-                    points: currentCourse.points,
+                    sessionId: sessionId,
+                    points: currentCourse!.points,
                     status: BookingStatus.Confirmed,
                     createdAt: new Date(),
-                    start: slot.start,
-                    end: slot.end,
-                    date: slot.date,
-                    courseTitle: currentCourse.title,
-                    merchantName: currentCourse.merchant.name,
-                    // 添加其他必要字段，确保类型兼容
-                    location: currentCourse.merchant.address || '',
+                    start: slot!.start,
+                    end: slot!.end,
+                    date: slot!.date,
+                    courseTitle: currentCourse!.title,
+                    merchantName: currentCourse!.merchant.name,
+                    location: currentCourse!.merchant.address || '',
                     rating: 0,
                     comment: '',
                     notes: ''
                 }
                 bookings.value.push(newBook)
             }
-            
             return result
         } catch (err) {
             return errorHandler.handleApiError(err, ERROR_MESSAGES.BOOKING_ERROR)
@@ -145,37 +97,31 @@ export const useBookingStore = defineStore('booking', () => {
         }
     }
 
-    // 取消预约
+    // 取消預約
     async function cancel(id: number): Promise<Result> {
         loading.value = true
         error.value = null
         
         try {
-            const booking = bookings.value.find(b => b.id === id)
-            if (!booking) {
-                return errorHandler.handleBusinessError(null, '預約不存在')
-            }
-            
-            if (booking.status === BookingStatus.Cancelled) {
-                return errorHandler.handleBusinessError(null, '課程已被取消')
-            }
-            
-            // 调用 BookingService 取消预约
+            // 調用 BookingService 取消預約
             const result = await BookingService.cancelBooking(id)
             
             if (result.success) {
-                // 更新本地数据
-                booking.status = BookingStatus.Cancelled
+                // 更新本地數據
+                const booking = bookings.value.find(b => b.id === id)
+                if (booking) {
+                    booking.status = BookingStatus.Cancelled
+                }
                 
-                // 还原点数
+                // 還原點數
                 const course = courseStore.currentCourse
-                if (course && course.id === booking.courseId) {
+                if (course && booking && course.id === booking.courseId) {
                     userStore.adjustPoints(booking.points)
                 }
             }
             return result
         } catch (err) {
-            return errorHandler.handleApiError(err, ERROR_MESSAGES.BOOKING_ERROR)
+            return err as Result
         } finally {
             loading.value = false
         }

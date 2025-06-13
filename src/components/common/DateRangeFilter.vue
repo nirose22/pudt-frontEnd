@@ -24,7 +24,7 @@ const props = defineProps({
     startDate: {
         type: Date,
         default: () => {
-            const date = new Date();
+            const LocalDate = new Date();
             date.setDate(date.getDate() - 30);
             return date;
         }
@@ -32,7 +32,7 @@ const props = defineProps({
     endDate: {
         type: Date,
         default: () => {
-            const date = new Date();
+            const LocalDate = new Date();
             date.setDate(date.getDate());
             return date;
         }

@@ -3,8 +3,8 @@ import { errorHandler } from './errorHandler'
 import { ERROR_MESSAGES } from './apiConfig'
 
 /**
- * 统一封装 API 请求，处理错误并返回标准化结果
- * @param fn API 请求函数
+ * 統一封裝 API 請求，處理錯誤並返回標準化結果
+ * @param fn API 請求函數
  * @returns Promise<Result<T>>
  */
 export async function request<T>(
@@ -22,9 +22,9 @@ export async function request<T>(
 }
 
 /**
- * 构建查询字符串
- * @param params 查询参数对象
- * @returns 查询字符串
+ * 構建查詢字符串
+ * @param params 查詢參數對象
+ * @returns 查詢字符串
  */
 export function buildQueryString(params: Record<string, string | string[] | undefined>): string {
     const searchParams = new URLSearchParams()

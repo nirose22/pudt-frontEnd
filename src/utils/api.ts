@@ -1,6 +1,7 @@
 import axios from 'axios'
 import type { AxiosInstance } from 'axios'
 import { API_CONFIG } from './apiConfig'
+import { errorHandler } from '@/utils/errorHandler'
 
 const api: AxiosInstance = axios.create({
   baseURL: API_CONFIG.BASE_URL,
@@ -13,9 +14,7 @@ api.interceptors.request.use(
   (config) => {
     // 從 pinia 持久化存儲中讀取 token
     const authData = localStorage.getItem(API_CONFIG.AUTH.TOKEN_KEY)
-    console.log(authData);
     let token = null
-    
     if (authData) {
       try {
         const parsedAuth = JSON.parse(authData)
@@ -30,7 +29,7 @@ api.interceptors.request.use(
     return config
   },
   (error) => {
-    return Promise.reject(error)
+    return errorHandler.handleApiError(error, '請求錯誤')
   }
 )
 
@@ -40,7 +39,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // 处理未授权错误
+      // 處理未授權錯誤
       localStorage.removeItem(API_CONFIG.AUTH.TOKEN_KEY)
       window.location.href = '/login'
     }

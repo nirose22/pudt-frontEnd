@@ -380,7 +380,7 @@ provide('purchaseData', {
         return purchaseStore.purchaseHistory.map(item => ({
             id: item.id,
             date: item.createdAt.toISOString().split('T')[0],
-            cardType: item.cardType as s CardType,
+            cardType: item.cardType as CardType,
             amount: item.total,
             points: 0,
             status: item.status,

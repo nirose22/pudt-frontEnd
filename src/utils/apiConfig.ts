@@ -48,10 +48,10 @@ export const API_ROUTES = {
         ABSENCES: (userId: number | string) => `/users/${userId}/absences`,
     },
     BOOKING: {
-        LIST: (queryString: string) => `/booking/${queryString}`,
+        LIST: (userId: number, queryString: string) => `/booking/users/${userId}?${queryString}`,
         DETAIL: (id: number) => `/booking/${id}`,
         CREATE: '/booking',
-        CANCEL: (id: number) => `/booking/${id}`,
+        CANCEL: (id: number) => `/booking/${id}/cancel`,
         CHECK: '/booking/check',
     },
     ACTIVITY: {

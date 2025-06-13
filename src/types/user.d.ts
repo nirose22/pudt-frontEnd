@@ -19,6 +19,7 @@ export interface User {
 export interface UserProfile {
   userId: number
   name?: string
+  points?: number
   interests: MainCategory[]
   preferredRegions: RegionCode[]
   timePreferences: Record<number, number>

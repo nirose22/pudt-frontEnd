@@ -364,40 +364,40 @@ const visibleRegions = computed(() => {
 		: allRegions.value.slice(0, visibleRegionsCount);
 });
 
-// 过滤后的课程列表
+// 過濾後的課程列表
 const filteredCourses = computed(() => {
 	if (!availableCourses.value.length) return [];
 
 	return availableCourses.value.filter((course: Course) => {
-		// 关键词过滤
+		// 關鍵詞過濾
 		if (keyword.value && !course.title.toLowerCase().includes(keyword.value.toLowerCase()) &&
 			!course.description?.toLowerCase().includes(keyword.value.toLowerCase())) {
 			return false;
 		}
 
-		// 区域过滤
+		// 區域過濾
 		if (selectedRegions.value.length > 0 && !selectedRegions.value.includes(course.region || '')) {
 			return false;
 		}
 
-		// 类别过滤 - 移除categories检查，因为CourseDTO没有此属性
-		// TODO: 如果需要添加类别过滤，请确保CourseDTO包含categories属性
-		// 暂时跳过类别过滤条件
+		// 類別過濾 - 移除categories檢查，因為CourseDTO沒有此屬性
+		// TODO: 如果需要添加類別過濾，請確保CourseDTO包含categories屬性
+		// 暫時跳過類別過濾條件
 
-		// 点数范围过滤
+		// 點數範圍過濾
 		if (course.points < pointsRange.value[0] ||
 			course.points > pointsRange.value[1]) {
 			return false;
 		}
 
-		// 有空位过滤 (模拟)
+		// 有空位過濾 (模擬)
 		if (filters.value.hasOpenSlots && course.id % 3 === 0) {
 			return false;
 		}
 
-		// 新上架过滤 (使用创建日期)
+		// 新上架過濾 (使用創建日期)
 		if (filters.value.newCourses) {
-			// 如果没有创建日期或创建日期超过14天，则不符合新上架条件
+			// 如果沒有創建日期或創建日期超過14天，則不符合新上架條件
 			if (!course.createdAt) return false;
 
 			const fourteenDaysAgo = new Date();
@@ -408,7 +408,7 @@ const filteredCourses = computed(() => {
 			}
 		}
 
-		// 收藏过滤 (模拟)
+		// 收藏過濾 (模擬)
 		if (filters.value.favourites && course.id % 5 !== 0) {
 			return false;
 		}
@@ -424,12 +424,12 @@ const filteredCourses = computed(() => {
 			case 'points-desc':
 				return b.points - a.points;
 			case 'rating':
-				// 模拟评分排序，实际应该使用课程评分
+				// 模擬評分排序，實際應該使用課程評分
 				return (b.id % 10) - (a.id % 10);
 			default:
-				// 默认按相关性排序 (使用ID模拟)
+				// 默認按相關性排序 (使用ID模擬)
 				if (keyword.value) {
-					// 如果标题包含关键词，则排在前面
+					// 如果標題包含關鍵詞，則排在前面
 					const aHasKeyword = a.title.toLowerCase().includes(keyword.value.toLowerCase());
 					const bHasKeyword = b.title.toLowerCase().includes(keyword.value.toLowerCase());
 
@@ -441,7 +441,7 @@ const filteredCourses = computed(() => {
 	});
 });
 
-// 监听路由变化，同步URL参数到过滤条件
+// 監聽路由變化，同步URL參數到過濾條件
 watchEffect(() => {
 	if (route.name === 'Search') {
 		// 只有在路由参数变化时才同步
@@ -481,35 +481,35 @@ onMounted(async () => {
 	initToast(toast);
 });
 
-// 视图查看课程详情
+// 檢視課程詳情
 async function selectCourse(course: Course): Promise<void> {
 	selectedCourseId.value = course.id;
 
-	// 标记为加载中
+	// 標記為載入中
 	setLoading(course.id, true);
 
 	try {
-		// 使用 courseStore 的 loadCourseDetail 方法加載課程數據
+		// 使用 courseStore 的 loadCourseDetail 方法載入課程數據
 		const result = await loadCourseDetail(course.id);
 
 		if (result.success) {
-			// 保存课程详情
+			// 保存課程詳情
 			if (currentCourse.value) {
 				currentCourses.value.set(course.id, currentCourse.value);
 				courseSessionMap.value.set(course.id, courseSession.value);
 			}
 
-			// 成功加載後打開詳情彈窗
+			// 成功載入後打開詳情彈窗
 			detailVisible.value = true;
 		} else {
 			// 顯示錯誤提示
-			showError(result.message || '加載課程詳情失敗', '無法查看課程詳情');
+			showError(result.message || '載入課程詳情失敗', '無法查看課程詳情');
 		}
 	} catch (error: unknown) {
-		console.error('加載課程詳情時出錯:', error);
-		showError(coursesLoadError.value || '加載課程詳情時出錯，請稍後再試', '無法查看課程詳情');
+		console.error('載入課程詳情時出錯:', error);
+		showError(coursesLoadError.value || '載入課程詳情時出錯，請稍後再試', '無法查看課程詳情');
 	} finally {
-		// 标记加载完成
+		// 標記載入完成
 		setLoading(course.id, false);
 	}
 }
@@ -535,47 +535,47 @@ function handleSubCategoryToggle(code: string): void {
 		}
 	}
 
-	// 立即获取过滤后的课程数据
+	// 立即獲取過濾後的課程數據
 	fetchFilteredCourses();
 }
 
-// 修改地区切换函数，点击后立即应用筛选
+// 修改地區切換函數，點擊後立即應用篩選
 function toggleRegion(code: string): void {
 	toggleItem(selectedRegions.value, code);
-	// 立即获取课程数据
+	// 立即獲取課程數據
 	fetchFilteredCourses();
 }
 
-// 获取过滤后的课程数据
+// 獲取過濾後的課程數據
 async function fetchFilteredCourses(): Promise<void> {
 	try {
-		// 设置加载状态
+		// 設置載入狀態
 		clearLoadingStates();
 
-		// 合并分类
+		// 合併分類
 		const allCategories = [...selectedMainCategories.value, ...selectedSubCategories.value];
 
-		// 调用API获取数据
+		// 調用API獲取數據
 		await fetchCourses(
 			keyword.value,
 			selectedRegions.value.length > 0 ? selectedRegions.value : undefined,
 			allCategories.length > 0 ? allCategories : undefined
 		);
 
-		// 显示过滤结果数量
+		// 顯示過濾結果數量
 		if (filteredCourses.value.length === 0) {
-			showInfo('没有找到符合条件的课程', '无搜索结果');
+			showInfo('沒有找到符合條件的課程', '無搜索結果');
 		}
 	} catch (error) {
-		console.error('获取课程失败:', error);
-		showError('请稍后再试', '获取数据失败');
+		console.error('獲取課程失敗:', error);
+		showError('請稍後再試', '獲取數據失敗');
 	}
 }
 
 // 處理應用篩選
 function handleApplyFilters(): void {
 	applyFilters(filteredCourses.value.length);
-	// 应用筛选条件后获取数据
+	// 應用篩選條件後獲取數據
 	fetchFilteredCourses();
 }
 

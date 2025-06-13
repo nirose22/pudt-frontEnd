@@ -10,7 +10,6 @@ export interface BaseCourse {
   title: string               // 課程標題
   description?: string        // 課程描述
   status?: CourseStatus       // 課程狀態
-  publishDate?: Date | null   // 上架時間
   points: number              // 課程點數
 }
 
@@ -20,7 +19,6 @@ export interface Course extends BaseCourse {
   coverUrl?: string           // 封面圖片
   region: RegionCode          // 地區碼
   createdAt: Date             // 創建時間
-  categories?: string[]       // 課程分類列表
   mainCategory?: MainCategory // 主分類
   subCategory?: SubCategory   // 子分類
   joinCount?: number          // 參與人數
@@ -35,8 +33,8 @@ export interface CourseCategoryLink {
 
 /* 時間區間接口 */
 export interface TimeRange {
-  start: string | Date  // HH:mm or Date
-  end: string | Date
+  start: string  // HH:mm or Date
+  end: string
 }
 
 /* 單一課程場次 (可多天多時段) */

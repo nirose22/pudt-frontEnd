@@ -7,13 +7,13 @@ import { API_ROUTES, ERROR_MESSAGES } from '@/utils/apiConfig';
 import { request } from '@/utils/requestHelper';
 
 /**
- * 购买服务 - 处理购买记录和订单相关功能
+ * 購買服務 - 處理購買記錄和訂單相關功能
  */
 export const PurchaseService = {
     /**
-     * 获取用户的购买历史
-     * @param userId 用户ID
-     * @returns Promise<ExtendedPurchaseItem[]> 购买记录列表
+     * 獲取用戶的購買歷史
+     * @param userId 用戶ID
+     * @returns Promise<ExtendedPurchaseItem[]> 購買記錄列表
      */
     async getPurchaseHistory(userId: number): Promise<Result<ExtendedPurchaseItem[]>> {
         return request<ExtendedPurchaseItem[]>(
@@ -23,17 +23,17 @@ export const PurchaseService = {
     },
     
     /**
-     * 将Order转换为ExtendedPurchaseItem
-     * @param orders Order数组
-     * @returns ExtendedPurchaseItem数组
+     * 將Order轉換為ExtendedPurchaseItem
+     * @param orders Order數組
+     * @returns ExtendedPurchaseItem數組
      */
     convertOrdersToPurchaseItems(orders: Order[]): ExtendedPurchaseItem[] {
         return orders.map(order => ({
             id: order.id,
             date: order.createdAt.toISOString().split('T')[0],
-            cardType: CardType.Basic, // 使用正确的枚举值
+            cardType: CardType.Basic, // 使用正確的枚舉值
             amount: order.total,
-            points: 0, // 需要从OrderItem中计算
+            points: 0, // 需要從OrderItem中計算
             status: order.status,
             paymentMethod: order.payMethod,
             invoiceNo: order.invoiceNo,
@@ -44,9 +44,9 @@ export const PurchaseService = {
     },
     
     /**
-     * 下载发票
-     * @param invoiceNo 发票号码
-     * @returns 下载结果
+     * 下載發票
+     * @param invoiceNo 發票號碼
+     * @returns 下載結果
      */
     async downloadInvoice(invoiceNo: string): Promise<Result<void>> {
         return request<void>(

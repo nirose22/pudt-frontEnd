@@ -6,12 +6,12 @@ import { BookingStatus } from '@/enums/BookingStatus';
 export interface BaseBooking {
   id: number;                // 预约ID
   sessionId?: number;        // 課程場次ID (FK -> CourseSession.id)
-  courseId: number;          // 课程ID
-  courseTitle: string;       // 课程标题
+  courseId: number;          // 課程ID
+  courseTitle: string;       // 課程標題
   points: number;            // 點數
   date: string | Date;                // 预约日期
-  start: string | Date;           // 开始时间
-  end: string | Date;             // 结束时间
+  start: string | Date;           // 開始時間
+  end: string | Date;             // 結束時間
   status: BookingStatus;     // 预约状态
   location?: string;         // 地点 (從舊接口整合)
   merchantName?: string;     // 商家名称 (從舊接口整合)

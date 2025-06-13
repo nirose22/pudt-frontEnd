@@ -2,8 +2,8 @@ import { CardType } from '@/enums/Cards';
 import { OrderStatus, PaymentMethod } from '@/enums/PurchaseStatus';
 
 /**
- * 购买记录接口 - 扩展自Order
- * 页面展示使用的购买记录，包含Order的基本字段和一些展示需要的附加字段
+ * 購買記錄介面 - 擴展自Order
+ * 頁面展示使用的購買記錄，包含Order的基本字段和一些展示需要的附加字段
  */
 export interface PurchaseItem {
   id: number;                  // 訂單號
@@ -17,7 +17,7 @@ export interface PurchaseItem {
 }
 
 /**
- * 扩展购买记录接口 - 包含更多显示信息
+ * 擴展購買記錄介面 - 包含更多顯示信息
  */
 export interface ExtendedPurchaseItem extends PurchaseItem {
   invoiceAvailable?: boolean;  // 是否可下載發票

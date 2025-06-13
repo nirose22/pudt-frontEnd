@@ -260,7 +260,6 @@ import Select from 'primevue/select';
 import Dialog from 'primevue/dialog';
 import Tag from 'primevue/tag';
 import Avatar from 'primevue/avatar';
-import InputText from 'primevue/inputtext';
 import ButtonGroup from 'primevue/buttongroup';
 import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -328,7 +327,7 @@ const statusOptions = [
     { label: '全部', value: '' },
     { label: '已确认', value: BookingStatus.Confirmed.toString() },
     { label: '已取消', value: BookingStatus.Cancelled.toString() },
-    { label: '待处理', value: BookingStatus.Pending.toString() }
+    { label: '待處理', value: BookingStatus.Pending.toString() }
 ];
 
 // 过滤条件
@@ -516,7 +515,7 @@ const cancelBooking = async () => {
         toast.add({ severity: 'success', summary: '成功', detail: '預約已取消', life: 3000 });
     } catch (error) {
         console.error('取消預約失败', error);
-        toast.add({ severity: 'error', summary: '错误', detail: '取消預約失败', life: 3000 });
+        toast.add({ severity: 'error', summary: '錯誤', detail: '取消預約失敗', life: 3000 });
     }
 };
 
