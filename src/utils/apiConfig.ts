@@ -25,6 +25,7 @@ export const API_ROUTES = {
     },
     COURSE: {
         LIST: '/courses',
+        SEARCH: '/courses/search',
         DETAIL: (id: number) => `/courses/${id}`,
         CREATE: '/courses',
         UPDATE: (id: number) => `/courses/${id}`,

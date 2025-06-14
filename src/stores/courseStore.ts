@@ -6,7 +6,6 @@ import { CourseService } from '@/services/CourseService'
 import { useUserStore } from './userStore'
 
 interface State {
-  allCourses: Course[]
   myBookings: Booking[]
   favoriteCourses: Course[]
   currentCourse: CourseDetailDTO | null
@@ -21,13 +20,9 @@ interface State {
  * 2. 專注狀態管理，資料請求全部委派 CourseService
  */
 export const useCourseStore = defineStore('course', () => {
-  const userStore = useUserStore();
-  const userId = computed(() => userStore.userId);
-
   /* ---------- state ---------- */
   const state = reactive<State>({
     currentCourse: null,
-    allCourses: [],
     myBookings: [],
     favoriteCourses: [],
     courseSession: [],
@@ -35,27 +30,7 @@ export const useCourseStore = defineStore('course', () => {
     error: null
   })
 
-  /* ---------- getters ---------- */
-  const popularCourses = computed(() =>
-    [...state.allCourses].sort((a, b) => (b.joinCount || 0) - (a.joinCount || 0)).slice(0, 6)
-  )
-  const latestCourses = computed(() =>
-    [...state.allCourses]
-      .sort((a, b) => {
-        const ad = a.createdAt?.getTime() || 0
-        const bd = b.createdAt?.getTime() || 0
-        return bd - ad
-      })
-      .slice(0, 6)
-  )
-  const recommendedCourses = computed(() => CourseService.getRecommendedCourses(userId.value, 6))
-
-
   /* ---------- actions ---------- */
-  async function fetchCourses(keyword?: string, regions?: string[], categories?: string[]) {
-    const data = await CourseService.getCourse(keyword, regions, categories)
-    if (data.success && data.data) state.allCourses = data.data
-  }
 
   async function loadCourseDetail(courseId: number) {
     const detail = await CourseService.fetchCourseDetail(courseId)
@@ -92,19 +67,19 @@ export const useCourseStore = defineStore('course', () => {
   }
 
 
-  async function createCourse(course: CourseDetailDTO) {
-    const created = await CourseService.createCourse(course)
-    if (created.success && created.data) state.allCourses.unshift(created.data)
-  }
+  // async function createCourse(course: CourseDetailDTO) {
+  //   const created = await CourseService.createCourse(course)
+  //   if (created.success && created.data) state.allCourses.unshift(created.data)
+  // }
 
-  async function updateCourse(courseId: number, course: CourseDetailDTO) {
-    const updated = await CourseService.updateCourse(courseId, course)
-    if (updated.success && updated.data) {
-      const idx = state.allCourses.findIndex(c => c.id === courseId)
-      if (idx !== -1) state.allCourses[idx] = updated.data
-      if (state.currentCourse?.id === courseId) state.currentCourse = updated.data
-    }
-  }
+  // async function updateCourse(courseId: number, course: CourseDetailDTO) {
+  //   const updated = await CourseService.updateCourse(courseId, course)
+  //   if (updated.success && updated.data) {
+  //     const idx = state.allCourses.findIndex(c => c.id === courseId)
+  //     if (idx !== -1) state.allCourses[idx] = updated.data
+  //     if (state.currentCourse?.id === courseId) state.currentCourse = updated.data
+  //   }
+  // }
 
   function updateAvailableSeats(sessionId: number, change: number) {
     const slot = state.courseSession.find(s => s.id === sessionId)
@@ -119,15 +94,9 @@ export const useCourseStore = defineStore('course', () => {
   /* ---------- expose ---------- */
   return {
     ...toRefs(state),
-    popularCourses,
-    latestCourses,
-    recommendedCourses,
-    fetchCourses,
     loadCourseDetail,
     fetchFavoriteCourses,
     toggleFavoriteCourse,
-    createCourse,
-    updateCourse,
     updateAvailableSeats,
   }
 })

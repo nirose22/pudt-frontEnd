@@ -11,8 +11,7 @@ export enum RegionCode {
     PIF = 'PIF',
 }
 
-
-export const RegionLabelMap: Record<RegionCode, string> = {
+export const RegionCodeLabel: Record<RegionCode, string> = {
     [RegionCode.TPE]: '台北',
     [RegionCode.KHH]: '高雄',
     [RegionCode.TNN]: '台南',

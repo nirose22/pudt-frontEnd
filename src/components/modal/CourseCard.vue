@@ -14,7 +14,7 @@
             <h3 class="text-lg font-bold mt-2 line-clamp-1">{{ course.title }}</h3>
             <div class="flex items-center text-sm text-gray-600 mb-1">
                 <i class="pi pi-map-marker mr-1"></i>
-                <span class="line-clamp-1">{{ course.region }}</span>
+                <span class="line-clamp-1">{{ RegionCodeLabel[course.region] }}</span>
             </div>
             <div class="h-10">
                 <p class="text-sm text-gray-500 mb-2 line-clamp-2">{{ course.description }}</p>
@@ -31,6 +31,7 @@
 </template>
 
 <script setup lang="ts">
+import { RegionCodeLabel } from '@/enums';
 import type { Course } from '@/types/course';
 import Card from 'primevue/card';
 import ProgressSpinner from 'primevue/progressspinner';

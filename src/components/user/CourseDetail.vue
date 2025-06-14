@@ -272,15 +272,8 @@
         </div>
         <template #footer>
             <div class="w-full bg-white border-t border-gray-200 p-3">
-                <div class="container mx-auto flex justify-between items-center">
-                    <div class="flex items-center gap-3">
-                        <Button text rounded :icon="isFavorite ? 'pi pi-heart-fill' : 'pi pi-heart'" :class="{
-                            'text-red-400!': isFavorite,
-                            'hover:bg-red-50': !isFavorite
-                        }" @click="toggleFavorite" :loading="favoriteLoading" aria-label="收藏課程" />
-                        <Button text rounded icon="pi pi-share-alt" class="hover:bg-sky-50" @click="shareCourse" />
-                    </div>
-                    <div class="text-lg font-bold text-gray-800">
+                <div class="flex justify-between items-center">
+                    <div class="text-lg font-bold text-gray-800 grow text-center">
                         <p v-if="selectedSession">
                             已選擇: {{ formatDate(selectedSession.date) }} {{ formatTimeSlot(selectedSession) }}
                         </p>
@@ -288,7 +281,12 @@
                             請選擇預約時段
                         </p>
                     </div>
-                    <div>
+                    <div class="flex items-center gap-3">
+                            <Button text rounded :icon="isFavorite ? 'pi pi-heart-fill' : 'pi pi-heart'" :class="{
+                                'text-red-400!': isFavorite,
+                                'hover:bg-red-50': !isFavorite
+                            }" @click="toggleFavorite" :loading="favoriteLoading" aria-label="收藏課程" />
+                            <Button text rounded icon="pi pi-share-alt" class="hover:bg-sky-50" @click="shareCourse" />
                         <ConfirmDialog id="confirm" style="width: 450px;" />
                         <Button @click="handleBooking" :disabled="!canBook"
                             class="booking-btn px-6 py-2 text-white transition-all" :class="{

@@ -1,229 +1,180 @@
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import type { RouteLocationNormalizedLoaded, Router } from 'vue-router';
 import { MainCategory, SubCategory } from '@/enums/CourseCategory';
 import { mockRegions } from '@/services/MockService';
 import { useToast } from 'primevue/usetoast';
+import type { SearchRequest } from '@/types/searchRequest';
+import { debounce } from '@/utils/cmmonUtils';
 
 export function useCourseFilters(route: RouteLocationNormalizedLoaded, router: Router) {
-  const toast = useToast();
-  
-  // 搜尋與篩選狀態
-  const keyword = ref(route.query.keyword as string || '');
-  const selectedMainCategories = ref<string[]>([]);
-  const selectedSubCategories = ref<string[]>([]);
-  const selectedRegions = ref<string[]>([]);
-  const pointsRange = ref([0, 50]);
-  const filters = ref({
-    hasOpenSlots: false,
-    newCourses: false,
-    favourites: false
-  });
-  const sortBy = ref('relevance');
+    const toast = useToast();
 
-  // 排序選項
-  const sortOptions = [
-    { label: '相關性優先', value: 'relevance' },
-    { label: '點數低至高', value: 'points-asc' },
-    { label: '點數高至低', value: 'points-desc' },
-    { label: '新上架優先', value: 'newest' },
-    { label: '評分高至低', value: 'rating' }
-  ];
-
-  // 計算已應用的篩選器數量
-  const appliedFiltersCount = computed(() => {
-    let count = 0;
-
-    // 区域筛选
-    if (selectedRegions.value.length > 0) count++;
-
-    // 类别筛选
-    if (selectedMainCategories.value.length > 0) count++;
-    if (selectedSubCategories.value.length > 0) count++;
-
-    // 点数筛选
-    if (pointsRange.value[0] > 0 || pointsRange.value[1] < 50) count++;
-
-    // 高级筛选
-    if (filters.value.hasOpenSlots) count++;
-    if (filters.value.newCourses) count++;
-    if (filters.value.favourites) count++;
-
-    // 排序
-    if (sortBy.value !== 'relevance') count++;
-
-    return count;
-  });
-
-  // 判断是否应用了筛选条件
-  const isFiltersApplied = computed(() => appliedFiltersCount.value > 0);
-
-  // 同步URL参数到过滤条件
-  const syncParamsToFilters = () => {
-    const params = route.query;
-
-    // 关键词
-    keyword.value = String(params.keyword);
-
-    // 区域
-    if (params.regions) {
-      const regionCodes = String(params.regions).split(',');
-      selectedRegions.value = regionCodes.filter(code =>
-        mockRegions.some((r) => r.code === code)
-      );
-    }
-
-    // 类别
-    if (params.categories) {
-      const categoryCodes = String(params.categories).split(',');
-      
-      // 分離主分類和子分類
-      selectedMainCategories.value = categoryCodes.filter(code => 
-        Object.values(MainCategory).includes(code as MainCategory)
-      );
-      
-      selectedSubCategories.value = categoryCodes.filter(code => 
-        Object.values(SubCategory).includes(code as SubCategory)
-      );
-    }
-
-    // 点数范围
-    if (params.minPoints) {
-      pointsRange.value[0] = Number(params.minPoints);
-    }
-    if (params.maxPoints) {
-      pointsRange.value[1] = Number(params.maxPoints);
-    }
-
-    // 高级过滤
-    if (params.hasOpenSlots) {
-      filters.value.hasOpenSlots = params.hasOpenSlots === 'true';
-    }
-    if (params.newCourses) {
-      filters.value.newCourses = params.newCourses === 'true';
-    }
-    if (params.favourites) {
-      filters.value.favourites = params.favourites === 'true';
-    }
-
-    // 排序
-    if (params.sortBy) {
-      const sortValue = String(params.sortBy);
-      if (sortOptions.some((opt) => opt.value === sortValue)) {
-        sortBy.value = sortValue;
-      }
-    }
-  };
-
-  // 同步过滤条件到URL
-  const syncFiltersToParams = () => {
-    const query: Record<string, string> = {};
-
-    // 基本搜索条件
-    query.keyword = keyword.value;
-
-    // 区域
-    if (selectedRegions.value.length > 0) {
-      query.regions = selectedRegions.value.join(',');
-    }
-
-    // 类别 - 合併主分類和子分類
-    const allCategories = [...selectedMainCategories.value, ...selectedSubCategories.value];
-    if (allCategories.length > 0) {
-      query.categories = allCategories.join(',');
-    }
-
-    // 点数范围
-    if (pointsRange.value[0] > 0) {
-      query.minPoints = pointsRange.value[0].toString();
-    }
-    if (pointsRange.value[1] < 100) {
-      query.maxPoints = pointsRange.value[1].toString();
-    }
-
-    // 高级过滤
-    if (filters.value.hasOpenSlots) {
-      query.hasOpenSlots = 'true';
-    }
-    if (filters.value.newCourses) {
-      query.newCourses = 'true';
-    }
-    if (filters.value.favourites) {
-      query.favourites = 'true';
-    }
-
-    // 排序
-    if (sortBy.value !== 'relevance') {
-      query.sortBy = sortBy.value;
-    }
-
-    // 使用router.replace而不是push，避免创建新的历史记录
-    router.replace({ query });
-  };
-
-  // 应用过滤器
-  const applyFilters = (filteredCoursesCount: number) => {
-    // 同步到URL
-    syncFiltersToParams();
-
-    // 显示成功提示
-    toast.add({
-      severity: 'success',
-      summary: '篩選已應用',
-      detail: `已找到 ${filteredCoursesCount} 個符合條件的結果`,
-      life: 3000
+    // 統一的搜索請求對象
+    const searchRequest = ref<SearchRequest>({
+        keyword: route.query.keyword as string || '',
+        regions: [],
+        categories: [],
+        minPoints: 0,
+        maxPoints: 100,
+        hasOpenSlots: false,
+        newCourses: false,
+        favourites: false,
+        sortBy: 'relevance',
+        sortOrder: 'desc',
+        pageNum: 1,
+        pageSize: 9
     });
-  };
 
-  // 重置过滤器
-  const resetFilters = () => {
-    // 重置所有筛选条件，但保留关键词
-    const currentKeyword = keyword.value;
-    
-    keyword.value = route.query.keyword as string || '';
-    selectedRegions.value = [];
-    selectedMainCategories.value = [];
-    selectedSubCategories.value = [];
-    pointsRange.value = [0, 100];
-    filters.value = {
-      hasOpenSlots: false,
-      newCourses: false,
-      favourites: false
+    // 排序選項
+    const sortOptions = [
+        { label: '相關性優先', value: 'relevance' },
+        { label: '點數低至高', value: 'points-asc' },
+        { label: '點數高至低', value: 'points-desc' },
+        { label: '新上架優先', value: 'newest' },
+        { label: '評分高至低', value: 'rating' }
+    ];
+
+    // 計算已應用的篩選器數量
+    const appliedFiltersCount = computed(() => {
+        let count = 0;
+        const req = searchRequest.value;
+
+        if (req.regions && req.regions.length > 0) count++;
+        if (req.categories && req.categories.length > 0) count++;
+        if (req.minPoints && req.minPoints > 0) count++;
+        if (req.maxPoints && req.maxPoints < 100) count++;
+        if (req.hasOpenSlots) count++;
+        if (req.newCourses) count++;
+        if (req.favourites) count++;
+        if (req.sortBy !== 'relevance') count++;
+
+        return count;
+    });
+
+    // 判斷是否應用了篩選條件
+    const isFiltersApplied = computed(() => appliedFiltersCount.value > 0);
+
+    // 同步URL參數到搜索請求
+    const syncParamsToFilters = () => {
+        console.log(22222);
+        
+        const params = route.query;
+        searchRequest.value = {
+            keyword: params.keyword as string || '',
+            regions: params.regions ? String(params.regions).split(',').filter(code =>
+                mockRegions.some(r => r.code === code)
+            ) : [],
+            categories: params.categories ? String(params.categories).split(',').filter(code =>
+                Object.values(SubCategory).includes(code as SubCategory) ||
+                Object.values(MainCategory).includes(code as MainCategory)
+            ) : [],
+            minPoints: params.minPoints ? Number(params.minPoints) : 0,
+            maxPoints: params.maxPoints ? Number(params.maxPoints) : 100,
+            hasOpenSlots: params.hasOpenSlots === 'true',
+            newCourses: params.newCourses === 'true',
+            favourites: params.favourites === 'true',
+            sortBy: params.sortBy as string || 'relevance',
+            sortOrder: 'desc',
+            pageNum: 1,
+            pageSize: 9
+        };
     };
-    sortBy.value = 'relevance';
 
-    // 同步到URL - 只保留关键词
-    router.replace({
-      query: currentKeyword ? { keyword: currentKeyword } : {}
+    // 同步搜索請求到URL（debounced）
+    const syncFiltersToParams = (() => {
+        const query: Record<string, string> = {};
+        const req = searchRequest.value;
+        console.log(11111);
+
+        if (req.keyword) query.keyword = req.keyword;
+        if (req.regions && req.regions.length > 0) query.regions = req.regions.join(',');
+        if (req.categories && req.categories.length > 0) query.categories = req.categories.join(',');
+        if (req.minPoints && req.minPoints > 0) query.minPoints = req.minPoints.toString();
+        if (req.maxPoints && req.maxPoints < 100) query.maxPoints = req.maxPoints.toString();
+        if (req.hasOpenSlots) query.hasOpenSlots = 'true';
+        if (req.newCourses) query.newCourses = 'true';
+        if (req.favourites) query.favourites = 'true';
+        if (req.sortBy !== 'relevance') query.sortBy = req.sortBy || '';
+        if (req.pageNum && req.pageNum > 1) query.pageNum = req.pageNum.toString();
+
+        router.replace({ query });
     });
 
-    // 显示重置提示
-    toast.add({
-      severity: 'info',
-      summary: '篩選已重置',
-      detail: '所有篩選條件已重置為默認值',
-      life: 3000
-    });
-  };
+    // 更新搜索參數的便捷方法
+    const updateSearchRequest = (updates: Partial<SearchRequest>) => {
+        Object.assign(searchRequest.value, updates);
+        syncFiltersToParams();
+    };
 
-  return {
-    // 狀態
-    keyword,
-    selectedMainCategories,
-    selectedSubCategories,
-    selectedRegions,
-    pointsRange,
-    filters,
-    sortBy,
-    sortOptions,
-    
-    // 計算屬性
-    appliedFiltersCount,
-    isFiltersApplied,
-    
-    // 方法
-    syncParamsToFilters,
-    syncFiltersToParams,
-    applyFilters,
-    resetFilters
-  };
+    // 重置篩選器
+    const resetFilters = () => {
+        const currentKeyword = searchRequest.value.keyword;
+
+        searchRequest.value = {
+            keyword: currentKeyword || '',
+            regions: [],
+            categories: [],
+            minPoints: 0,
+            maxPoints: 100,
+            hasOpenSlots: false,
+            newCourses: false,
+            favourites: false,
+            sortBy: 'relevance',
+            sortOrder: 'desc',
+            pageNum: 1,
+            pageSize: 9
+        };
+
+        router.replace({
+            query: currentKeyword ? { keyword: currentKeyword } : {}
+        });
+
+        toast.add({
+            severity: 'info',
+            summary: '篩選已重置',
+            detail: '所有篩選條件已重置為默認值',
+            life: 3000
+        });
+    };
+
+    // 應用篩選器
+    const applyFilters = (filteredCoursesCount: number) => {
+        syncFiltersToParams();
+
+        toast.add({
+            severity: 'success',
+            summary: '篩選已應用',
+            detail: `已找到 ${filteredCoursesCount} 個符合條件的結果`,
+            life: 3000
+        });
+    };
+
+    // 設置搜索監聽器 - 返回一個debounced搜索函數
+    const setupSearchWatcher = (searchFunction: () => Promise<void>) => {
+        const debouncedSearch = debounce(searchFunction, 500);
+        watch(searchRequest, () => {
+            debouncedSearch();
+        }, { deep: true, immediate: false });
+
+        return debouncedSearch;
+    };
+
+    return {
+        // 核心狀態
+        searchRequest,
+
+        // UI選項
+        sortOptions,
+
+        // 計算屬性
+        appliedFiltersCount,
+        isFiltersApplied,
+
+        // 方法
+        syncParamsToFilters,
+        updateSearchRequest,
+        applyFilters,
+        resetFilters,
+        setupSearchWatcher
+    };
 } 

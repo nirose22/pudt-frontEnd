@@ -156,7 +156,7 @@ import Button from 'primevue/button';
 import IftaLabel from 'primevue/iftalabel';
 import { useAuthStore } from '@/stores/authStore';
 import { UserGender, UserGenderLabel } from '@/enums/User';
-import { RegionCode, RegionLabelMap } from '@/enums/RegionCode';
+import { RegionCode, RegionCodeLabel } from '@/enums/RegionCode';
 
 const router = useRouter();
 const toast = useToast();
@@ -181,16 +181,16 @@ const genderOptions = [
 
 // 地區選項
 const locationOptions = [
-    { name: RegionLabelMap.TPE, value:  RegionCode.TPE},
-    { name: RegionLabelMap.KHH, value:  RegionCode.KHH},
-    { name: RegionLabelMap.TNN, value:  RegionCode.TNN},
-    { name: RegionLabelMap.TCH, value:  RegionCode.TCH},
-    { name: RegionLabelMap.HSZ, value:  RegionCode.HSZ},
-    { name: RegionLabelMap.TAO, value:  RegionCode.TAO},
-    { name: RegionLabelMap.ILA, value:  RegionCode.ILA},
-    { name: RegionLabelMap.HUA, value:  RegionCode.HUA},
-    { name: RegionLabelMap.TTT, value:  RegionCode.TTT},
-    { name: RegionLabelMap.PIF, value:  RegionCode.PIF},
+    { name: RegionCodeLabel.TPE, value:  RegionCode.TPE},
+    { name: RegionCodeLabel.KHH, value:  RegionCode.KHH},
+    { name: RegionCodeLabel.TNN, value:  RegionCode.TNN},
+    { name: RegionCodeLabel.TCH, value:  RegionCode.TCH},
+    { name: RegionCodeLabel.HSZ, value:  RegionCode.HSZ},
+    { name: RegionCodeLabel.TAO, value:  RegionCode.TAO},
+    { name: RegionCodeLabel.ILA, value:  RegionCode.ILA},
+    { name: RegionCodeLabel.HUA, value:  RegionCode.HUA},
+    { name: RegionCodeLabel.TTT, value:  RegionCode.TTT},
+    { name: RegionCodeLabel.PIF, value:  RegionCode.PIF},
 ];
 
 // 類別圖標映射
