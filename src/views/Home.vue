@@ -149,11 +149,11 @@ async function selectCourse(course: Course) {
     visible.value = true;
 }
 
-function handleSearch() {
+function handleSearch(keyword: string) {
     router.push({
         name: 'Search',
         query: {
-            keyword: searchQuery.value
+            keyword: keyword || searchQuery.value
         }
     });
 }

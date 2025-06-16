@@ -40,8 +40,9 @@
 				<!-- 列表视图 -->
 				<template #list>
 					<div class="flex flex-col gap-4 p-2">
+						
 						<div v-for="course in favoriteCourses" :key="course.id"
-							class="flex flex-col sm:flex-row rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-sky-100 bg-white relative"
+							class="flex flex-col sm:flex-row overflow-hidden shadow-sm hover:shadow-md transition-shadow"
 							:class="{ 'opacity-70': isLoading(course.id) }">
 							<div class="sm:w-48 h-48 sm:h-auto bg-gray-200 relative overflow-hidden">
 								<img v-if="course.coverUrl" :src="course.coverUrl" :alt="course.title"
@@ -89,16 +90,13 @@
 				<template #grid>
 					<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-2">
 						<div v-for="course in favoriteCourses" :key="course.id"
-							class="course-card-container transition-all duration-200 hover:shadow-md relative border border-sky-100 rounded-lg">
+							class="course-card-container relative">
 							<CourseCard :course="mapCourseToDTO(course)" @click="viewCourseDetails(course.id)"
 								:loading="isLoading(course.id)" :disabled="isLoading(course.id)" />
 							<div class="absolute top-2 right-2 flex gap-1 z-10">
 								<Button icon="pi pi-heart-fill" text rounded aria-label="取消收藏"
-									class="bg-white bg-opacity-70 text-red-500 hover:bg-white hover:bg-opacity-100 hover:bg-red-50"
+									class="bg-opacity-70 !text-white text-2xl! hover:bg-opacity-100 hover:bg-red-50  hover:text-red-400!"
 									@click.stop="removeFavorite(course.id)" />
-								<Button icon="pi pi-share-alt" text rounded aria-label="分享"
-									class="bg-white bg-opacity-70 text-sky-500 hover:bg-white hover:bg-opacity-100 hover:bg-sky-50"
-									@click.stop="shareCourse(course)" />
 							</div>
 						</div>
 					</div>
@@ -132,14 +130,17 @@ import CourseDetail from '@/components/user/CourseDetail.vue';
 import DataView from 'primevue/dataview';
 import type { Course } from '@/types/course';
 import { showSuccess, showError, showInfo, initToast } from '@/utils/toastHelper';
-import { generateMockCourses } from '@/services/MockService';
 import { useAuthStore } from '@/stores/authStore';
-
+import { CourseService } from '@/services/CourseService';
+import { useCourseStore } from '@/stores/courseStore';
+import { useConfirm } from 'primevue/useconfirm';
+const courseStore = useCourseStore();
 const userStore = useUserStore();
 const router = useRouter();
 const toast = useToast();
 const loading = ref(false);
 const { isLoggedIn } = useAuthStore();
+const confirm = useConfirm();
 
 // 視圖控制
 const layout = ref('grid');
@@ -160,12 +161,10 @@ const setLoading = (courseId: number, state: boolean): void => {
 };
 
 // 計算屬性 - 收藏課程列表
-const favoriteCourses = computed(() => {
-	return userStore.favoriteCourses || [];
-});
+const favoriteCourses = computed(() => courseStore.favoriteCourses);
 
 // 監聽收藏課程變化
-watch(() => userStore.favoriteCourses, (newValue) => {
+watch(() => favoriteCourses.value, (newValue) => {
 	// 當收藏課程變更時，清除所有課程的加載狀態
 	loadingStates.value.clear();
 	console.log('收藏課程已更新', newValue);
@@ -193,22 +192,8 @@ onMounted(async () => {
 	// 加載收藏課程
 	loading.value = true;
 	try {
-		if (isLoggedIn && (!userStore.favoriteCourses || userStore.favoriteCourses.length === 0)) {
-			await userStore.fetchFavoriteCourses();
-
-			// 如果没有收藏课程数据，生成 mock 数据（仅用于演示）
-			if (!userStore.favoriteCourses.length) {
-				// 注：在实际应用中，应该移除以下模拟数据代码
-				const mockCourses = generateMockCourses();
-				const randomFavorites = mockCourses
-					.filter((_, index) => index % 3 === 0) // 随机选择三分之一的课程
-					.slice(0, 8); // 最多8个收藏
-
-				// 将模拟数据添加到收藏
-				for (const course of randomFavorites) {
-					await userStore.addFavorite(course);
-				}
-			}
+		if (isLoggedIn && (!favoriteCourses.value || favoriteCourses.value.length === 0)) {
+			await courseStore.fetchFavoriteCourses(userStore.user.id);
 		}
 	} catch (error) {
 		showError('載入收藏課程失敗，請稍後再試', '錯誤');
@@ -219,20 +204,18 @@ onMounted(async () => {
 
 // 移除收藏課程
 const removeFavorite = async (courseId: number) => {
-	setLoading(courseId, true);
-	try {
-		// 使用 userStore 的 removeFavorite 方法
-		const result = await userStore.removeFavorite(courseId);
-		if (result?.success) {
+	confirm.require({
+        message: `確定要移除收藏嗎？`,
+        header: '移除收藏',
+        icon: 'pi pi-heart-fill',
+        acceptLabel: '確認',
+        rejectLabel: '取消',
+        accept: async () => {
+            await courseStore.toggleFavoriteCourse(courseId);
 			showSuccess('課程已從收藏中移除', '成功');
-		} else {
-			showError(result?.message || '移除收藏失敗', '錯誤');
-		}
-	} catch (error) {
-		showError(error as string, '錯誤');
-	} finally {
-		setLoading(courseId, false);
-	}
+        }
+    });
+	
 };
 
 // 查看課程詳情
@@ -268,17 +251,6 @@ const shareCourse = (course: any) => {
 
 <style scoped>
 @reference "tailwindcss";
-
-.course-card-container {
-	position: relative;
-	border-radius: 0.5rem;
-	overflow: hidden;
-}
-
-.course-card-container:hover {
-	transform: translateY(-4px);
-	transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
 
 :deep(.p-datatable-header),
 :deep(.p-dataview-header) {

@@ -24,7 +24,18 @@ export class BookingService {
         const queryString = buildQueryString(queryParams)
         return request<Booking[]>(() => api.get(API_ROUTES.BOOKING.LIST(userId, queryString)))
     }
-    
+
+    static async getSchedule(userId: number, query?: BookingQuery): Promise<Result<Booking[]>> {
+        const queryParams: Record<string, string | undefined> = {}
+        if (query?.courseId) queryParams.courseId = query.courseId  // 已經是string，直接使用
+        if (query?.status) queryParams.status = query.status
+        if (query?.dateRange) queryParams.dateRange = query.dateRange
+        
+        const queryString = buildQueryString(queryParams)
+        return request<Booking[]>(() => api.get(API_ROUTES.BOOKING.SCHEDULE(userId, queryString)))
+    }
+
+        
     // 便利方法：按課程ID查詢
     static async getBookingsByCourse(userId: number, courseId: string): Promise<Result<Booking[]>> {
         return this.getBookings(userId, { courseId })

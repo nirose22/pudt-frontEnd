@@ -37,10 +37,10 @@ export const API_ROUTES = {
         IMAGES: (id: number) => `/courses/${id}/images`,
         ENROLLMENTS: (id: number) => `/courses/${id}/enrollments`,
         FAVORITE: (courseId: number) => `/courses/${courseId}/favorite`,
+        FAVORITES: (userId: number) => `/courses/favorites?userId=${userId}`,
     },
     USER: {
         PROFILE: (id: number | 'me') => `/users/${id}`,
-        FAVORITES: (userId: number) => `/users/${userId}/favorites`,
         INTERESTS: (userId: number) => `/users/${userId}/interests`,
         BEHAVIOR: (userId: number) => `/users/${userId}/behavior`,
         ADDRESS: (userId: number) => `/users/${userId}/address`,
@@ -49,11 +49,17 @@ export const API_ROUTES = {
         ABSENCES: (userId: number | string) => `/users/${userId}/absences`,
     },
     BOOKING: {
-        LIST: (userId: number, queryString: string) => `/booking/users/${userId}?${queryString}`,
+        LIST: (userId: number, queryString: string) => `/booking/users/${userId}${queryString}`,
         DETAIL: (id: number) => `/booking/${id}`,
         CREATE: '/booking',
         CANCEL: (id: number) => `/booking/${id}/cancel`,
         CHECK: '/booking/check',
+        SCHEDULE: (userId: number, queryString: string) => `/booking/users/${userId}/schedule${queryString}`,
+    },
+    PURCHASE: {
+        HISTORY: (userId: number) => `/purchase/${userId}/purchase-history`,
+        UNPAID: (userId: number) => `/purchase/${userId}/unpaid-items`,
+        PAY: (id: number) => `/purchase/${id}/pay`,
     },
     ACTIVITY: {
         RECORD: '/activities',
@@ -87,6 +93,7 @@ export const ERROR_MESSAGES = {
     NOT_FOUND: '請求的資源不存在',
     VALIDATION_ERROR: '輸入數據驗證失敗',
     USER_ERROR: '用戶操作失敗',
+    PURCHASE_ERROR: '購買操作失敗',
     AUTH: {
         LOGIN_ERROR: '登錄失敗，請檢查您的賬號密碼',
         REGISTER_ERROR: '註冊失敗，請稍後重試',

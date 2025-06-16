@@ -19,7 +19,6 @@ export const useUserStore = defineStore('user', () => {
   const state = reactive<State>({
     user: {} as User,
     profile: {} as UserProfile,
-    favs: [],
     error: null,
     isLoading: false,
     lastProfileUpdate: null,
@@ -28,7 +27,6 @@ export const useUserStore = defineStore('user', () => {
   /* ---------- getters ---------- */
   const userName = computed(() => state.profile?.name || UserRole.Guest)
   const userId = computed(() => state.profile?.userId ?? 0)
-  const favoriteCourses = computed(() => state.favs)
   const userInterests = computed(() => state.profile?.interests ?? [])
   const userAvatar = computed(() => state.user?.avatarUrl)
   const userRegion = computed(() => state.profile?.preferredRegions)
@@ -56,7 +54,6 @@ export const useUserStore = defineStore('user', () => {
 
   const primaryInterests = computed(() => state.profile?.interests.slice(0, 3))
 
-  const isFavorite = (id: number) => state.favs.some(c => c.id === id)
 
   /* ---------- actions ---------- */
   async function fetchProfile(id?: number) {
@@ -163,14 +160,14 @@ export const useUserStore = defineStore('user', () => {
   }
 
   function clearUserData() {
-    Object.assign(state, {
-      user: {} as User,
-      profile: {} as UserProfile,
-      favs: [],
-      error: null,
-      isLoading: false,
-      lastProfileUpdate: null,
-    })
+    state.user = {} as User;
+    state.profile = {} as UserProfile;
+    state.favs = [];
+    state.error = null;
+    state.isLoading = false;
+    state.lastProfileUpdate = null;
+		localStorage.clear();
+    console.log('✅ 已清除用戶數據和 sessionStorage')
   }
 
   async function initialize() {
@@ -195,7 +192,6 @@ export const useUserStore = defineStore('user', () => {
     // 計算屬性
     userName,
     userId,
-    favoriteCourses,
     userInterests,
     userLevel,
     userAvatar,
@@ -203,7 +199,6 @@ export const useUserStore = defineStore('user', () => {
     activityLevel,
     needsProfileUpdate,
     primaryInterests,
-    isFavorite,
 
     // 方法
     fetchProfile,

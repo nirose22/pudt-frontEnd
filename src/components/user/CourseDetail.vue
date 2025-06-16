@@ -382,7 +382,7 @@ const loadUserBookings = async () => {
         return;
     }
     const dateRange = startDate.value.toISOString() + '~' + endDate.value.toISOString();
-    const result = await bookingStore.fetchBookings({ status: BookingStatus.Confirmed, courseId: props.courseId.toString(), dateRange: dateRange });
+    const result = await bookingStore.fetchSchedule({ status: BookingStatus.Confirmed, courseId: props.courseId.toString(), dateRange: dateRange });
     if (!result.success) {
         showError(result.message || '載入預約狀態失敗', '載入失敗');
     }
@@ -675,8 +675,8 @@ const handleBooking = async () => {
                     await loadUserBookings();
                 } else {
                     // 確保傳遞的是字串型別
-                    const errorMessage = result && 'reason' in result && typeof result.reason === 'string'
-                        ? result.reason
+                    const errorMessage = result && 'message' in result && typeof result.message === 'string'
+                        ? result.message as string
                         : '預約失敗，請稍後再試';
                     showError(errorMessage, '預約失敗');
                 }
@@ -721,11 +721,13 @@ const toggleFavorite = async () => {
 
     favoriteLoading.value = true;
     try {
+        const fav = currentCourse.value.isFavorite;
         const result = await courseStore.toggleFavoriteCourse(currentCourse.value.id);
         if (result) {
-            if (isFavorite.value) {
+            if (fav) {
                 showSuccess(result.message || '已從收藏中移除', '成功');
                 currentCourse.value.isFavorite = false;
+
             } else {
                 showSuccess(result.message || '已加入收藏', '成功');
                 currentCourse.value.isFavorite = true;

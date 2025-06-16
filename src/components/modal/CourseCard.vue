@@ -48,11 +48,11 @@ defineProps<{
    background-color: #fdfdfd;
 }
 
-.course-card:hover :deep(.p-card img) {
+.course-card:hover :deep(img) {
     transform: scale(1.05);
 }
 
-:deep(.p-card img) {
+:deep(img) {
     transition: transform 0.25s ease-in-out;
 }
 

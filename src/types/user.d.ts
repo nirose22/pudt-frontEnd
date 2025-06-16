@@ -1,14 +1,16 @@
-import { UserGender } from '@/enums/User';
+import { UserGender, UserRole } from '@/enums/User';
+import { MainCategory, RegionCode } from '@/enums';
 
 export interface User {
   id: number
   name: string
   email: string
+  phone?: string
   points: number
   avatarUrl?: string
   address?: string
   birthday?: string
-  gender?: Gender
+  gender?: UserGender
   regionCode?: RegionCode
   createdAt: string
   lastLogin?: string

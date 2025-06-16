@@ -9,10 +9,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import Button from 'primevue/button';
 import AutoComplete from 'primevue/autocomplete';
 import { SubCategoryLabelList } from '@/enums/CourseCategory';
+import { debounce } from '@/utils/cmmonUtils';
 
 const modelValue = defineModel<string>('modelValue');
 
@@ -27,9 +28,14 @@ const suggestions = ref<string[]>([]);
 
 const emit = defineEmits(['update:modelValue', 'search', 'complete']);
 
+// 即時搜尋處理（debounced）
+const debouncedSearch = debounce((keyword: string) => {
+  console.log('debouncedSearch called with keyword:', keyword);
+  emit('search', keyword.trim());
+}, 300);
+
+// 點擊搜尋或按 Enter 鍵時的搜尋（立即執行）
 const onSearch = () => {
-  // 不管是否有值，都执行搜索操作
-  // 如果是空值，会搜索全部
   emit('search', modelValue.value?.trim() || '');
 };
 

@@ -117,4 +117,38 @@ export function clearToasts() {
  */
 export function clearToastGroup(group: string) {
   toast?.removeGroup(group);
-} 
+}
+
+// 添加安全的初始化檢查
+export const isToastReady = (): boolean => {
+  return toast !== null;
+};
+
+// 延遲初始化函數
+export const initToastSafely = (toast: any, maxRetries: number = 3): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    let retries = 0;
+    
+    const tryInit = () => {
+      try {
+        if (toast && typeof toast.add === 'function') {
+          initToast(toast);
+          console.log('✅ Toast 初始化成功');
+          resolve();
+        } else if (retries < maxRetries) {
+          retries++;
+          console.warn(`Toast 初始化失敗，重試 ${retries}/${maxRetries}`);
+          setTimeout(tryInit, 100 * retries); // 遞增延遲
+        } else {
+          console.error('Toast 初始化失敗，已達到最大重試次數');
+          reject(new Error('Toast 初始化失敗'));
+        }
+      } catch (error) {
+        console.error('Toast 初始化過程中發生錯誤:', error);
+        reject(error);
+      }
+    };
+    
+    tryInit();
+  });
+}; 

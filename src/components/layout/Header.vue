@@ -35,7 +35,7 @@ import ScheduleManagement from '@/views/user/userManagement/ScheduleManagement.v
 import OverlayBadge from 'primevue/overlaybadge';
 import Drawer from 'primevue/drawer';
 import { useAuthStore } from '@/stores/authStore';
-
+import { useCourseFilters } from '@/composables/useCourseFilters';
 const visibleMenu = ref(false);
 const visibleScheduleBar = ref(false);
 const router = useRouter();
@@ -43,6 +43,7 @@ const route = useRoute();
 const hasNewSchedule = ref(false);
 const authStore = useAuthStore();
 const role = authStore.role;
+const { searchRequest } = useCourseFilters(route, router);
 
 const keyword = ref('');
 const menuPt = ref({
@@ -61,17 +62,24 @@ const menuPt = ref({
 });
 
 // 搜索功能
-const searchAgain = (value: string) => {
-    if (route.name !== 'Search') {
-        router.push({
-            name: 'search',
-            query: { keyword: value }
+const searchAgain = (keyword: string) => {
+    console.log('searchAgain', keyword);
+    
+    // 如果已經在搜尋頁面，直接更新 URL 參數
+    if (route.name === 'Search') {
+        router.replace({
+            name: 'Search',
+            query: { 
+                ...route.query, // 保留其他查詢參數
+                keyword: keyword.trim(),
+                pageNum: undefined // 重置頁碼
+            }
         });
     } else {
-        console.log('searchAgain', value);
-
-        router.replace({
-            query: { ...route.query, keyword: value }
+        // 如果不在搜尋頁面，則跳轉到搜尋頁面
+        router.push({
+            name: 'Search',
+            query: { keyword: keyword.trim() }
         });
     }
 };

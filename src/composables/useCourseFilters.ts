@@ -56,8 +56,6 @@ export function useCourseFilters(route: RouteLocationNormalizedLoaded, router: R
 
     // 同步URL參數到搜索請求
     const syncParamsToFilters = () => {
-        console.log(22222);
-        
         const params = route.query;
         searchRequest.value = {
             keyword: params.keyword as string || '',
@@ -81,10 +79,9 @@ export function useCourseFilters(route: RouteLocationNormalizedLoaded, router: R
     };
 
     // 同步搜索請求到URL（debounced）
-    const syncFiltersToParams = (() => {
+    const syncFiltersToParams = () => {
         const query: Record<string, string> = {};
         const req = searchRequest.value;
-        console.log(11111);
 
         if (req.keyword) query.keyword = req.keyword;
         if (req.regions && req.regions.length > 0) query.regions = req.regions.join(',');
@@ -95,10 +92,10 @@ export function useCourseFilters(route: RouteLocationNormalizedLoaded, router: R
         if (req.newCourses) query.newCourses = 'true';
         if (req.favourites) query.favourites = 'true';
         if (req.sortBy !== 'relevance') query.sortBy = req.sortBy || '';
-        if (req.pageNum && req.pageNum > 1) query.pageNum = req.pageNum.toString();
+        // if (req.pageNum && req.pageNum > 1)  query.pageNum = req.pageNum.toString();
 
         router.replace({ query });
-    });
+    };
 
     // 更新搜索參數的便捷方法
     const updateSearchRequest = (updates: Partial<SearchRequest>) => {
@@ -153,6 +150,7 @@ export function useCourseFilters(route: RouteLocationNormalizedLoaded, router: R
     const setupSearchWatcher = (searchFunction: () => Promise<void>) => {
         const debouncedSearch = debounce(searchFunction, 500);
         watch(searchRequest, () => {
+            console.log("searchRequest!!!!");
             debouncedSearch();
         }, { deep: true, immediate: false });
 

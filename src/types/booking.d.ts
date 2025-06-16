@@ -13,7 +13,6 @@ export interface BaseBooking {
   start: string | Date;           // 開始時間
   end: string | Date;             // 結束時間
   status: BookingStatus;     // 预约状态
-  location?: string;         // 地点 (從舊接口整合)
   merchantName?: string;     // 商家名称 (從舊接口整合)
   rating?: number;           // 評分 (從舊接口整合)
   comment?: string;          // 評論 (從舊接口整合)
@@ -75,3 +74,4 @@ export interface MerchantBookingDetail extends BaseBooking, BookingDetail {
   customerName: string;      // 客户姓名
   customerPhone: string;     // 客户电话
 }
+

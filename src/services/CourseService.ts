@@ -87,7 +87,7 @@ export class CourseService {
 
     /* ----------------- Favorites ----------------- */
     static getUserFavorites(userId: number): Promise<Result<Course[]>> {
-        return request<Course[]>(() => api.get(API_ROUTES.USER.FAVORITES(userId)))
+        return request<Course[]>(() => api.get(API_ROUTES.COURSE.FAVORITES(userId)))
     }
 
     static toggleFavorite(courseId: number): Promise<Result<void>> {

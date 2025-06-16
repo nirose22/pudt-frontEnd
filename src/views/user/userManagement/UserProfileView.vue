@@ -33,22 +33,16 @@
                                             <i class="pi pi-camera text-xs"></i>
                                         </div>
                                     </div>
-                                    
-                                    <!-- 等級徽章 -->
-                                    <div class="absolute -bottom-3 -right-3 text-3xl" 
-                                        v-tooltip.top="levelNames[userStore.userLevel]">
-                                        {{ levelEmojis[userStore.userLevel] }}
-                                    </div>
                                 </div>
 
                                 <!-- 基本信息 -->
                                 <div class="flex flex-col gap-1 text-center md:text-left">
-                                    <h2 class="text-3xl font-bold">{{ userStore.profile?.name || '用戶名稱' }}</h2>
-                                    <p class="text-gray-700">{{ userStore.profile?.email || 'email@example.com' }}</p>
+                                    <h2 class="text-3xl font-bold">{{ userStore.user.name || '用戶名稱' }}</h2>
+                                    <p class="text-gray-700">{{ userStore.user.email || 'email@example.com' }}</p>
                                     
                                     <!-- 點數顯示 -->
                                     <div class="flex flex-wrap justify-center md:justify-start gap-2 mt-2">
-                                        <Chip :label="`點數: ${userStore.points}`"
+                                        <Chip :label="`點數: ${userStore.user.points}`"
                                             class="!bg-sky-400 !text-white !font-bold" />
                                     </div>
                                 </div>
@@ -60,36 +54,36 @@
                                     <div class="flex items-center gap-2">
                                         <div class="flex flex-col">
                                             <span class="text-sm">PUDT 等級：</span>
-                                            <span class="text- text-blue-600">{{ levelNames[userStore.userLevel] }}</span>
-                                            <span class="text-2xl text-blue-600">{{ levelRoles[userStore.userLevel] }}</span>
+                                            <span class="text-2xl text-blue-600">{{ levelNames[UserLevel.Flower] }}</span>
                                         </div>
                                     </div>
                                     <div class="bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full text-center">
-                                        <span class="font-bold text-2xl">{{ userStore.completedCoursesCount }} 堂</span>
+                                        <!-- <span class="font-bold text-2xl">{{ userStore.user.points }} 堂</span> -->
+                                        <span class="font-bold text-2xl">{{ 50 }} 堂</span>
                                     </div>
                                 </div>
                                 
                                 <!-- 等級進度條 -->
                                 <div class="mt-3">
-                                    <div v-if="userStore.levelProgress.nextLevel" class="flex justify-between text-sm mb-2">
-                                        <span class="text-gray-800">當前：{{ levelNames[userStore.userLevel] }}</span>
+                                    <div v-if="true" class="flex justify-between text-sm mb-2">
+                                        <span class="text-gray-800">當前： </span>
                                         <span class="text-gray-800">
-                                            距離 {{ levelNames[userStore.levelProgress.nextLevel] }} 
-                                            <span class="font-bold">還差 {{ userStore.levelProgress.remainingCourses }} 堂</span>
+                                            距離 {{ levelNames[UserLevel.Flower] }} 
+                                            <span class="font-bold">還差 {{ 50 }} 堂</span>
                                         </span>
                                     </div>
                                     <div v-else class="text-sm mb-2 text-center text-gray-800">
-                                        <span>恭喜！您已達到最高等級 {{ levelNames[userStore.userLevel] }}</span>
+                                        <span>恭喜！您已達到最高等級 {{ levelNames[UserLevel.Flower] }}</span>
                                     </div>
                                     
-                                    <div class="w-full bg-blue-700/30 rounded-full h-3 overflow-hidden">
-                                        <div class="h-full bg-white rounded-full transition-all duration-500"
-                                            :style="{ width: `${userStore.levelProgress.progress}%` }"></div>
+                                    <div class="w-full bg-blue-500/30 rounded-full h-3 overflow-hidden">
+                                        <div class="h-full bg-blue-400 rounded-full transition-all duration-500"
+                                            :style="{ width: `${58}%` }"></div>
                                     </div>
                                     
                                     <!-- 進度百分比顯示 -->
                                     <div class="text-right mt-1">
-                                        <span class="text-xs text-gray-800">{{ userStore.levelProgress.progress }}% 完成</span>
+                                        <span class="text-xs text-gray-800">{{ 58 }}% 完成</span>
                                     </div>
                                 </div>
                             </div>
@@ -176,7 +170,7 @@ import { usePurchaseStore } from '@/stores/orderStore';
 import { useConfirm } from 'primevue/useconfirm';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter, useRoute } from 'vue-router';
-import { showSuccess, showError, initToast } from '@/utils/toastHelper';
+import { showSuccess, showError, initToastSafely } from '@/utils/toastHelper';
 import { CardType } from '@/enums/Cards';
 import { OrderStatus } from '@/enums/PurchaseStatus';
 import { UserLevel } from '@/enums/UserLevel';
@@ -204,12 +198,18 @@ const router = useRouter();
 const route = useRoute();
 
 // 初始化数据
-onMounted(() => {
-    initToast(toast);
+onMounted(async () => {
+    // 安全地初始化 toast
+    try {
+        await initToastSafely(toast);
+    } catch (error) {
+        console.error('Toast 初始化失敗:', error);
+    }
+    
     if (authStore.isLoggedIn) {
         userStore.fetchProfile();
         pointsStore.init();
-        bookingStore.fetchBookings();
+        bookingStore.fetchSchedule();
         purchaseStore.fetchHistory();
     }
 })
@@ -251,7 +251,7 @@ const confirmPhotoUpload = () => {
         const reader = new FileReader();
         reader.onload = (e) => {
             if (userStore.profile) {
-                userStore.profile.avatarUrl = e.target?.result as string;
+                userStore.user.avatarUrl = e.target?.result as string;
                 showPhotoDialog.value = false;
                 showSuccess('頭像已更新', '成功');
             }
@@ -327,35 +327,8 @@ const handlePurchase = (cardId: number) => {
 
 // 為 ProfileManagement 提供数据
 provide('profileData', {
-    profile: computed(() => userStore.profile),
+    profile: computed(() => userStore.user),
     updateProfile: updateProfile
-});
-
-// 為 PointsManagement 提供数据
-provide('pointsData', {
-    points: computed(() => userStore.points),
-    pointsHistory: computed(() => {
-        return pointsStore.pointsHistory.map(txn => ({
-            id: txn.id,
-            date: txn.createdAt,
-            type: txn.kind,
-            description: txn.note || '點數交易',
-            points: txn.amount,
-            balance: txn.balance,
-            remark: txn.refType?.toString()
-        }));
-    }),
-    pointsCards: computed(() => {
-        return pointsStore.pointsCards.map(card => ({
-            id: card.id,
-            name: `${card.points}點數卡`,
-            description: card.description,
-            points: card.points,
-            price: card.price,
-            discount: card.discount
-        }));
-    }),
-    handlePurchase: handlePurchase
 });
 
 // 為 BookingsManagement 提供数据
@@ -380,7 +353,7 @@ provide('purchaseData', {
         return purchaseStore.purchaseHistory.map(item => ({
             id: item.id,
             date: item.createdAt.toISOString().split('T')[0],
-            cardType: item.cardType as CardType,
+            cardType: item.sn,
             amount: item.total,
             points: 0,
             status: item.status,
@@ -395,7 +368,7 @@ provide('purchaseData', {
         return purchaseStore.byStatus(OrderStatus.Pending).map(item => ({
             id: item.id,
             date: item.createdAt.toISOString().split('T')[0],
-            cardType: item.cardType as CardType,
+            cardType: item.sn,
             amount: item.total,
             points: 0,
             status: item.status,

@@ -20,5 +20,4 @@ export interface OrderItem {
   name: string;           // 購買項目名稱（如「課程點數卡 - PRO」）
   qty: number;            // 數量（通常為 1）
   unitPrice: number;      // 單價（單位：TWD）
-  courseId?: number;      // 若購買為特定課程（可為 null）
 }

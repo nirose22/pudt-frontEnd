@@ -258,7 +258,7 @@
                         <h4 class="text-lg font-medium mb-3 pb-2 border-b border-sky-100 text-sky-700">興趣類別</h4>
                         <div class="flex flex-wrap gap-2">
                             <Chip v-for="cat in mainCategoryOptions" :key="cat.value" :label="cat.label"
-                                :class="{ 'chip-selected': form.interests.categories.includes(cat.value), 'hover:!bg-sky-100': !form.interests.categories.includes(cat.value) }"
+                                :class="{ 'chip-selected': form.interests.categories.includes(cat.value as MainCategory), 'hover:!bg-sky-100': !form.interests.categories.includes(cat.value as MainCategory) }"
                                 @click="toggleMainCategory(cat.value)" />
                         </div>
                     </div>
@@ -329,13 +329,13 @@ import type { User } from '@/types';
 import { useToast } from 'primevue/usetoast';
 import { Form, FormField } from '@primevue/forms';
 import Dialog from 'primevue/dialog';
-import { UserGender, UserGenderLabel } from '@/enums/User';
+import { UserGender, UserGenderLabel, UserGenderLabelShort } from '@/enums/User';
 import { MainCategory, MainCategoryLabel, SubCategory, SubCategoryLabel } from '@/enums/CourseCategory';
 import { useUserStore } from '@/stores/userStore';
 import Accordion from 'primevue/accordion';
 import AccordionPanel from 'primevue/accordionpanel';
 import Badge from 'primevue/badge';
-import { showSuccess, showError, showInfo, initToast } from '@/utils/toastHelper';
+import { showSuccess, showError, showInfo, initToastSafely } from '@/utils/toastHelper';
 
 // 初始化 toast
 const toast = useToast();
@@ -352,7 +352,9 @@ const profile = computed(() => profileData?.profile.value || null);
 const updateProfile = profileData?.updateProfile;
 
 // 擴展 User 類型，添加新的欄位
-interface ExtendedUser extends User {
+interface ExtendedUser extends Omit<User, 'birthday' | 'createdAt'> {
+    birthday: Date;
+    createdAt: Date;
     twoFactorEnabled: boolean;
     socialAccounts: {
         facebook: boolean;
@@ -361,7 +363,7 @@ interface ExtendedUser extends User {
         instagram: boolean;
     };
     interests: {
-        categories: string[]; // 主分類
+        categories: MainCategory[]; // 主分類
         subCategories: string[]; // 子分類
     };
     notifications: {
@@ -413,12 +415,12 @@ const form = reactive<ExtendedUser>({
     id: profile.value?.id ?? 0,
     name: profile.value?.name ?? '',
     gender: profile.value?.gender ?? UserGender.Other,
-    birthday: new Date(profile.value?.birthday ?? new Date()),
+    birthday: profile.value?.birthday ? new Date(profile.value.birthday) : new Date(),
     address: profile.value?.address ?? '',
     email: profile.value?.email ?? '',
     phone: profile.value?.phone ?? '',
     points: profile.value?.points ?? 0,
-    createdAt: new Date(profile.value?.createdAt ?? new Date()),
+    createdAt: profile.value?.createdAt ? new Date(profile.value.createdAt) : new Date(),
     // 新增欄位的默認值
     twoFactorEnabled: false,
     socialAccounts: {
@@ -531,10 +533,10 @@ const passwordResolver = zodResolver(
 );
 
 const genderOptions = [
-    { label: UserGenderLabel.M, value: UserGender.Male },
-    { label: UserGenderLabel.F, value: UserGender.Female },
-    { label: UserGenderLabel.O, value: UserGender.Other },
-    { label: UserGenderLabel.ND, value: UserGender.NotDisclosed }
+    { label: UserGenderLabelShort.M, value: UserGender.Male },
+    { label: UserGenderLabelShort.F, value: UserGender.Female },
+    { label: UserGenderLabelShort.O, value: UserGender.Other },
+    { label: UserGenderLabelShort.ND, value: UserGender.NotDisclosed }
 ];
 
 // 切換社群帳號綁定狀態
@@ -552,10 +554,10 @@ const toggleSocialAccount = (platform: keyof typeof form.socialAccounts) => {
 
 // 切換主分類
 const toggleMainCategory = (category: string) => {
-    const index = form.interests.categories.indexOf(category);
+    const index = form.interests.categories.indexOf(category as MainCategory);
     if (index === -1) {
         // 添加主分類
-        form.interests.categories.push(category);
+        form.interests.categories.push(category as MainCategory);
         
         // 不自動選中該主分類下的所有子分類，讓用戶自己選擇
     } else {
@@ -612,19 +614,23 @@ const removeSubCategory = (subCategory: string) => {
 // 保存用户兴趣到localStorage和userStore
 const saveUserInterests = () => {
     // 使用userStore更新用户兴趣
-    userStore.updateUserInterests(form.interests.categories);
+    userStore.updateInterests(form.interests.categories);
     // 將子分類儲存到localStorage (userStore目前只保存主分類)
     localStorage.setItem('userInterestsTags', JSON.stringify(form.interests.subCategories));
 };
 
 // 初始化用戶興趣和toast
-onMounted(() => {
-    // 初始化 toast
-    initToast(toast);
+onMounted(async () => {
+    // 安全地初始化 toast
+    try {
+        await initToastSafely(toast);
+    } catch (error) {
+        console.error('Toast 初始化失敗:', error);
+    }
     
     // 從 userStore 獲取主分類
-    if (userStore.interests && userStore.interests.length > 0) {
-        form.interests.categories = [...userStore.interests];
+    if (userStore.userInterests && userStore.userInterests.length > 0) {
+        form.interests.categories = [...userStore.userInterests];
     }
     
     // 從 localStorage 獲取子分類
@@ -637,7 +643,7 @@ onMounted(() => {
                 
                 // 確保所有子分類的主分類都被選中
                 parsedSubCategories.forEach(subCat => {
-                    const mainCat = subCat.split('_')[0];
+                    const mainCat = subCat.split('_')[0] as MainCategory;
                     if (!form.interests.categories.includes(mainCat)) {
                         form.interests.categories.push(mainCat);
                     }
@@ -671,7 +677,7 @@ const resetForm = () => {
     if (profile.value) {
         form.name = profile.value.name || '';
         form.gender = profile.value.gender || UserGender.Other;
-        form.birthday = new Date(profile.value.birthday || new Date());
+        form.birthday = profile.value.birthday ? new Date(profile.value.birthday) : new Date();
         form.address = profile.value.address || '';
         form.phone = profile.value.phone || '';
     }

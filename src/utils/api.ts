@@ -9,7 +9,6 @@ const api: AxiosInstance = axios.create({
   headers: API_CONFIG.HEADERS
 })
 
-// 请求拦截器
 api.interceptors.request.use(
   (config) => {
     // 從 pinia 持久化存儲中讀取 token
@@ -39,8 +38,14 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // 處理未授權錯誤
+      // 處理未授權錯誤 - 清除所有相關數據
       localStorage.removeItem(API_CONFIG.AUTH.TOKEN_KEY)
+      localStorage.removeItem('userInterests')
+      localStorage.removeItem('userAge')
+      localStorage.removeItem('userInterestsTags')
+      sessionStorage.removeItem('user')
+      
+      console.log('🚫 檢測到401錯誤，已清除所有登入數據')
       window.location.href = '/login'
     }
     return Promise.reject(error)

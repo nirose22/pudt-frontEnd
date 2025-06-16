@@ -112,7 +112,7 @@ const onFormSubmit = async (e: any) => {
                 showSuccess(res.message || '登入成功')
                 visible.value = false
                 setTimeout(() => {
-                    // window.location.reload()
+                    router.go(0)
                 }, 500)
             } else {
                 showError(res.message || '登入失敗')

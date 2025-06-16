@@ -57,9 +57,9 @@ export const usePurchaseStore = defineStore('purchase', () => {
   const fetchHistory = async (userId?: number): Promise<Result<Order[]>> => {
     loading.value.history = true
     try {
-      const data = await api.get<Order[]>(API_ROUTES.PURCHASE.HISTORY(userId ?? userStore.profile?.id ?? 0))
-      OrderHistory.value = data
-      return { success: true, data }
+      const data = await api.get<Order[]>(API_ROUTES.PURCHASE.HISTORY(userId ?? userStore.user.id ?? 0))
+      OrderHistory.value = data.data
+      return { success: true, data: data.data }
     } catch (error) {
       return errorHandler.handleApiError(error, ERROR_MESSAGES.PURCHASE_ERROR)
     } finally {
@@ -80,9 +80,9 @@ export const usePurchaseStore = defineStore('purchase', () => {
   const fetchUnpaid = async (userId?: number): Promise<Result<UnpaidItem[]>> => {
     loading.value.unpaid = true
     try {
-      const data = await api.get<UnpaidItem[]>(API_ROUTES.PURCHASE.UNPAID(userId ?? userStore.profile?.id ?? 0))
-      unpaidItems.value = data
-      return { success: true, data }
+      const data = await api.get<UnpaidItem[]>(API_ROUTES.PURCHASE.UNPAID(userId ?? userStore.user.id ?? 0))
+      unpaidItems.value = data.data
+      return { success: true, data: data.data }
     } catch (error) {
       return errorHandler.handleApiError(error, ERROR_MESSAGES.PURCHASE_ERROR)
     } finally {
@@ -97,7 +97,7 @@ export const usePurchaseStore = defineStore('purchase', () => {
    */
   const payUnpaidItem = async (itemId: number, amount: number): Promise<Result<void>> => {
     try {
-      await api.post(API_ROUTES.PURCHASE.PAY_UNPAID(itemId), { amount })
+      await api.post(API_ROUTES.PURCHASE.PAY(itemId), { amount })
 
       const itemIndex = unpaidItems.value.findIndex(item => item.id === itemId)
       if (itemIndex >= 0) {
@@ -147,7 +147,7 @@ export const usePurchaseStore = defineStore('purchase', () => {
     
       const pointHistoryItem: PointTxn = {
         id: Date.now(),
-        userId: userStore.profile?.id ?? 0,
+        userId: userStore.user.id ?? 0,
         kind: PointKind.Deposit,
         amount: selectedCard.points,
         balance: newBalance ?? 0,
@@ -160,7 +160,7 @@ export const usePurchaseStore = defineStore('purchase', () => {
     
       const purchaseItem: Order = {
         id: Date.now(),
-        userId: userStore.profile?.id ?? 0,
+        userId: userStore.user.id ?? 0,
         sn: `ORD-${Date.now().toString().slice(-6)}`,
         total: selectedCard.price,
         status: OrderStatus.Paid,

@@ -130,7 +130,7 @@ const userMenuItems = ref<MenuItem[]>([
         command: () => {
             // 處理登出邏輯
             authStore.logout();
-            router.push('/login');
+            router.go(0);
         }
     }
 ]);

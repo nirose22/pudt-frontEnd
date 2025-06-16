@@ -7,7 +7,7 @@
             <div class="flex flex-col md:flex-row justify-between items-center gap-6">
                 <div class="text-center md:text-left">
                     <h3 class="text-white text-lg font-medium mb-1">目前可用點數</h3>
-                    <div class="text-white text-4xl font-bold">{{ points }}</div>
+                    <div class="text-white text-4xl font-bold">{{ currentPoints }}</div>
                     <div v-if="expiringPoints > 0" class="mt-2 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm inline-flex items-center">
                         <i class="pi pi-exclamation-circle mr-1"></i>
                         {{ expiringPoints }} 點將於 {{ expiryDate }} 到期
@@ -47,7 +47,7 @@
                         <div class="flex justify-end">
                             <Button label="購買課卡" icon="pi pi-shopping-cart" 
                                 class="p-button-sm"
-                                @click="purchaseCard(1)" />
+                                @click="handlePurchaseCard(1)" />
                         </div>
                     </div>
                 </div>
@@ -73,7 +73,7 @@
                         <div class="flex justify-end">
                             <Button label="購買課卡" icon="pi pi-shopping-cart" 
                                 class="p-button-sm"
-                                @click="purchaseCard(2)" />
+                                @click="handlePurchaseCard(2)" />
                         </div>
                     </div>
                 </div>
@@ -99,7 +99,7 @@
                         <div class="flex justify-end">
                             <Button label="購買課卡" icon="pi pi-shopping-cart" 
                                 class="p-button-sm"
-                                @click="purchaseCard(3)" />
+                                @click="handlePurchaseCard(3)" />
                         </div>
                     </div>
                 </div>
@@ -126,7 +126,7 @@
                         <div class="flex justify-end">
                             <Button label="購買課卡" icon="pi pi-shopping-cart" 
                                 class="p-button-sm"
-                                @click="purchaseCard(4)" />
+                                @click="handlePurchaseCard(4)" />
                         </div>
                     </div>
                 </div>
@@ -171,13 +171,13 @@
         <!-- 儲值對話框組件 -->
         <PurchaseDialog
             v-model:visible="showPurchaseDialog"
-            :points-cards="pointsCards"
+            :points-cards="availablePointsCards"
             :purchase-card-id="purchaseCardId"
             :payment-method="paymentMethod"
             @update:purchase-card-id="purchaseCardId = $event"
             @update:payment-method="paymentMethod = $event"
             @purchase="confirmPurchase"
-            @cancel="showPurchaseDialog = false"
+            @cancel="cancelPurchase"
         />
 
         <!-- 點數歷史對話框組件 -->
@@ -195,21 +195,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, inject } from 'vue';
-import type { PropType } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import Button from 'primevue/button';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Select from 'primevue/select';
 import Tag from 'primevue/tag';
 import { useToast } from 'primevue/usetoast';
+import { useConfirm } from 'primevue/useconfirm';
 import PurchaseDialog from '@/components/user/PurchaseDialog.vue';
 import HistoryDialog from '@/components/user/HistoryDialog.vue';
+import { useUserStore } from '@/stores/userStore';
+import { usePointsStore } from '@/stores/pointsStore';
+import { usePurchaseStore } from '@/stores/orderStore';
+import { useAuthStore } from '@/stores/authStore';
+import { showSuccess, showError } from '@/utils/toastHelper';
 
 // 定義數據類型
 interface PointsCard {
     id: number;
     name: string;
+    type: string;
     description: string;
     points: number;
     price: number;
@@ -236,42 +242,56 @@ interface HistoryFilterOptions {
     type: string;
 }
 
-interface PaymentMethod {
-    label: string;
-    value: string;
-    icon: string;
-}
-
-// 定义inject的数据类型
-interface PointsDataInject {
-    points: { value: number };
-    pointsHistory: { value: TransactionRecord[] };
-    pointsCards: { value: PointsCard[] };
-    handlePurchase: (cardId: number) => void;
-}
-
-// 使用inject获取数据
-const pointsData = inject<PointsDataInject>('pointsData');
-const points = computed(() => pointsData?.points.value || 0);
-const pointsHistory = computed(() => pointsData?.pointsHistory.value || []);
-const pointsCards = computed(() => pointsData?.pointsCards.value || []);
-const handlePurchase = pointsData?.handlePurchase;
-
-// 删除emit
-// const emit = defineEmits(['purchase']);
+// 使用 stores
+const userStore = useUserStore();
+const pointsStore = usePointsStore();
+const purchaseStore = usePurchaseStore();
+const authStore = useAuthStore();
 const toast = useToast();
+const confirm = useConfirm();
 
-// 點數相關狀態
+// 初始化數據
+onMounted(() => {
+    if (authStore.isLoggedIn) {
+        pointsStore.init();
+    }
+});
+
+// 計算屬性 - 當前點數
+const currentPoints = computed(() => userStore.user?.points || 0);
+
+// 計算屬性 - 點數歷史記錄
+const pointsHistory = computed(() => {
+    return pointsStore.pointsHistory.map(txn => ({
+        id: txn.id,
+        date: txn.createdAt,
+        type: txn.kind,
+        description: txn.note || '點數交易',
+        points: txn.amount,
+        balance: txn.balance,
+        remark: txn.refType?.toString()
+    }));
+});
+
+// 計算屬性 - 可用點數卡
+const availablePointsCards = computed(() => {
+    return pointsStore.pointsCards.map(card => ({
+        id: card.id,
+        name: `${card.points}點數卡`,
+        description: card.description,
+        points: card.points,
+        price: card.price,
+        discount: card.discount
+    }));
+});
+
+// 響應式狀態
 const expiringPoints = ref(50); 
 const expiryDate = ref('2023/12/31');
-
-// 卡片選擇狀態
 const selectedCard = ref<number | null>(null);
 const showPurchaseDialog = ref(false);
-const purchaseCardId = ref<number | null>(null);
-const paymentMethod = ref<string | null>(null);
-
-// 歷史記錄對話框
+const purchaseCardId = ref<number | undefined>(undefined);
+const paymentMethod = ref<string | undefined>(undefined);
 const showHistoryDialog = ref(false);
 
 // 篩選條件
@@ -303,19 +323,11 @@ const typeOptions = [
     { label: '過期', value: 'expire' }
 ];
 
-// 付款方式
-const paymentMethods: PaymentMethod[] = [
-    { label: '信用卡', value: 'credit', icon: 'pi pi-credit-card' },
-    { label: '銀行轉帳', value: 'bank', icon: 'pi pi-wallet' },
-    { label: '行動支付', value: 'mobile', icon: 'pi pi-mobile' }
-];
-
-// 判斷正向交易類型 (增加點數)
+// 業務邏輯方法
 const isPositiveType = (type: string): boolean => {
     return ['add', 'reward'].includes(type);
 };
 
-// 按日期排序數據
 const sortByDateDesc = (a: TransactionRecord, b: TransactionRecord): number => {
     return new Date(b.date).getTime() - new Date(a.date).getTime();
 };
@@ -324,7 +336,6 @@ const sortByDateDesc = (a: TransactionRecord, b: TransactionRecord): number => {
 const filteredPointsHistory = computed(() => {
     let result = [...pointsHistory.value];
     
-    // 月份篩選
     if (filter.value.month) {
         result = result.filter(item => {
             const itemDate = new Date(item.date);
@@ -333,12 +344,10 @@ const filteredPointsHistory = computed(() => {
         });
     }
     
-    // 類型篩選
     if (filter.value.type) {
         result = result.filter(item => item.type === filter.value.type);
     }
     
-    // 按日期降序排序
     return result.sort(sortByDateDesc);
 });
 
@@ -346,7 +355,6 @@ const filteredPointsHistory = computed(() => {
 const filteredHistoryRecords = computed(() => {
     let result = [...pointsHistory.value];
     
-    // 日期範圍篩選
     if (historyFilter.value.dateRange && historyFilter.value.dateRange[0] && historyFilter.value.dateRange[1]) {
         const startDate = new Date(historyFilter.value.dateRange[0]);
         startDate.setHours(0, 0, 0, 0);
@@ -360,40 +368,50 @@ const filteredHistoryRecords = computed(() => {
         });
     }
     
-    // 類型篩選
     if (historyFilter.value.type) {
         result = result.filter(item => item.type === historyFilter.value.type);
     }
     
-    // 按日期降序排序
     return result.sort(sortByDateDesc);
 });
 
-// 選中卡片的價格
-const selectedCardPrice = computed(() => {
-    if (!purchaseCardId.value) return 0;
-    const card = pointsCards.value.find(card => card.id === purchaseCardId.value);
-    return card ? card.price : 0;
-});
-
-// 選擇卡片
-const selectCard = (cardId: number) => {
-    selectedCard.value = cardId;
+// 業務方法
+const handlePurchaseCard = (cardId: number) => {
+    if (!authStore.isLoggedIn) {
+        showError('請先登入', '未登入');
+        return;
+    }
+    
+    confirm.require({
+        message: '確認購買此點數卡？',
+        header: '購買確認',
+        acceptLabel: '確認購買',
+        rejectLabel: '取消',
+        icon: 'pi pi-exclamation-triangle',
+        acceptClass: 'p-button-primary',
+        accept: async () => {
+            try {
+                const res = await purchaseStore.buyPointsCard(cardId);
+                if (res.success) {
+                    showSuccess(res.message || '點數卡購買成功', '成功');
+                    // 重新載入用戶點數
+                    await userStore.fetchProfile();
+                } else {
+                    showError(res.message || '購買點數失敗', '失敗');
+                }
+            } catch (error) {
+                console.error('處理購買請求時出錯:', error);
+                showError('處理您的購買請求時出錯', '錯誤');
+            }
+        }
+    });
 };
 
-// 購買卡片
-const purchaseCard = (cardId: number) => {
-    if (!handlePurchase) return;
-    handlePurchase(cardId);
-};
-
-// 確認購買
 const confirmPurchase = () => {
     if (!purchaseCardId.value) return;
     
     showPurchaseDialog.value = false;
     
-    // 模擬付款流程
     toast.add({
         severity: 'info',
         summary: '處理中',
@@ -401,17 +419,19 @@ const confirmPurchase = () => {
         life: 2000
     });
     
-    // 延遲模擬付款完成
     setTimeout(() => {
-        // 重置狀態
-        purchaseCardId.value = null;
-        paymentMethod.value = null;
+        purchaseCardId.value = undefined;
+        paymentMethod.value = undefined;
     }, 2000);
 };
 
-// 應用歷史記錄篩選
+const cancelPurchase = () => {
+    showPurchaseDialog.value = false;
+    purchaseCardId.value = undefined;
+    paymentMethod.value = undefined;
+};
+
 const applyHistoryFilter = () => {
-    // 已通過 computed 自動應用篩選
     toast.add({
         severity: 'info',
         summary: '已應用篩選',
@@ -420,7 +440,6 @@ const applyHistoryFilter = () => {
     });
 };
 
-// 重置歷史記錄篩選
 const resetHistoryFilter = () => {
     historyFilter.value = {
         dateRange: null,
@@ -428,19 +447,12 @@ const resetHistoryFilter = () => {
     };
 };
 
-// 格式化日期
+// 格式化方法
 const formatDate = (dateString: string | Date): string => {
     const date = new Date(dateString);
     return `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
 };
 
-// 格式化時間
-const formatTime = (dateString: string | Date): string => {
-    const date = new Date(dateString);
-    return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-};
-
-// 獲取交易類型標籤
 const getTypeLabel = (type: string): string => {
     const typeMap: Record<string, string> = {
         'add': '儲值',
@@ -451,7 +463,6 @@ const getTypeLabel = (type: string): string => {
     return typeMap[type] || type;
 };
 
-// 獲取交易類型嚴重性
 const getTypeSeverity = (type: string): string => {
     const severityMap: Record<string, string> = {
         'add': 'success',

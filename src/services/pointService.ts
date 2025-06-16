@@ -6,15 +6,13 @@ import { request } from '@/utils/requestHelper'
 export const pointService = {
   async fetchPointsCards(): Promise<Result<PointsCard[]>> {
     return request<PointsCard[]>(
-      () => api.get(API_ROUTES.POINTS.CARDS),
-      ERROR_MESSAGES.POINTS_ERROR
+      () => api.get(API_ROUTES.POINTS.CARDS)
     )
   },
 
   async fetchPointsHistory(): Promise<Result<PointTxn[]>> {
     return request<PointTxn[]>(
-      () => api.get(API_ROUTES.POINTS.HISTORY),
-      ERROR_MESSAGES.POINTS_ERROR
+      () => api.get(API_ROUTES.POINTS.HISTORY)
     )
   }
 } 

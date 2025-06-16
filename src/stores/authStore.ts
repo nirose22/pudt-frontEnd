@@ -84,12 +84,25 @@ export const useAuthStore = defineStore('auth', () => {
 
 	async function logout(): Promise<Result<void>> {
 		const res = await authApi.logout();
-		if (res.success) {
-			useUserStore().clearUserData();
-			token.value = null;
-			role.value = null;
-		}
+		clearAuthData();
 		return res;
+	}
+
+	function clearAuthData() {
+		useUserStore().clearUserData();
+		token.value = null;
+		role.value = null;
+		localStorage.clear()
+		console.log('✅ 已清除所有登入數據');
+	}
+
+
+	// 檢查 token 有效性並清理無效數據
+	function validateAndCleanup() {
+		if (!token.value || !role.value) {
+			console.log('🔍 檢測到無效的登入狀態，清除殘留數據');
+			clearAuthData();
+		}
 	}
 
 	return {
@@ -100,7 +113,9 @@ export const useAuthStore = defineStore('auth', () => {
 		loginWithGoogle,
 		loginWithFacebook,
 		logout,
-		register
+		register,
+		clearAuthData,
+		validateAndCleanup
 	}
 }, {
 	persist: {

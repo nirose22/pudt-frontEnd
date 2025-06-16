@@ -440,9 +440,8 @@ const loadRecommendationCourses = async () => {
 };
 
 // 處理分頁切換
-function onPage(event: { page: number, first: number, rows: number, pageCount: number }): void {
+function onPage(event: { page: number, first: number, rows: number, pageCount?: number }): void {
 	const pageNum = event.page + 1; // PrimeVue 分頁器的 page 從 0 開始，需要 +1
-	console.log('切換到頁面:', pageNum, '總頁數:', searchResultsPages.value);
 	
 	// 只更新 searchRequest，不管理 first 狀態
 	if (pageNum >= 1 && pageNum <= searchResultsPages.value) {
@@ -459,26 +458,22 @@ async function fetchFilteredCourses(): Promise<void> {
 		
 		// 準備搜索請求，過濾掉空值，但保留分頁參數
 		const cleanRequest = Object.fromEntries(
-			Object.entries(searchRequest.value).filter(([key, value]) => {
+			Object.entries(searchRequest.value).filter(([_, value]) => {
 				if (Array.isArray(value)) return value.length > 0;
 				if (typeof value === 'boolean') return value;
 				if (typeof value === 'number') return value > 0;
 				return value !== undefined && value !== null && value !== '';
 			})
 		);
-		console.log('pageNum **********');
-		console.log(cleanRequest.pageNum);
-		console.log("**********");
-		
 
+		console.log("fetchFilteredCourses");
+		
 		const result = await CourseService.searchCourses(cleanRequest);
 
 		if (result.success && result.data) {
 			searchResults.value = result.data.list || [];
 			searchResultsTotal.value = result.data.total || 0;
-			searchResultsPages.value = result.data.pages || 0;
-			searchRequest.value.pageNum = 1;
-			
+			searchResultsPages.value = result.data.pages || 0;			
 			if (searchResults.value.length === 0) {
 				showInfo('沒有找到符合條件的課程', '無搜索結果');
 			}
@@ -522,6 +517,7 @@ async function selectCourse(course: Course): Promise<void> {
 function handleSubCategoryToggle(code: string): void {
 	const categories = [...(searchRequest.value.categories || [])];
 	const index = categories.indexOf(code);
+	searchRequest.value.pageNum = 1;
 
 	if (index > -1) {
 		categories.splice(index, 1);
@@ -536,13 +532,12 @@ function handleSubCategoryToggle(code: string): void {
 function toggleRegion(code: string): void {
 	const regions = [...(searchRequest.value.regions || [])];
 	const index = regions.indexOf(code);
-
+	searchRequest.value.pageNum = 1;
 	if (index > -1) {
 		regions.splice(index, 1);
 	} else {
 		regions.push(code);
 	}
-
 	updateSearchRequest({ regions });
 }
 
@@ -580,6 +575,24 @@ onMounted(async () => {
 	// 初始化 toast
 	initToast(toast);
 });
+
+// 監聽路由參數變化，當從 Header 搜尋時重新觸發搜尋
+watch(() => route.query, (newQuery, oldQuery) => {
+	// 檢查是否為搜尋相關的參數變化
+	const searchParams = ['keyword', 'regions', 'categories', 'minPoints', 'maxPoints', 'hasOpenSlots', 'newCourses', 'favourites', 'sortBy'];
+	const hasSearchParamChange = searchParams.some(param => 
+		newQuery[param] !== oldQuery[param]
+	);
+	
+	if (hasSearchParamChange) {
+		console.log('路由搜尋參數變化，重新同步並搜尋:', newQuery);
+		// 同步新的 URL 參數到搜索請求
+		syncParamsToFilters();
+		// 重新執行搜尋
+		fetchFilteredCourses();
+	}
+}, { deep: true });
+
 </script>
 
 

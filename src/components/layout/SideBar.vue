@@ -60,6 +60,9 @@ import Avatar from 'primevue/avatar';
 
 import ConfirmDialog from 'primevue/confirmdialog';
 import { useConfirm } from 'primevue/useconfirm';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 
 const visibleMenu = defineModel<boolean>('visible', { required: true });
 const { isLoggedIn } = useAuthStore();
@@ -90,7 +93,7 @@ const logout = async () => {
         acceptClass: 'p-button-warning',
         accept: async () => {
             await authStore.logout();
-            // window.location.reload();
+            router.go(0);
         }
     });
 }

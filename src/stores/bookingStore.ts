@@ -40,10 +40,10 @@ export const useBookingStore = defineStore('booking', () => {
 
     /* ---------- actions ---------- */
     // 獲取用戶的預約記錄
-    const fetchBookings = async (query?: BookingQuery): Promise<Result> => {
+    const fetchSchedule = async (query?: BookingQuery): Promise<Result> => {
         loading.value = true
         error.value = null
-        const result = await BookingService.getBookings(userStore.profile.userId, query);
+        const result = await BookingService.getSchedule(userStore.profile.userId, query);
         if (result.success && result.data) {
             bookings.value = result.data
         }
@@ -133,7 +133,7 @@ export const useBookingStore = defineStore('booking', () => {
         byStatus,
         loading,
         error,
-        fetchBookings,
+        fetchSchedule,
         canBook,
         book,
         cancel

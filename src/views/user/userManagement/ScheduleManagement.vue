@@ -6,7 +6,7 @@
                 :showControls="false" @change="handleDateRangeChange" class="border-b border-sky-100 pb-3" />
 
             <!-- 課程列表（按日期分組） -->
-            <div v-if="bookingsInRange.length" class="flex-1 flex flex-col gap-3 overflow-auto">
+            <div v-if="bookingsInRange.length && isLoggedIn" class="flex-1 flex flex-col gap-3 overflow-auto">
                 <div v-for="date in Object.keys(bookingsByDate)" :key="date" class="flex flex-col gap-1">
                     <!-- 使用 DataView 展示当天课程 -->
                     <DataView :value="bookingsByDate[date]" :layout="layout" :rows="bookingsByDate[date].length">
@@ -15,16 +15,23 @@
                                 {{ formatDateHeader(date) }}
                             </p>
                         </template>
-
                         <!-- 列表视图 -->
                         <template #list="slotProps">
                             <div v-for="(booking, index) in slotProps.items" :key="index">
-                                <div class="flex p-3 gap-4 border border-sky-100 rounded-lg shadow-sm hover:bg-sky-50 transition-colors mb-2 cursor-pointer"
+                                <div class="flex p-3 gap-6 border border-sky-100 rounded-lg shadow-sm hover:bg-sky-50 transition-colors mb-2 cursor-pointer"
                                     @click="showBookingDetail(booking)">
-                                    <div v-if="booking.instructor?.avatar" class="flex-shrink-0">
-                                        <img :src="booking.instructor.avatar" alt="教練照片"
-                                            class="w-12 h-12 rounded-full object-cover shadow-sm border border-sky-100" />
+                                    <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 self-center">
+                                        <div v-if="booking.instructor?.avatar"
+                                            class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                                            <img :src="booking.instructor.avatar" alt="教練照片"
+                                                class="w-full h-full object-cover bg-gray-200" />
+                                        </div>
+                                        <div v-else
+                                            class="w-full h-full bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center">
+                                            <i class="pi pi-user text-white text-sm"></i>
+                                        </div>
                                     </div>
+
                                     <div class="flex-1 flex flex-col">
                                         <div class="text-base font-medium text-sky-700">{{ booking.courseTitle }}
                                         </div>
@@ -34,7 +41,7 @@
                                         </div>
                                         <div class="flex items-center text-sm text-gray-600 mb-1">
                                             <i class="pi pi-map-marker text-sky-500 mr-1"></i>
-                                            <span>{{ booking.location }}</span>
+                                            <span>{{ booking.merchantName }}</span>
                                         </div>
                                         <div class="flex items-center text-sm text-gray-600">
                                             <i class="pi pi-user text-sky-500 mr-1"></i>
@@ -43,7 +50,9 @@
                                     </div>
                                 </div>
                             </div>
+                          
                         </template>
+
 
                         <template #empty>
                             <div class="text-center p-4 bg-sky-50 rounded-lg border border-sky-100">
@@ -54,13 +63,22 @@
                     </DataView>
                 </div>
             </div>
-
             <div v-else class="content-center block text-center p-8 bg-sky-50 flex-1 rounded-lg border border-sky-100">
-                <i class="pi pi-calendar-times text-6xl text-sky-200 mb-4"></i>
-                <p class="text-sky-600 text-lg mb-2">您目前沒有任何預約</p>
-                <p class="text-gray-500 mb-4">選擇課程並預約參加吧！</p>
-                <Button label="瀏覽課程" icon="pi pi-search" @click="router.push('/courses')"
-                    class="!bg-sky-500 !border-sky-500" />
+                <div v-if="!isLoggedIn">
+                    <i class="pi pi-calendar-times text-6xl text-sky-200 mb-4"></i>
+                    <p class="text-sky-600 text-lg mb-2">尚未登入</p>
+                    <p class="text-gray-500 mb-4">快登入預約參加吧！</p>
+                    <Button label="登入" icon="pi pi-sign-in" @click="handleLogin"
+                        class="!bg-sky-500 !border-sky-500" />
+                </div>
+                <div v-else>
+                    
+                    <i class="pi pi-calendar-times text-6xl text-sky-200 mb-4"></i>
+                    <p class="text-sky-600 text-lg mb-2">您目前沒有任何預約</p>
+                    <p class="text-gray-500 mb-4">選擇課程並預約參加吧！</p>
+                    <Button label="瀏覽課程" icon="pi pi-search" @click="router.push('/courses')"
+                        class="!bg-sky-500 !border-sky-500" />
+                </div>
             </div>
 
             <Dialog v-model:visible="showDetailDialog" header="課程詳情" :modal="true" :closable="true"
@@ -73,7 +91,7 @@
                         </div>
                         <div class="flex justify-between mb-2">
                             <span class="text-gray-600">日期：</span>
-                            <span>{{ selectedBooking ? formatDateString(String(selectedBooking.date)) : '' }}</span>
+                            <span>{{ selectedBooking.date }}</span>
                         </div>
                         <div class="flex justify-between mb-2">
                             <span class="text-gray-600">時間：</span>
@@ -106,10 +124,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, provide } from 'vue';
+import { ref, computed, onMounted, provide, inject, type Ref } from 'vue';
 import DateRangeFilter from '@/components/common/DateRangeFilter.vue';
 import { useBookingStore } from '@/stores/bookingStore';
-import { inRange, byDate, formatDateString } from '@/utils/dateUtils';
+import { byDate, formatDateString } from '@/utils/dateUtils';
 import { BookingStatus } from '@/enums/BookingStatus';
 import DataView from 'primevue/dataview';
 import type { Booking } from '@/types/booking';
@@ -118,6 +136,9 @@ import { showSuccess, showError } from '@/utils/toastHelper';
 import Dialog from 'primevue/dialog';
 import { useToast } from 'primevue/usetoast';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/authStore';
+
+const showLoginDialog = inject('showLoginDialog') as Ref<boolean>;
 
 const router = useRouter();
 const bookingStore = useBookingStore();
@@ -131,9 +152,10 @@ const loading = ref(false);
 
 // 日期範圍
 const startDate = ref(new Date());
-const endDate = ref(new Date());
-endDate.value.setDate(startDate.value.getDate() + 7);
+const endDate = ref(new Date(startDate.value.getTime() + 7 * 24 * 60 * 60 * 1000));
 const range = ref<{ start: Date; end: Date } | null>(null);
+const bookingsInRange = ref<Booking[]>([]);
+const isLoggedIn = computed(() => useAuthStore().isLoggedIn);
 
 const handleDateRangeChange = (dateRange: { start: Date; end: Date }) => {
     range.value = dateRange;
@@ -143,10 +165,18 @@ const handleDateRangeChange = (dateRange: { start: Date; end: Date }) => {
 
 // 根據日期範圍過濾預約
 const fetchFilteredBookings = async () => {
+    if (!isLoggedIn) {
+        return;
+    }
     try {
         loading.value = true;
         // 先獲取所有預約
-        await bookingStore.fetchBookings();
+        const dateRange = range.value?.start.toISOString() + '~' + range.value?.end.toISOString();
+        const status = BookingStatus.Confirmed;
+        const result = await bookingStore.fetchSchedule({ dateRange: dateRange, status: status });
+        if (result.success) {
+            bookingsInRange.value = result.data as Booking[];
+        }
     } catch (error) {
         console.error('獲取預約失敗:', error);
         showError('獲取預約數據失敗');
@@ -155,22 +185,6 @@ const fetchFilteredBookings = async () => {
     }
 };
 
-// 獲取範圍內的預約
-const bookingsInRange = computed(() => {
-    if (!range.value) {
-        return bookingStore.bookings;
-    }
-
-    // 确保只筛选确认状态的预约
-    const confirmedBookings = bookingStore.bookings.filter(b => b.status === BookingStatus.Confirmed);
-    return inRange(
-        range.value.start,
-        range.value.end,
-        confirmedBookings,
-        // 优先使用专门的预约日期字段，如果不存在则使用创建日期
-        booking => booking.date instanceof Date ? booking.date : booking.createdAt
-    );
-});
 
 const bookingsByDate = computed(() => {
     return byDate(bookingsInRange.value, booking => booking.date instanceof Date ? booking.date : booking.createdAt);
@@ -210,6 +224,10 @@ const cancelBooking = async (booking: Booking) => {
             }
         }
     });
+};
+
+const handleLogin = () => {
+    showLoginDialog.value = true;
 };
 
 // 初始化設定日期範圍
