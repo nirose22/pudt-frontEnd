@@ -205,7 +205,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, inject, watch } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
@@ -226,41 +226,35 @@ import Select from 'primevue/select';
 import type { AbsenceRecord } from '@/types/activity';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
+import { useBookingStore } from '@/stores/bookingStore';
+import { useUserStore } from '@/stores/userStore';
+import { useAuthStore } from '@/stores/authStore';
 
-// 定义数据接口
-interface CourseRecord {
-    id: number;
-    userId: number;
-    courseTitle: string;
-    courseType: string;
-    location: string;
-    date: string;
-    time: string;
-    points: number;
-    status: BookingStatus;
-    rating?: number;
-    comment?: string;
-    instructor?: {
-        name: string;
-        avatar?: string;
-        title?: string;
-    };
-}
+// 使用 stores
+const bookingStore = useBookingStore();
+const userStore = useUserStore();
+const authStore = useAuthStore();
 
-// 定义注入数据接口
-interface ActivityDataInject {
-    courseHistory: { value: CourseRecord[] };
-    absenceRecords: { value: AbsenceRecord[] };
-}
+// 計算屬性 - 課程歷史
+const courseHistory = computed(() => {
+    return bookingStore.bookings.filter(booking => 
+        booking.status === BookingStatus.Completed
+    );
+});
 
-// 使用inject获取数据
-const activityData = inject<ActivityDataInject>('activityData');
-const courseHistory = computed(() => activityData?.courseHistory.value || []);
-const absenceRecords = computed(() => activityData?.absenceRecords.value || []);
+// 計算屬性 - 缺席記錄
+const absenceRecords = computed(() => {
+    return bookingStore.bookings.filter(booking => 
+        booking.status === BookingStatus.Cancelled || 
+        booking.status === BookingStatus.NoShow
+    );
+});
 
-// 添加评分记录数据 - 因为现在没有通过props传入，所以需要从课程历史中提取
-const ratingHistory = computed(() => {
-    return courseHistory.value.filter(course => course.rating && course.rating > 0);
+// 初始化數據
+onMounted(() => {
+    if (authStore.isLoggedIn) {
+        bookingStore.fetchSchedule();
+    }
 });
 
 // 狀態與過濾

@@ -313,8 +313,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, inject } from 'vue';
-import { type PropType, reactive, onMounted } from 'vue';
+import { ref, computed, reactive, onMounted } from 'vue';
+import { type PropType } from 'vue';
 import Select from 'primevue/select';
 import DatePicker from 'primevue/datepicker';
 import Button from 'primevue/button';
@@ -332,6 +332,7 @@ import Dialog from 'primevue/dialog';
 import { UserGender, UserGenderLabel, UserGenderLabelShort } from '@/enums/User';
 import { MainCategory, MainCategoryLabel, SubCategory, SubCategoryLabel } from '@/enums/CourseCategory';
 import { useUserStore } from '@/stores/userStore';
+import { useAuthStore } from '@/stores/authStore';
 import Accordion from 'primevue/accordion';
 import AccordionPanel from 'primevue/accordionpanel';
 import Badge from 'primevue/badge';
@@ -340,16 +341,29 @@ import { showSuccess, showError, showInfo, initToastSafely } from '@/utils/toast
 // 初始化 toast
 const toast = useToast();
 
-// 定义profileData的类型接口
-interface ProfileDataInject {
-  profile: { value: User | null };
-  updateProfile: (data: Partial<User>) => void;
-}
+// 直接使用 stores
+const userStore = useUserStore();
+const authStore = useAuthStore();
 
-// 使用inject获取数据，指定类型
-const profileData = inject<ProfileDataInject>('profileData');
-const profile = computed(() => profileData?.profile.value || null);
-const updateProfile = profileData?.updateProfile;
+// 計算屬性 - 用戶資料
+const profile = computed(() => userStore.user);
+
+// 業務方法 - 更新用戶資料
+const updateProfile = async (updatedProfile: Partial<User>) => {
+    const res = await userStore.updateProfile(updatedProfile);
+    if (res.success) {
+        showSuccess(res.message || '個人資料更新成功', '成功');
+    } else {
+        showError(res.message || '個人資料更新失敗', '失敗');
+    }
+};
+
+// 初始化數據
+onMounted(() => {
+    if (authStore.isLoggedIn) {
+        userStore.fetchProfile();
+    }
+});
 
 // 擴展 User 類型，添加新的欄位
 interface ExtendedUser extends Omit<User, 'birthday' | 'createdAt'> {
@@ -377,7 +391,6 @@ interface ExtendedUser extends Omit<User, 'birthday' | 'createdAt'> {
 
 const showPasswordModal = ref(false);
 const showInterestsModal = ref(false);
-const userStore = useUserStore();
 
 // 將主分類轉換為選項格式
 const mainCategoryOptions = Object.entries(MainCategoryLabel).map(([value, label]) => ({
@@ -618,42 +631,6 @@ const saveUserInterests = () => {
     // 將子分類儲存到localStorage (userStore目前只保存主分類)
     localStorage.setItem('userInterestsTags', JSON.stringify(form.interests.subCategories));
 };
-
-// 初始化用戶興趣和toast
-onMounted(async () => {
-    // 安全地初始化 toast
-    try {
-        await initToastSafely(toast);
-    } catch (error) {
-        console.error('Toast 初始化失敗:', error);
-    }
-    
-    // 從 userStore 獲取主分類
-    if (userStore.userInterests && userStore.userInterests.length > 0) {
-        form.interests.categories = [...userStore.userInterests];
-    }
-    
-    // 從 localStorage 獲取子分類
-    const savedSubCategories = localStorage.getItem('userInterestsTags');
-    if (savedSubCategories) {
-        try {
-            const parsedSubCategories = JSON.parse(savedSubCategories);
-            if (Array.isArray(parsedSubCategories)) {
-                form.interests.subCategories = parsedSubCategories;
-                
-                // 確保所有子分類的主分類都被選中
-                parsedSubCategories.forEach(subCat => {
-                    const mainCat = subCat.split('_')[0] as MainCategory;
-                    if (!form.interests.categories.includes(mainCat)) {
-                        form.interests.categories.push(mainCat);
-                    }
-                });
-            }
-        } catch (e) {
-            console.error('解析用戶興趣標籤數據失敗:', e);
-        }
-    }
-});
 
 // 提交密碼變更
 const submitPasswordChange = ({ valid }: any) => {

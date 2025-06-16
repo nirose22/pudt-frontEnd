@@ -329,7 +329,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, inject, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import type { PropType } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
@@ -347,17 +347,56 @@ import Select from 'primevue/select';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Button from 'primevue/button';
+import { usePurchaseStore } from '@/stores/orderStore';
+import { useUserStore } from '@/stores/userStore';
+import { useAuthStore } from '@/stores/authStore';
 
-// 定义inject数据接口
-interface PurchaseDataInject {
-    purchaseHistory: { value: ExtendedPurchaseItem[] };
-    unpaidRecords: { value: ExtendedPurchaseItem[] };
-}
+// 使用 stores
+const purchaseStore = usePurchaseStore();
+const userStore = useUserStore();
+const authStore = useAuthStore();
 
-// 使用inject获取数据
-const purchaseData = inject<PurchaseDataInject>('purchaseData');
-const purchaseHistory = computed(() => purchaseData?.purchaseHistory.value || []);
-const unpaidRecords = computed(() => purchaseData?.unpaidRecords.value || []);
+// 計算屬性 - 購買歷史
+const purchaseHistory = computed(() => {
+    return purchaseStore.purchaseHistory.map(item => ({
+        id: item.id,
+        date: item.createdAt.toISOString().split('T')[0],
+        cardType: item.sn || '',
+        amount: item.total,
+        points: 0,
+        status: item.status,
+        paymentMethod: item.payMethod,
+        invoiceNo: item.invoiceNo,
+        invoiceAvailable: !!item.invoiceNo,
+        invoiceNumber: item.invoiceNo || '',
+        paymentDate: item.createdAt.toISOString().split('T')[0],
+    }));
+});
+
+// 計算屬性 - 未付款記錄
+const unpaidRecords = computed(() => {
+    return purchaseStore.byStatus(OrderStatus.Pending).map(item => ({
+        id: item.id,
+        date: item.createdAt.toISOString().split('T')[0],
+        cardType: item.sn || '',
+        amount: item.total,
+        points: 0,
+        status: item.status,
+        paymentMethod: item.payMethod,
+        invoiceNo: item.invoiceNo,
+        invoiceAvailable: false,
+        invoiceNumber: '',
+        paymentDate: '',
+        expiry: ''
+    }));
+});
+
+// 初始化數據
+onMounted(() => {
+    if (authStore.isLoggedIn) {
+        purchaseStore.fetchHistory();
+    }
+});
 
 const toast = useToast();
 const loading = ref(false);

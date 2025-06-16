@@ -155,7 +155,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, provide } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import Avatar from 'primevue/avatar';
 import Chip from 'primevue/chip';
@@ -163,23 +163,14 @@ import Dialog from 'primevue/dialog';
 import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import { useUserStore } from '@/stores/userStore';
-import { useBookingStore } from '@/stores/bookingStore';
-import { BookingStatus } from '@/enums/BookingStatus';
-import { usePointsStore } from '@/stores/pointsStore';
-import { usePurchaseStore } from '@/stores/orderStore';
 import { useConfirm } from 'primevue/useconfirm';
 import { useAuthStore } from '@/stores/authStore';
-import { useRouter, useRoute } from 'vue-router';
-import { showSuccess, showError, initToastSafely } from '@/utils/toastHelper';
-import { CardType } from '@/enums/Cards';
-import { OrderStatus } from '@/enums/PurchaseStatus';
+import { useRouter } from 'vue-router';
+import { showSuccess, initToastSafely } from '@/utils/toastHelper';
 import { UserLevel } from '@/enums/UserLevel';
 import LoginDialog from '@/components/auth/LoginDialog.vue';
 import {
-    levelNames,
-    levelEmojis,
-    levelDescriptions,
-    levelRoles
+    levelNames
 } from '@/utils/userLevelUtils';
 
 const toast = useToast();
@@ -191,11 +182,7 @@ const selectedPhoto = ref<File | null>(null);
 const confirm = useConfirm();
 const userStore = useUserStore();
 const authStore = useAuthStore();
-const bookingStore = useBookingStore();
-const pointsStore = usePointsStore();
-const purchaseStore = usePurchaseStore();
 const router = useRouter();
-const route = useRoute();
 
 // 初始化数据
 onMounted(async () => {
@@ -208,13 +195,12 @@ onMounted(async () => {
     
     if (authStore.isLoggedIn) {
         userStore.fetchProfile();
-        pointsStore.init();
-        bookingStore.fetchSchedule();
-        purchaseStore.fetchHistory();
+    } else {
+        router.push('/Search');
     }
-})
+});
 
-// 菜單項目 - 更新圖示以匹配植物主題
+// 菜單項目
 const menuItems = [
     { id: 'profile', label: '會員資料管理', icon: 'pi-user', path: '/profile/management' },
     { id: 'favorite', label: '收藏課程', icon: 'pi-heart', path: '/profile/favorite' },
@@ -225,6 +211,7 @@ const menuItems = [
     { id: 'purchase', label: '購買紀錄', icon: 'pi-shopping-cart', path: '/profile/purchase' }
 ];
 
+// 頭像相關方法
 const handlePhotoUpload = () => {
     if (!authStore.isLoggedIn) {
         showLoginDialog.value = true;
@@ -237,14 +224,11 @@ const onPhotoSelected = (event: Event) => {
     selectedPhoto.value = (event.target as HTMLInputElement).files?.[0] ?? null;
 };
 
-// 觸發文件輸入點擊
 const triggerFileInput = () => {
     const input = fileInput.value as HTMLInputElement;
     input?.click();
 };
 
-// 確認上傳頭像
-// API: /api/user/update-avatar
 const confirmPhotoUpload = () => {
     if (selectedPhoto.value) {
         // 在實際應用中，這裡應該上傳照片到服務器
@@ -260,24 +244,7 @@ const confirmPhotoUpload = () => {
     }
 };
 
-const updateProfile = async (updatedProfile: Partial<any>) => {
-    const res = await userStore.updateProfile(updatedProfile);
-    if (res.success) {
-        showSuccess(res.message || '個人資料更新成功', '成功');
-    } else {
-        showError(res.message || '個人資料更新失敗', '失敗');
-    }
-};
-
-const cancelBooking = async (bookingId: number) => {
-    const res = await bookingStore.cancel(bookingId);
-    if (res.success) {
-        showSuccess(res.message || '預約取消成功', '成功');
-    } else {
-        showError(res.message || '預約取消失敗', '失敗');
-    }
-};
-
+// 認證相關方法
 const handleLogout = () => {
     confirm.require({
         message: '確認登出?',
@@ -285,7 +252,7 @@ const handleLogout = () => {
         acceptLabel: '確認',
         rejectLabel: '取消',
         accept: () => {
-            useAuthStore().logout().then(() => {
+            authStore.logout().then(() => {
                 router.push('/login');
             });
         }
@@ -295,92 +262,6 @@ const handleLogout = () => {
 const goToRegister = () => {
     router.push('/register');
 };
-
-const handlePurchase = (cardId: number) => {
-    if (!authStore.isLoggedIn) {
-        showLoginDialog.value = true;
-        return;
-    }
-    
-    confirm.require({
-        message: '確認購買此點數卡？',
-        header: '購買確認',
-        acceptLabel: '確認購買',
-        rejectLabel: '取消',
-        icon: 'pi pi-exclamation-triangle',
-        acceptClass: 'p-button-primary',
-        accept: async () => {
-            try {
-                const res = await purchaseStore.buyPointsCard(cardId)
-                if (res.success) {
-                    showSuccess(res.message || '點數卡購買成功', '成功');
-                } else {
-                    showError(res.message || '購買點數失敗', '失敗');
-                }
-            } catch (error) {
-                console.error('處理購買請求時出錯:', error);
-                showError('處理您的購買請求時出錯', '錯誤');
-            }
-        }
-    });
-}
-
-// 為 ProfileManagement 提供数据
-provide('profileData', {
-    profile: computed(() => userStore.user),
-    updateProfile: updateProfile
-});
-
-// 為 BookingsManagement 提供数据
-provide('bookingsData', {
-    bookings: computed(() => bookingStore.byStatus(BookingStatus.Confirmed)),
-    cancelBooking: cancelBooking
-});
-
-// 為 ActivityHistory 提供数据
-provide('activityData', {
-    courseHistory: computed(() => {
-        return bookingStore.bookings
-    }),
-    absenceRecords: computed(() => {
-        return bookingStore.byStatus(BookingStatus.Pending)
-    })
-});
-
-// 為 PurchaseHistory 提供数据
-provide('purchaseData', {
-    purchaseHistory: computed(() => {
-        return purchaseStore.purchaseHistory.map(item => ({
-            id: item.id,
-            date: item.createdAt.toISOString().split('T')[0],
-            cardType: item.sn,
-            amount: item.total,
-            points: 0,
-            status: item.status,
-            paymentMethod: item.payMethod,
-            invoiceNo: item.invoiceNo,
-            invoiceAvailable: !!item.invoiceNo,
-            invoiceNumber: item.invoiceNo,
-            paymentDate: item.createdAt.toISOString().split('T')[0],
-        }));
-    }),
-    unpaidRecords: computed(() => {
-        return purchaseStore.byStatus(OrderStatus.Pending).map(item => ({
-            id: item.id,
-            date: item.createdAt.toISOString().split('T')[0],
-            cardType: item.sn,
-            amount: item.total,
-            points: 0,
-            status: item.status,
-            paymentMethod: item.payMethod,
-            invoiceNo: item.invoiceNo,
-            invoiceAvailable: false,
-            invoiceNumber: '',
-            paymentDate: '',
-            expiry: ''
-        }));
-    })
-});
 </script>
 
 <style scoped>

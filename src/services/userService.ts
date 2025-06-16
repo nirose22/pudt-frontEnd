@@ -5,12 +5,8 @@ import type { MainCategory } from '@/enums'
 import { request } from '@/utils/requestHelper'
 
 export const userService = {
-  async fetchProfile(id?: number): Promise<Result<User>> {
-    return request<User>(() => api.get(API_ROUTES.USER.PROFILE(id || 'me')))
-  },
-
-  async fetchFavoriteCourses(userId: number): Promise<Result<Course[]>> {
-    return request<Course[]>(() => api.get(API_ROUTES.USER.FAVORITES(userId)))
+  async fetchProfile(id: number): Promise<Result<User>> {
+    return request<User>(() => api.get(API_ROUTES.USER.PROFILE(id)))
   },
 
   async updateProfile(userId: number, data: Partial<User>): Promise<Result<User>> {

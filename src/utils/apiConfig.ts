@@ -40,7 +40,7 @@ export const API_ROUTES = {
         FAVORITES: (userId: number) => `/courses/favorites?userId=${userId}`,
     },
     USER: {
-        PROFILE: (id: number | 'me') => `/users/${id}`,
+        PROFILE: (id: number) => `/users/${id}`,
         INTERESTS: (userId: number) => `/users/${userId}/interests`,
         BEHAVIOR: (userId: number) => `/users/${userId}/behavior`,
         ADDRESS: (userId: number) => `/users/${userId}/address`,
