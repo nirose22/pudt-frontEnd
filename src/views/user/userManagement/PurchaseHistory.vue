@@ -6,7 +6,7 @@
 
         <!-- 消費統計卡片 -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
-            <div class="card p-4 shadow-sm rounded-lg border-l-4 border-sky-500 bg-white border border-sky-100">
+            <div class="card p-4 shadow-sm rounded-lg border-l-4  bg-white border border-sky-100">
                 <div class="flex justify-between items-center">
                     <div>
                         <div class="text-sm text-gray-500">總消費金額</div>
@@ -17,7 +17,7 @@
                     </div>
                 </div>
             </div>
-            <div class="card p-4 shadow-sm rounded-lg border-l-4 border-green-500 bg-white border border-sky-100">
+            <div class="card p-4 shadow-sm rounded-lg border-l-4 bg-white border border-sky-100">
                 <div class="flex justify-between items-center">
                     <div>
                         <div class="text-sm text-gray-500">總購買點數</div>
@@ -28,7 +28,7 @@
                     </div>
                 </div>
             </div>
-            <div class="card p-4 shadow-sm rounded-lg border-l-4 border-purple-500 bg-white border border-sky-100">
+            <div class="card p-4 shadow-sm rounded-lg border-l-4 bg-white border border-sky-100">
                 <div class="flex justify-between items-center">
                     <div>
                         <div class="text-sm text-gray-500">購買次數</div>

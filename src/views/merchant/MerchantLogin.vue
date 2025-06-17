@@ -6,13 +6,13 @@
 
         <!-- Logo 和標題 -->
         <div class="flex flex-col items-center mb-6">
-          <img src="../../../assets/image/pudt_logo-sm.png" alt="PUDT Logo" class="h-16 mb-4" />
+          <img src="@/assets/image/pudt_logo-sm.png" alt="PUDT Logo" class="h-16 mb-4" />
           <h2 class="text-xl font-bold text-sky-600">商家登入</h2>
         </div>
 
-        <Form v-slot="$form" @submit="login" :resolver="resolver" :initialValues="initialValues"
+        <Form v-slot="$form" @submit="onFormSubmit" :resolver="resolver" :initialValues="initialValues"
           class="flex flex-col gap-4">
-          <FormField name="email">
+          <FormField name="account">
             <IconField>
               <InputIcon class="pi pi-envelope" />
               <InputText placeholder="請輸入您的電子郵件" type="email" class="w-full" fluid />
@@ -88,44 +88,45 @@ import Checkbox from 'primevue/checkbox';
 import Button from 'primevue/button';
 import Divider from 'primevue/divider';
 import { showSuccess, showError, showInfo } from '@/utils/toastHelper';
+import { useAuthStore } from '@/stores/authStore';
 
 const router = useRouter();
 const route = useRoute();
+const authStore = useAuthStore();
 
 const loading = ref(false);
 const rememberMe = ref(false);
 
 const initialValues = ref({
-  email: '',
+  account: '',
   password: ''
 });
 
 const resolver = zodResolver(
   z.object({
-    email: z.string().email({ message: '請輸入有效的電子郵件' }),
+    account: z.string().email({ message: '請輸入有效的電子郵件' }),
     password: z.string().min(6, { message: '密碼至少需要6個字符' })
   })
 );
 
-async function login(e: any) {
+const onFormSubmit = async (e: any) => {
   if (e.valid) {
     loading.value = true;
     try {
-      // 模擬 API 請求
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      if (e.values.email === 'merchant@example.com' && e.values.password === 'password123') {
-        localStorage.setItem('merchantToken', 'mock-token-123456');
-        const redirectPath = route.query.redirect as string || '/merchant';
-        router.push(redirectPath);
-        showSuccess('歡迎回來！', '登入成功');
+      const res = await authStore.login({
+        ...e.values,
+        rememberMe: rememberMe.value
+      })
+      if (res.success) {
+        console.log(1111);
+        
+        showSuccess(res.message || '登入成功')
+        router.push('/merchant/dashboard')
       } else {
-        showError('電子郵件或密碼錯誤，請重試。', '登入失敗');
+        showError(res.message || '登入失敗')
       }
-    } catch (error) {
-      showError('登入時發生錯誤，請稍後再試。', '登入失敗');
     } finally {
-      loading.value = false;
+      loading.value = false
     }
   }
 }

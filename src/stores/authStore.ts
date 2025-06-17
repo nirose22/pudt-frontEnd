@@ -36,7 +36,10 @@ export const useAuthStore = defineStore('auth', () => {
 		const res = await authApi.login(creds);
 		if (res.success && res.data) {
 			token.value = res.data.token || null;
-			role.value = UserRole.User;
+			role.value = res.data.role as UserRole;
+			console.log('role', role.value);
+			console.log('token', token.value);
+			
 			useUserStore().fetchUserProfile(res.data.id);
 			useUserStore().fetchBehaviorProfile(res.data.id)
 		}

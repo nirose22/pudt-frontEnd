@@ -280,7 +280,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import CourseCard from '@/components/modal/CourseCard.vue';
 import TabPanel from 'primevue/tabpanel';
 import CourseDetail from '@/components/user/CourseDetail.vue';
 import type { Course, CourseSession } from '@/types/course';

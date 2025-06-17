@@ -195,7 +195,7 @@ onMounted(async () => {
     if (authStore.isLoggedIn) {
         userStore.fetchUserProfile(userStore.user.id);
     } else {
-        router.push('/Search');
+        router.push('/search');
     }
 });
 

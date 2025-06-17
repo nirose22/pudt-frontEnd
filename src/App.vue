@@ -11,7 +11,7 @@
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import Toast from 'primevue/toast'
-import LoginDialog from '@/components/auth/LoginDialog.vue'
+import LoginDialog from '@/components/user/LoginDialog.vue'
 import { ref, watch, provide } from 'vue'
 
 const route = useRoute()

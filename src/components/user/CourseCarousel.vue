@@ -28,7 +28,6 @@
 import Carousel from 'primevue/carousel';
 import type { CarouselResponsiveOptions } from 'primevue/carousel';
 import ProgressSpinner from 'primevue/progressspinner';
-import CourseCard from '@/components/modal/CourseCard.vue';
 import type { Course } from '@/types/course';
 
 const props = defineProps({

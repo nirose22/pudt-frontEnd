@@ -64,7 +64,6 @@ import Tabs from 'primevue/tabs';
 import TabList from 'primevue/tablist';
 import Tab from 'primevue/tab';
 import Button from 'primevue/button';
-import CourseCarousel from '@/components/modal/CourseCarousel.vue';
 import { useUserStore } from '@/stores/userStore';
 import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
@@ -72,7 +71,6 @@ import type { Course } from '@/types/course';
 import { CourseService } from '@/services/CourseService';
 import { useBookingStore } from '@/stores/bookingStore';
 import { showError, initToast } from '@/utils/toastHelper';
-import { useCourseStore } from '@/stores/courseStore';
 
 // 一次性解構 userStore
 const userStore = useUserStore();

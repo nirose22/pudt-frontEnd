@@ -129,7 +129,7 @@ const handleGoogleLogin = async () => {
         if (res.success) {
             visible.value = false
         }
-    } catch (error) {
+    } catch {
         showError('Google 登入失敗')
     }
 }
@@ -140,7 +140,7 @@ const handleFacebookLogin = async () => {
         if (res.success) {
             visible.value = false
         }
-    } catch (error) {
+    } catch {
         showError('Facebook 登入失敗')
     }
 }
