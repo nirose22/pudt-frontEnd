@@ -110,40 +110,76 @@
                 <div class="card p-4 shadow-sm rounded-lg border border-sky-100">
                     <h3 class="text-lg font-semibold mb-4 pb-2 border-b border-sky-100 flex justify-between items-center text-sky-700">
                         <span><i class="pi pi-heart mr-2"></i>興趣偏好設定</span>
-                        <Button label="選擇興趣標籤" icon="pi pi-tags" size="small" @click="showInterestsModal = true" 
+                        <Button label="設定興趣偏好" icon="pi pi-tags" size="small" @click="showInterestsModal = true" 
                             class="!bg-sky-500 !border-sky-500" />
                     </h3>
                     
-                    <!-- 已選興趣標籤預覽區 -->
-                    <div v-if="form.interests.subCategories.length > 0" class="mb-4">
+                    <!-- 已選興趣偏好預覽區 -->
+                    <div v-if="form.interests.categories.length > 0" class="mb-4">
                         <div class="form-label flex justify-between">
-                            <span>已選擇的興趣標籤</span>
+                            <span>您的興趣偏好順序</span>
                             <span class="text-sm text-sky-600 font-medium">
-                                {{ form.interests.subCategories.length }} 個標籤
+                                {{ form.interests.categories.length }} 個興趣類別
+                            </span>
+                        </div>
+                        <div class="space-y-2 p-3 border rounded-lg bg-sky-50 border-sky-100">
+                            <div v-for="(cat, index) in form.interests.categories" :key="cat"
+                                class="flex items-center justify-between p-2 bg-white rounded border border-sky-100">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-6 h-6 bg-sky-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                                        {{ index + 1 }}
+                                    </span>
+                                    <span class="font-medium text-sky-700">{{ getMainCategoryLabel(cat) }}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <Button icon="pi pi-chevron-up" size="small" text @click="moveInterestUp(index)" 
+                                        :disabled="index === 0" class="!text-sky-600" />
+                                    <Button icon="pi pi-chevron-down" size="small" text @click="moveInterestDown(index)" 
+                                        :disabled="index === form.interests.categories.length - 1" class="!text-sky-600" />
+                                    <Button icon="pi pi-times" size="small" text severity="danger" 
+                                        @click="removeInterestCategory(cat)" class="!text-red-500" />
+                                </div>
+                            </div>
+                        </div>
+                        <small class="text-gray-500 mt-2 block">排序越前面的興趣，推薦權重越高</small>
+                    </div>
+                    
+                    <div v-if="form.interests.categories.length === 0" class="text-center p-4 border rounded-lg bg-sky-50 border-sky-100">
+                        <p class="text-gray-600 mb-2">您尚未設定興趣偏好</p>
+                        <p class="text-gray-500 text-sm mb-4">設定您的興趣偏好順序可以獲得更精準的個人化推薦</p>
+                        <Button label="設定興趣偏好" icon="pi pi-plus" @click="showInterestsModal = true" 
+                            class="!bg-sky-500 !border-sky-500" />
+                    </div>
+                </div>
+
+                <!-- 地區偏好設定 -->
+                <div class="card p-4 shadow-sm rounded-lg border border-sky-100">
+                    <h3 class="text-lg font-semibold mb-4 pb-2 border-b border-sky-100 flex justify-between items-center text-sky-700">
+                        <span><i class="pi pi-map-marker mr-2"></i>地區偏好設定</span>
+                        <Button label="選擇偏好地區" icon="pi pi-map" size="small" @click="showRegionsModal = true" 
+                            class="!bg-sky-500 !border-sky-500" />
+                    </h3>
+                    
+                    <!-- 已選地區偏好預覽區 -->
+                    <div v-if="form.preferences.preferredRegions.length > 0" class="mb-4">
+                        <div class="form-label flex justify-between">
+                            <span>已選擇的偏好地區</span>
+                            <span class="text-sm text-sky-600 font-medium">
+                                {{ form.preferences.preferredRegions.length }} 個地區
                             </span>
                         </div>
                         <div class="flex flex-wrap gap-2 p-3 border rounded-lg bg-sky-50 border-sky-100">
-                            <Chip v-for="subCat in form.interests.subCategories" :key="subCat"
-                                :label="getSubCategoryLabel(subCat)" removable
-                                @remove="removeSubCategory(subCat)" 
+                            <Chip v-for="region in form.preferences.preferredRegions" :key="region"
+                                :label="getRegionLabel(region)" removable
+                                @remove="removePreferredRegion(region)" 
                                 class="!bg-white border border-sky-100" />
                         </div>
                     </div>
                     
-                    <!-- 摘要信息 -->
-                    <div v-if="form.interests.categories.length > 0" class="mb-4">
-                        <div class="form-label">興趣類別摘要</div>
-                        <div class="flex flex-wrap gap-2">
-                            <Chip v-for="cat in form.interests.categories" :key="cat" 
-                                  :label="getMainCategoryLabel(cat)"
-                                  class="!bg-sky-100 !text-sky-700" />
-                        </div>
-                    </div>
-                    
-                    <div v-if="form.interests.categories.length === 0" class="text-center p-4 border rounded-lg bg-sky-50 border-sky-100">
-                        <p class="text-gray-600 mb-2">您尚未選擇任何興趣標籤</p>
-                        <p class="text-gray-500 text-sm mb-4">設定您的興趣標籤可以獲得更精準的個人化推薦</p>
-                        <Button label="選擇興趣標籤" icon="pi pi-plus" @click="showInterestsModal = true" 
+                    <div v-if="form.preferences.preferredRegions.length === 0" class="text-center p-4 border rounded-lg bg-sky-50 border-sky-100">
+                        <p class="text-gray-600 mb-2">您尚未設定偏好地區</p>
+                        <p class="text-gray-500 text-sm mb-4">設定偏好地區可以優先推薦您附近的課程</p>
+                        <Button label="選擇偏好地區" icon="pi pi-plus" @click="showRegionsModal = true" 
                             class="!bg-sky-500 !border-sky-500" />
                     </div>
                 </div>
@@ -236,26 +272,26 @@
             </div>
         </Dialog>
 
-        <!-- 興趣標籤選擇對話框 -->
-        <Dialog v-model:visible="showInterestsModal" header="選擇您的興趣標籤" :modal="true" :closable="true"
-            class="w-full md:w-4/5 lg:w-3/4" :draggable="false" :resizable="false" 
+        <!-- 興趣偏好選擇對話框 -->
+        <Dialog v-model:visible="showInterestsModal" header="設定您的興趣偏好順序" :modal="true" :closable="true"
+            class="w-full md:w-3/5 lg:w-1/2" :draggable="false" :resizable="false" 
             :contentStyle="{ 'background-color': '#f8fafc' }">
             <div class="p-4">
                 <!-- 統計和提示信息 -->
                 <div class="bg-sky-50 p-3 rounded-lg mb-4 border border-sky-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div>
-                        <p class="font-medium">已選擇 <span class="text-sky-700">{{ form.interests.categories.length }}</span> 個類別，
-                        <span class="text-sky-700">{{ form.interests.subCategories.length }}</span> 個標籤</p>
-                        <p class="text-sm text-gray-600">選擇您喜歡的類別和標籤，系統將為您推薦相關課程</p>
+                        <p class="font-medium">已選擇 <span class="text-sky-700">{{ form.interests.categories.length }}</span> 個興趣類別</p>
+                        <p class="text-sm text-gray-600">選擇您喜歡的興趣類別，排序前面的類別將獲得更高的推薦權重</p>
                     </div>
-                    <Button v-if="form.interests.categories.length > 0 || form.interests.subCategories.length > 0"
+                    <Button v-if="form.interests.categories.length > 0"
                         label="清空所有選擇" icon="pi pi-trash" text severity="danger" @click="clearAllInterests" />
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    <!-- 左側：主分類選擇區 -->
-                    <div class="col-span-1 border rounded-lg p-3 border-sky-100">
-                        <h4 class="text-lg font-medium mb-3 pb-2 border-b border-sky-100 text-sky-700">興趣類別</h4>
+                <!-- 主分類選擇區 -->
+                <div class="border rounded-lg p-4 border-sky-100 mb-4">
+                    <h4 class="text-lg font-medium mb-3 pb-2 border-b border-sky-100 text-sky-700">
+                        <i class="pi pi-heart mr-2"></i>興趣類別
+                    </h4>
                         <div class="flex flex-wrap gap-2">
                             <Chip v-for="cat in mainCategoryOptions" :key="cat.value" :label="cat.label"
                                 :class="{ 'chip-selected': form.interests.categories.includes(cat.value as MainCategory), 'hover:!bg-sky-100': !form.interests.categories.includes(cat.value as MainCategory) }"
@@ -263,36 +299,71 @@
                         </div>
                     </div>
 
-                    <!-- 中間：子分類選擇區 -->
-                    <div class="lg:col-span-2 border rounded-lg p-3 border-sky-100">
-                        <h4 class="text-lg font-medium mb-3 pb-2 border-b border-sky-100 text-sky-700">詳細興趣標籤</h4>
-                        
-                        <div v-if="form.interests.categories.length === 0" class="text-center p-4">
-                            <p class="text-gray-500">請先從左側選擇興趣類別</p>
+                <!-- 已選興趣排序區 -->
+                <div v-if="form.interests.categories.length > 0" class="border rounded-lg p-4 border-sky-100">
+                    <h4 class="text-lg font-medium mb-3 pb-2 border-b border-sky-100 text-sky-700">
+                        <i class="pi pi-sort mr-2"></i>偏好順序
+                    </h4>
+                    <div class="space-y-2">
+                        <div v-for="(cat, index) in form.interests.categories" :key="cat"
+                            class="flex items-center justify-between p-2 bg-white rounded border border-sky-100">
+                            <div class="flex items-center gap-3">
+                                <span class="w-6 h-6 bg-sky-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                                    {{ index + 1 }}
+                                </span>
+                                <span class="font-medium text-sky-700">{{ getMainCategoryLabel(cat) }}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <Button icon="pi pi-chevron-up" size="small" text @click="moveInterestUp(index)" 
+                                    :disabled="index === 0" class="!text-sky-600" />
+                                <Button icon="pi pi-chevron-down" size="small" text @click="moveInterestDown(index)" 
+                                    :disabled="index === form.interests.categories.length - 1" class="!text-sky-600" />
+                                <Button icon="pi pi-times" size="small" text severity="danger" 
+                                    @click="removeInterestCategory(cat)" class="!text-red-500" />
+                            </div>
                         </div>
-                        
-                        <Accordion v-else :multiple="true" class="interest-accordion">
-                            <AccordionPanel v-for="mainCat in form.interests.categories" :key="mainCat" :value="mainCat">
-                                <div class="flex justify-between items-center w-full" slot="header">
-                                    <span>{{ getMainCategoryLabel(mainCat) }}</span>
-                                    <Badge :value="getSubCategoriesCount(mainCat)" class="ml-2" severity="info" />
-                                </div>
-                                
-                                <div class="flex flex-wrap gap-2 p-2">
-                                    <Chip v-for="subCat in getSubCategoriesForMainCategory(mainCat)" :key="subCat.value"
-                                        :label="subCat.label"
-                                        :class="{ 'chip-selected': form.interests.subCategories.includes(subCat.value), 'hover:!bg-sky-100': !form.interests.subCategories.includes(subCat.value) }"
-                                        @click="toggleSubCategory(subCat.value)" />
-                                </div>
-                                
-                                <div class="mt-2 flex justify-between">
-                                    <Button label="全選" icon="pi pi-check-circle" size="small" text
-                                        @click="selectAllSubCategories(mainCat)" class="!text-sky-600" />
-                                    <Button label="取消全選" icon="pi pi-times-circle" size="small" text
-                                        @click="deselectAllSubCategories(mainCat)" class="!text-sky-600" />
-                                </div>
-                            </AccordionPanel>
-                        </Accordion>
+                    </div>
+                    <small class="text-gray-500 mt-2 block">拖拽或使用箭頭調整順序，排序越前面推薦權重越高</small>
+                </div>
+            </div>
+
+            <template #footer>
+                <div class="flex justify-between w-full">
+                    <small class="text-gray-500 self-center">
+                        提示：選擇並排序您的興趣偏好，系統將提供個人化的課程推薦
+                    </small>
+                    <div>
+                        <Button label="取消" icon="pi pi-times" class="p-button-text" @click="showInterestsModal = false" />
+                        <Button label="確認" icon="pi pi-check" @click="confirmInterests" class="!bg-sky-500 !border-sky-500" />
+                    </div>
+                </div>
+            </template>
+        </Dialog>
+
+        <!-- 地區偏好選擇對話框 -->
+        <Dialog v-model:visible="showRegionsModal" header="選擇您的偏好地區" :modal="true" :closable="true"
+            class="w-full md:w-3/5 lg:w-1/2" :draggable="false" :resizable="false" 
+            :contentStyle="{ 'background-color': '#f8fafc' }">
+            <div class="p-4">
+                <!-- 統計和提示信息 -->
+                <div class="bg-sky-50 p-3 rounded-lg mb-4 border border-sky-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                    <div>
+                        <p class="font-medium">已選擇 <span class="text-sky-700">{{ form.preferences.preferredRegions.length }}</span> 個偏好地區</p>
+                        <p class="text-sm text-gray-600">選擇您偏好的地區，系統將優先推薦這些地區的課程</p>
+                    </div>
+                    <Button v-if="form.preferences.preferredRegions.length > 0"
+                        label="清空所有選擇" icon="pi pi-trash" text severity="danger" @click="clearAllRegions" />
+                </div>
+
+                <!-- 地區選擇區 -->
+                <div class="border rounded-lg p-4 border-sky-100">
+                    <h4 class="text-lg font-medium mb-3 pb-2 border-b border-sky-100 text-sky-700">
+                        <i class="pi pi-map mr-2"></i>台灣地區
+                    </h4>
+                    <div class="flex flex-wrap gap-2">
+                        <Chip v-for="region in regionOptions" :key="region.value" :label="region.label"
+                            :class="{ 'chip-selected': form.preferences.preferredRegions.includes(region.value), 'hover:!bg-sky-100': !form.preferences.preferredRegions.includes(region.value) }"
+                            @click="togglePreferredRegion(region.value)" />
                     </div>
                 </div>
             </div>
@@ -300,11 +371,11 @@
             <template #footer>
                 <div class="flex justify-between w-full">
                     <small class="text-gray-500 self-center">
-                        提示：選擇感興趣的標籤，系統將為您提供個人化的課程推薦
+                        提示：選擇您經常活動或偏好的地區，系統將優先推薦這些地區的課程
                     </small>
                     <div>
-                        <Button label="取消" icon="pi pi-times" class="p-button-text" @click="showInterestsModal = false" />
-                        <Button label="確認" icon="pi pi-check" @click="confirmInterests" class="!bg-sky-500 !border-sky-500" />
+                        <Button label="取消" icon="pi pi-times" class="p-button-text" @click="showRegionsModal = false" />
+                        <Button label="確認" icon="pi pi-check" @click="confirmRegions" class="!bg-sky-500 !border-sky-500" />
                     </div>
                 </div>
             </template>
@@ -325,20 +396,15 @@ import { z } from 'zod';
 import InputText from 'primevue/inputtext';
 import Message from 'primevue/message';
 import type { User } from '@/types';
-import { useToast } from 'primevue/usetoast';
 import { Form, FormField } from '@primevue/forms';
 import Dialog from 'primevue/dialog';
 import { UserGender, UserGenderLabelShort } from '@/enums/User';
-import { MainCategory, MainCategoryLabel, SubCategory, SubCategoryLabel } from '@/enums/CourseCategory';
+import { MainCategory, MainCategoryLabel } from '@/enums/CourseCategory';
+import { RegionCode, RegionCodeLabel } from '@/enums/RegionCode';
 import { useUserStore } from '@/stores/userStore';
 import { useAuthStore } from '@/stores/authStore';
-import Accordion from 'primevue/accordion';
-import AccordionPanel from 'primevue/accordionpanel';
-import Badge from 'primevue/badge';
-import { showSuccess, showError, showInfo, initToastSafely } from '@/utils/toastHelper';
-
-// 初始化 toast
-const toast = useToast();
+import { userService } from '@/services/UserService';
+import { showSuccess, showError, showInfo } from '@/utils/toastHelper';
 
 // 直接使用 stores
 const userStore = useUserStore();
@@ -346,6 +412,7 @@ const authStore = useAuthStore();
 
 // 計算屬性 - 用戶資料
 const profile = computed(() => userStore.user);
+const behaviorProfile = computed(() => userStore.profile);
 
 // 業務方法 - 更新用戶資料
 const updateProfile = async (updatedProfile: Partial<User>) => {
@@ -358,9 +425,10 @@ const updateProfile = async (updatedProfile: Partial<User>) => {
 };
 
 // 初始化數據
-onMounted(() => {
-    if (authStore.isLoggedIn) {
-        userStore.fetchProfile(userStore.user.id);
+onMounted(async () => {
+    if (authStore.isLoggedIn && userStore.user.id) {
+        await userStore.fetchUserProfile(userStore.user.id);
+        await userStore.fetchBehaviorProfile(userStore.user.id);
     }
 });
 
@@ -376,8 +444,7 @@ interface ExtendedUser extends Omit<User, 'birthday' | 'createdAt'> {
         instagram: boolean;
     };
     interests: {
-        categories: MainCategory[]; // 主分類
-        subCategories: string[]; // 子分類
+        categories: MainCategory[]; // 主分類（按偏好順序排列）
     };
     notifications: {
         email: boolean;
@@ -386,10 +453,14 @@ interface ExtendedUser extends Omit<User, 'birthday' | 'createdAt'> {
         promotion: boolean;
         newCourse: boolean;
     };
+    preferences: {
+        preferredRegions: string[];
+    };
 }
 
 const showPasswordModal = ref(false);
 const showInterestsModal = ref(false);
+const showRegionsModal = ref(false);
 
 // 將主分類轉換為選項格式
 const mainCategoryOptions = Object.entries(MainCategoryLabel).map(([value, label]) => ({
@@ -402,23 +473,9 @@ const getMainCategoryLabel = (code: string): string => {
     return MainCategoryLabel[code as MainCategory] || code;
 };
 
-const getSubCategoryLabel = (code: string): string => {
-    return SubCategoryLabel[code as SubCategory] || code;
-};
-
-// 計算某主分類下已選擇的子分類數量
-const getSubCategoriesCount = (mainCat: string): number => {
-    return form.interests.subCategories.filter(subCat => subCat.startsWith(mainCat)).length;
-};
-
-// 根據主分類獲取相關子分類的選項
-const getSubCategoriesForMainCategory = (mainCatCode: string) => {
-    return Object.entries(SubCategoryLabel)
-        .filter(([value]) => value.startsWith(mainCatCode))
-        .map(([value, label]) => ({
-            label,
-            value
-        }));
+// 獲取地區標籤名稱
+const getRegionLabel = (code: string): string => {
+    return RegionCodeLabel[code as RegionCode] || code;
 };
 
 // 表單數據
@@ -442,8 +499,7 @@ const form = reactive<ExtendedUser>({
         instagram: false
     },
     interests: {
-        categories: [],  // 主分類
-        subCategories: [] // 子分類
+        categories: behaviorProfile.value.interests || []  // 只保留主分類
     },
     notifications: {
         email: true,
@@ -451,68 +507,92 @@ const form = reactive<ExtendedUser>({
         activity: true,
         promotion: false,
         newCourse: true
+    },
+    preferences: {
+        preferredRegions: behaviorProfile.value.preferredRegions || []
     }
 });
 
-// 臨時保存興趣數據，用於對話框操作
-const tempInterests = reactive({
-    categories: [] as string[],
-    subCategories: [] as string[]
-});
+// 保存用户兴趣到後端
+const saveUserInterests = async () => {
+    try {
+        if (!userStore.user.id) {
+            showError('用戶未登入', '保存失敗');
+            return;
+        }
+        
+        const interestsRequest = {
+            categories: form.interests.categories
+        };
+        const result = await userService.updateUserInterestsAndRegions(userStore.user.id, interestsRequest);
+        
+        if (result.success) {
+            // 更新userStore
+            userStore.updateInterests(form.interests.categories);
+            
+            showSuccess('興趣偏好已保存', '保存成功');
+        } else {
+            showError(result.message || '保存興趣偏好失敗', '保存失敗');
+        }
+    } catch (error) {
+        console.error('保存興趣偏好失敗:', error);
+        showError('保存興趣偏好時出錯', '保存失敗');
+    }
+};
 
-// 當對話框開啟時保存當前選擇
-const openInterestsModal = () => {
-    tempInterests.categories = [...form.interests.categories];
-    tempInterests.subCategories = [...form.interests.subCategories];
-    showInterestsModal.value = true;
+
+// 興趣偏好順序管理方法
+const moveInterestUp = (index: number) => {
+    if (index > 0) {
+        const temp = form.interests.categories[index];
+        form.interests.categories[index] = form.interests.categories[index - 1];
+        form.interests.categories[index - 1] = temp;
+        showInfo('已調整偏好順序', '順序更新');
+    }
+};
+
+const moveInterestDown = (index: number) => {
+    if (index < form.interests.categories.length - 1) {
+        const temp = form.interests.categories[index];
+        form.interests.categories[index] = form.interests.categories[index + 1];
+        form.interests.categories[index + 1] = temp;
+        showInfo('已調整偏好順序', '順序更新');
+    }
+};
+
+const removeInterestCategory = (category: MainCategory) => {
+    const index = form.interests.categories.indexOf(category);
+    if (index !== -1) {
+        form.interests.categories.splice(index, 1);
+        showInfo(`已移除興趣類別: ${getMainCategoryLabel(category)}`, '興趣更新');
+    }
 };
 
 // 確認興趣選擇
-const confirmInterests = () => {
-    // 已經在操作中直接修改了form.interests，所以此處只要保存即可
-    saveUserInterests();
+const confirmInterests = async () => {
+    // 保存興趣到後端
+    await saveUserInterests();
     showInterestsModal.value = false;
-    showSuccess('興趣標籤已更新', '偏好設定');
 };
 
-// 選擇某主分類下的所有子分類
-const selectAllSubCategories = (mainCat: string) => {
-    const allSubCats = Object.keys(SubCategoryLabel)
-        .filter(key => key.startsWith(mainCat));
-    
-    // 添加尚未選中的子分類
-    allSubCats.forEach(subCat => {
-        if (!form.interests.subCategories.includes(subCat)) {
-            form.interests.subCategories.push(subCat);
-        }
-    });
-    
-    showInfo(`已選擇「${getMainCategoryLabel(mainCat)}」下的所有標籤`, '標籤更新');
-};
-
-// 取消選擇某主分類下的所有子分類
-const deselectAllSubCategories = (mainCat: string) => {
-    form.interests.subCategories = form.interests.subCategories.filter(
-        subCat => !subCat.startsWith(mainCat)
-    );
-    
-    // 如果沒有該主分類下的子分類，可以選擇是否要移除主分類
-    // 這裡選擇保留主分類，讓用戶能夠更方便地重新選擇
-    
-    showInfo(`已移除「${getMainCategoryLabel(mainCat)}」下的所有標籤`, '標籤更新');
+// 切換主分類
+const toggleMainCategory = (category: string) => {
+    const mainCat = category as MainCategory;
+    const index = form.interests.categories.indexOf(mainCat);
+    if (index === -1) {
+        // 添加主分類
+        form.interests.categories.push(mainCat);
+    } else {
+        // 移除主分類
+        form.interests.categories.splice(index, 1);
+    }
 };
 
 // 清空所有興趣選擇
 const clearAllInterests = () => {
     form.interests.categories = [];
-    form.interests.subCategories = [];
-    showInfo('已清空所有興趣標籤', '標籤更新');
+    showInfo('已清空所有興趣偏好', '偏好更新');
 };
-
-const passwordForm = reactive({
-    password: '',
-    confirmPassword: ''
-});
 
 // 表單驗證
 const resolver = zodResolver(
@@ -564,72 +644,43 @@ const toggleSocialAccount = (platform: keyof typeof form.socialAccounts) => {
     }
 };
 
-// 切換主分類
-const toggleMainCategory = (category: string) => {
-    const index = form.interests.categories.indexOf(category as MainCategory);
-    if (index === -1) {
-        // 添加主分類
-        form.interests.categories.push(category as MainCategory);
-        
-        // 不自動選中該主分類下的所有子分類，讓用戶自己選擇
+// 地區偏好選擇相關邏輯
+const regionOptions = Object.entries(RegionCodeLabel).map(([value, label]) => ({
+    label,
+    value
+}));
+
+const togglePreferredRegion = (region: string) => {
+    if (form.preferences.preferredRegions.includes(region)) {
+        form.preferences.preferredRegions = form.preferences.preferredRegions.filter(r => r !== region);
     } else {
-        // 移除主分類
-        form.interests.categories.splice(index, 1);
-        
-        // 同時移除該主分類下的所有子分類
-        form.interests.subCategories = form.interests.subCategories.filter(
-            subCat => !subCat.startsWith(category)
-        );
+        form.preferences.preferredRegions.push(region);
     }
 };
 
-// 切換子分類
-const toggleSubCategory = (subCategory: string) => {
-    const index = form.interests.subCategories.indexOf(subCategory);
-    if (index === -1) {
-        // 添加子分類
-        form.interests.subCategories.push(subCategory);
-        
-        // 確保主分類已選中
-        const mainCat = subCategory.split('_')[0];
-        if (!form.interests.categories.includes(mainCat)) {
-            form.interests.categories.push(mainCat);
-        }
-    } else {
-        // 移除子分類
-        form.interests.subCategories.splice(index, 1);
-    }
+const clearAllRegions = () => {
+    form.preferences.preferredRegions = [];
+    showInfo('已清空所有偏好地區', '地區偏好設定');
 };
 
-// 直接移除子分類
-const removeSubCategory = (subCategory: string) => {
-    const index = form.interests.subCategories.indexOf(subCategory);
-    if (index !== -1) {
-        form.interests.subCategories.splice(index, 1);
-        
-        // 檢查是否需要移除主分類（如果該主分類下的所有子分類都被移除）
-        const mainCat = subCategory.split('_')[0];
-        const hasOtherSubCats = form.interests.subCategories.some(
-            sc => sc.startsWith(mainCat)
-        );
-        
-        if (!hasOtherSubCats) {
-            // 提示用戶這個主分類下沒有選擇任何子分類
-            showInfo(`您已移除「${getMainCategoryLabel(mainCat)}」分類下的所有標籤`, '提示');
-        }
-        
-        // 保存到localStorage和userStore
-        saveUserInterests();
-    }
+// 移除偏好地區
+const removePreferredRegion = (region: string) => {
+    form.preferences.preferredRegions = form.preferences.preferredRegions.filter(r => r !== region);
+    showInfo(`已移除偏好地區: ${region}`, '地區偏好設定');
 };
 
-// 保存用户兴趣到localStorage和userStore
-const saveUserInterests = () => {
-    // 使用userStore更新用户兴趣
-    userStore.updateInterests(form.interests.categories);
-    // 將子分類儲存到localStorage (userStore目前只保存主分類)
-    localStorage.setItem('userInterestsTags', JSON.stringify(form.interests.subCategories));
+// 確認地區選擇
+const confirmRegions = async () => {
+    // 保存地區偏好到後端
+    await saveUserRegions();
+    showRegionsModal.value = false;
+    showSuccess('偏好地區已更新', '地區偏好設定');
 };
+
+const passwordForm = reactive({
+    password: '',
+    confirmPassword: ''
+});
 
 // 提交密碼變更
 const submitPasswordChange = ({ valid }: any) => {
@@ -647,6 +698,27 @@ const submitPasswordChange = ({ valid }: any) => {
     }, 1000);
 };
 
+// 保存用戶地區偏好到後端
+const saveUserRegions = async () => {
+    try {
+        if (!userStore.user.id) {
+            showError('用戶未登入', '保存失敗');
+            return;
+        }
+        const regions = form.preferences.preferredRegions.map(region => region as RegionCode);
+        const result = await userService.updateUserRegions(userStore.user.id, regions);
+        
+        if (result.success) {
+            showSuccess('地區偏好已保存', '保存成功');
+        } else {
+            showError(result.message || '保存地區偏好失敗', '保存失敗');
+        }
+    } catch (error) {
+        console.error('保存地區偏好失敗:', error);
+        showError('保存地區偏好時出錯', '保存失敗');
+    }
+};
+
 // 重置表單
 const resetForm = () => {
     // 只重置基本資料，保留其他設定
@@ -662,7 +734,7 @@ const resetForm = () => {
 };
 
 // 儲存個人資料
-const saveProfile = (values: any) => {
+const saveProfile = async (values: any) => {
     if (!updateProfile) return;
     
     // 合併基本資料和擴展資料
@@ -671,13 +743,15 @@ const saveProfile = (values: any) => {
         twoFactorEnabled: form.twoFactorEnabled,
         socialAccounts: form.socialAccounts,
         interests: form.interests,
-        notifications: form.notifications
+        notifications: form.notifications,
+        preferences: form.preferences
     };
     
-    // 保存兴趣标签到localStorage和userStore
-    saveUserInterests();
+    // 保存基本資料到用戶表
+    await updateProfile(profileData);
     
-    updateProfile(profileData);
+    // 保存偏好設定到行為檔案表
+    // await saveCompletePreferences();
 };
 </script>
 

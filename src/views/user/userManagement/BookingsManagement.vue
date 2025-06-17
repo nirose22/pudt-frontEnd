@@ -1,38 +1,52 @@
 <template>
     <div class="flex flex-col flex-1 overflow-y-auto">
-        <h2 class="text-2xl font-bold mb-6 text-sky-700 flex items-center">
+        <h2 class="text-2xl font-bold mb-3 text-sky-700 flex items-center">
             <i class="pi pi-calendar-plus mr-2"></i>預約行程管理
         </h2>
 
-        <!-- 即將到來的預約 -->
-        <div v-if="upcomingBookings.length > 0" class="mb-6">
-            <h3 class="text-lg font-semibold mb-3 text-sky-700 flex items-center">
-                <i class="pi pi-clock mr-2"></i>即將到來的預約
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div v-for="booking in upcomingBookings" :key="booking.id"
-                    class="card p-4 shadow-sm rounded-lg border-l-4 border border-sky-100 hover:shadow-md transition-shadow"
-                    :class="getUpcomingBorderClass(booking)">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h4 class="font-medium text-lg text-sky-700">{{ booking.courseTitle }}</h4>
-                            <div class="text-sm text-gray-500 mt-1">{{ formatDateString((booking.date ||
-                                booking.createdAt).toString()) }} {{ booking.start }}</div>
-                            <div class="text-sm text-gray-500">{{ booking.merchantName }}</div>
+        <!-- 即將到來的預約 - 橫向滾動卡片 -->
+        <Carousel :value="upcomingBookings" :responsiveOptions="responsiveOptions" :showIndicators="false" :numVisible="4" :numScroll="1"
+            class="mb-2">
+            <template #item="slotProps">
+                <div class="p-2">
+                    <div class=" bg-white p-4 shadow-sm rounded-lg border-l-4 hover:shadow-md transition-all duration-200 cursor-pointer border-sky-100"
+                        @click="viewBookingDetail(slotProps.data)">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-semibold text-lg text-sky-700 truncate">
+                                {{ slotProps.data.courseTitle }}
+                            </h4>
+                            <div class="text-sm text-gray-600 mt-1">
+                                <i class="pi pi-calendar mr-1"></i>
+                                {{ formatDateString((slotProps.data.date || slotProps.data.createdAt).toString()) }}
+                            </div>
+                            <div class="text-sm text-gray-600">
+                                <i class="pi pi-clock mr-1"></i>
+                                {{ slotProps.data.start }}
+                            </div>
+                            <div class="text-sm text-gray-600">
+                                <i class="pi pi-map-marker mr-1"></i>
+                                {{ slotProps.data.merchantName }}
+                            </div>
                         </div>
-                        <Tag :value="getTimeLeftLabel(booking)" :severity="getTimeLeftSeverity(booking)" />
+                        <Tag :value="getTimeLeftLabel(slotProps.data)"
+                            :severity="getTimeLeftSeverity(slotProps.data)" />
                     </div>
-                    <div class="mt-3 flex justify-end gap-2">
-                        <Button icon="pi pi-map-marker" text rounded aria-label="查看地圖" @click="showLocationMap(booking)"
-                            class="text-sky-500 hover:bg-sky-50" />
-                        <Button icon="pi pi-eye" text rounded aria-label="查看詳情" @click="viewBookingDetail(booking)"
-                            class="text-sky-500 hover:bg-sky-50" />
-                        <Button icon="pi pi-times" text rounded aria-label="取消預約"
-                            @click="confirmCancelBooking(booking.id)" class="text-red-500 hover:bg-red-50" />
+
+                    <div class="flex justify-end gap-2">
+                        <Button icon="pi pi-map-marker" text rounded size="small" aria-label="查看地圖"
+                            @click.stop="showLocationMap(slotProps.data)" class="hover:bg-sky-50" />
+                        <Button icon="pi pi-eye" text rounded size="small" aria-label="查看詳情"
+                            @click.stop="viewBookingDetail(slotProps.data)" class="hover:bg-sky-50" />
+                        <Button v-if="canCancel(slotProps.data)" icon="pi pi-times" text rounded size="small"
+                            aria-label="取消預約" @click.stop="confirmCancelBooking(slotProps.data.id)"
+                            class="hover:bg-red-50" />
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </template>
+        </Carousel>
+
 
         <!-- 視圖切換按鈕 -->
         <div class="flex justify-between items-center mb-4">
@@ -72,7 +86,8 @@
                 <Column field="instructor.name" header="講師" headerClass="bg-sky-50 text-sky-700" />
                 <Column field="status" header="狀態" headerClass="bg-sky-50 text-sky-700">
                     <template #body="{ data }">
-                        <Tag :severity="getStatusSeverity(data.status)" :value="getStatusLabel(data.status)" />
+                        <Tag :severity="getBookingStatusSeverity(data.status)"
+                            :value="getBookingStatusLabel(data.status)" />
                     </template>
                 </Column>
                 <Column header="操作" headerClass="bg-sky-50 text-sky-700">
@@ -106,111 +121,12 @@
         </div>
 
         <!-- 預約詳情對話框 -->
-        <Dialog v-model:visible="showDetailDialog" :header="selectedBooking?.courseTitle || '預約詳情'" :modal="true"
-            :closable="true" :style="{ width: '500px' }" :contentStyle="{ 'background-color': '#f8fafc' }">
-            <div v-if="selectedBooking" class="space-y-4">
-                <div class="p-3 border rounded-lg bg-white border-sky-100">
-                    <div class="flex justify-between mb-2">
-                        <span class="text-gray-600">課程名稱：</span>
-                        <span class="font-medium text-sky-700">{{ selectedBooking.courseTitle }}</span>
-                    </div>
-                    <div class="flex justify-between mb-2">
-                        <span class="text-gray-600">日期：</span>
-                        <span>{{ selectedBooking.date }}</span>
-                    </div>
-                    <div class="flex justify-between mb-2">
-                        <span class="text-gray-600">時間：</span>
-                        <span>{{ selectedBooking.start }} - {{ selectedBooking.end }}</span>
-                    </div>
-                    <div class="flex justify-between mb-2">
-                        <span class="text-gray-600">地點：</span>
-                        <span>{{ selectedBooking.merchantName }}</span>
-                    </div>
-                    <div class="flex justify-between mb-2">
-                        <span class="text-gray-600">講師：</span>
-                        <span>{{ selectedBooking.instructor?.name }}</span>
-                    </div>
-                    <div class="flex justify-between mb-2">
-                        <span class="text-gray-600">點數：</span>
-                        <span class="font-bold text-sky-600">{{ selectedBooking.points }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">狀態：</span>
-                        <Tag :severity="getStatusSeverity(selectedBooking.status)"
-                            :value="getStatusLabel(selectedBooking.status)" />
-                    </div>
-                </div>
-
-                <!-- 講師資訊 -->
-                <div v-if="selectedBooking.instructor" class="p-3 border rounded-lg border-sky-100 bg-white">
-                    <h3 class="font-medium mb-2 text-sky-700">講師資訊</h3>
-                    <div class="flex items-center gap-3">
-                        <Avatar v-if="selectedBooking.instructor.avatar" :image="selectedBooking.instructor.avatar"
-                            shape="circle" size="large" class="!bg-sky-100 !text-sky-700" />
-                        <Avatar v-else :label="selectedBooking.instructor.name.charAt(0)" shape="circle" size="large"
-                            class="!bg-sky-100 !text-sky-700" />
-                        <div>
-                            <div class="font-medium">{{ selectedBooking.instructor.name }}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 地圖 -->
-                <div v-if="selectedBooking.merchantName" class="p-3 border rounded-lg border-sky-100 bg-white">
-                    <h3 class="font-medium mb-2 text-sky-700">上課地點</h3>
-                    <div class="h-40 bg-sky-50 flex items-center justify-center border border-sky-100 rounded-lg">
-                        <i class="pi pi-map-marker text-4xl text-sky-300"></i>
-                        <span class="ml-2 text-sky-600">{{ selectedBooking.merchantName }}</span>
-                    </div>
-                    <div class="mt-2 text-sm text-gray-500">
-                        請提前 15 分鐘到達上課地點
-                    </div>
-                </div>
-
-                <!-- 注意事項 -->
-                <div class="p-3 border rounded-lg bg-sky-50 border-sky-100">
-                    <h3 class="font-medium mb-2 flex items-center text-sky-700">
-                        <i class="pi pi-info-circle mr-2 text-sky-500"></i>
-                        課程注意事項
-                    </h3>
-                    <ul class="list-disc pl-5 text-sm text-gray-600">
-                        <li>請提前 15 分鐘到達教室</li>
-                        <li>請攜帶個人用品（如瑜珈墊、毛巾等）</li>
-                        <li>如需取消預約，請至少提前 24 小時</li>
-                        <li>遲到超過 15 分鐘將無法參與課程</li>
-                    </ul>
-                </div>
-            </div>
-            <template #footer>
-                <Button label="關閉" icon="pi pi-times" @click="showDetailDialog = false" outlined
-                    class="!border-gray-300 !text-gray-700" />
-                <Button v-if="selectedBooking && canCancel(selectedBooking)" label="取消預約" icon="pi pi-times"
-                    severity="danger" @click="confirmCancelSelectedBooking" />
-                <Button label="加入行事曆" icon="pi pi-calendar-plus" @click="addToCalendar"
-                    class="!bg-sky-500 !border-sky-500" />
-            </template>
-        </Dialog>
+        <BookingDetailDialog v-if="selectedBooking" v-model:showDetailDialog="showDetailDialog"
+            :selectedBooking="selectedBooking" @confirmCancelSelectedBooking="confirmCancelSelectedBooking"
+            @addToCalendar="addToCalendar" />
 
         <!-- 取消預約確認對話框 -->
-        <Dialog v-model:visible="showCancelDialog" header="取消預約" :style="{ width: '450px' }"
-            :contentStyle="{ 'background-color': '#f8fafc' }">
-            <div class="p-4">
-                <div class="flex items-center gap-3 mb-4">
-                    <i class="pi pi-exclamation-triangle text-3xl text-yellow-500"></i>
-                    <p class="font-medium">您確定要取消這個預約嗎？</p>
-                </div>
-                <p class="text-gray-600">取消可能會影響您的上課權益，且可能產生以下結果：</p>
-                <ul class="list-disc pl-5 mt-2 text-sm text-gray-600">
-                    <li>提前 24 小時取消：點數全額退還</li>
-                    <li>提前 12-24 小時取消：點數退還 50%</li>
-                    <li>提前不到 12 小時取消：不退還點數</li>
-                </ul>
-            </div>
-            <template #footer>
-                <Button label="返回" icon="pi pi-arrow-left" class="p-button-text" @click="showCancelDialog = false" />
-                <Button label="確認取消預約" icon="pi pi-check" severity="danger" @click="handleCancelBooking" />
-            </template>
-        </Dialog>
+        <CancelCourseDialog v-model:showCancelDialog="showCancelDialog" @cancel="handleCancelBooking" />
 
         <!-- 行事曆同步對話框 -->
         <Dialog v-model:visible="showCalendarSyncDialog" header="同步至行事曆" :style="{ width: '450px' }"
@@ -266,7 +182,6 @@ import Column from 'primevue/column';
 import Select from 'primevue/select';
 import Dialog from 'primevue/dialog';
 import Tag from 'primevue/tag';
-import Avatar from 'primevue/avatar';
 import ButtonGroup from 'primevue/buttongroup';
 import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -282,6 +197,11 @@ import { useUserStore } from '@/stores/userStore';
 import { useAuthStore } from '@/stores/authStore';
 import { BookingService } from '@/services/UserBookingService';
 import { showSuccess, showError } from '@/utils/toastHelper';
+import CancelCourseDialog from '@/components/user/CancelCourseDialog.vue';
+import { getBookingStatusLabel, getBookingStatusSeverity } from '@/utils/statusUtil';
+import BookingDetailDialog from '@/components/user/BookingDetailDialog.vue';
+import Carousel from 'primevue/carousel';
+
 
 // 使用 stores 和 composables
 const bookingStore = useBookingStore();
@@ -315,6 +235,18 @@ const loadBookings = async () => {
     }
 };
 
+const responsiveOptions = [
+    {
+        breakpoint: '1200px',
+        numVisible: 3,
+        numScroll: 1
+    },
+    {
+        breakpoint: '992px',
+        numVisible: 2,
+        numScroll: 1
+    }
+]
 // 業務方法 - 取消預約
 const handleCancelBooking = async () => {
     if (!selectedBookingId.value) return;
@@ -367,10 +299,15 @@ const isUpcoming = (date: Date | string, time: string | Date): boolean => {
     return bookingDate >= now && bookingDate <= sevenDaysLater;
 };
 
-// 即将到来的预约
+// 即将到来的预约 - 過濾掉已取消和待處理的狀態
 const upcomingBookings = computed(() => {
     return bookings.value
         .filter(booking => {
+            // 過濾掉已取消和待處理的狀態
+            if (booking.status === BookingStatus.Cancelled || booking.status === BookingStatus.Pending) {
+                return false;
+            }
+
             // 使用預約日期而不是創建日期
             const bookingDate = booking.date || booking.createdAt;
             return isUpcoming(bookingDate, booking.start || '');
@@ -381,15 +318,14 @@ const upcomingBookings = computed(() => {
             const dateB = new Date(`${b.date || b.createdAt}T${b.start || '00:00'}`);
             return dateA.getTime() - dateB.getTime();
         })
-        .slice(0, 3);
+        .slice(0, 5);
 });
 
-// 状态选项
+// 状态选项 - 移除已取消和待處理選項
 const statusOptions = [
     { label: '全部', value: '' },
     { label: '已确认', value: BookingStatus.Confirmed.toString() },
-    { label: '已取消', value: BookingStatus.Cancelled.toString() },
-    { label: '待處理', value: BookingStatus.Pending.toString() }
+    { label: '已完成', value: BookingStatus.Completed.toString() }
 ];
 
 // 过滤条件
@@ -397,9 +333,12 @@ const filter = ref({
     status: ''
 });
 
-// 过滤后的预约
+// 过滤后的预约 - 過濾掉已取消和待處理的狀態
 const filteredBookings = computed(() => {
-    let result = [...bookings.value];
+    let result = bookings.value.filter(booking =>
+        booking.status !== BookingStatus.Cancelled &&
+        booking.status !== BookingStatus.Pending
+    );
 
     // 状态过滤
     if (filter.value.status) {
@@ -416,7 +355,7 @@ const filteredBookings = computed(() => {
     return result;
 });
 
-// 日历事件 - 修復數據結構和日期格式
+// 日历事件 - 過濾掉已取消和待處理的狀態
 const events = computed(() =>
     filteredBookings.value.map((booking: Booking) => {
         // 確保日期格式正確
@@ -437,14 +376,13 @@ const events = computed(() =>
                 instructor: booking.instructor?.name || '未指定',
                 points: booking.points || 0
             },
-            classNames: getEventClassNames(booking.status),
             backgroundColor: getEventBackgroundColor(booking.status),
-            textColor: getEventTextColor(booking.status)
+            textColor: '#ffffff'
         };
     })
 );
 
-// 日历配置 - 改為響應式
+// 日历配置
 const calendarOptions = computed((): CalendarOptions => ({
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
     initialView: 'dayGridMonth',
@@ -481,7 +419,7 @@ const calendarOptions = computed((): CalendarOptions => ({
     eventDidMount: (info) => {
         // 添加工具提示
         info.el.setAttribute('title',
-            `${info.event.title}\n地點: ${info.event.extendedProps.location}\n狀態: ${getStatusLabel(info.event.extendedProps.status)}`
+            `${info.event.title}\n地點: ${info.event.extendedProps.location}\n狀態: ${getBookingStatusLabel(info.event.extendedProps.status)}`
         );
     }
 }));
@@ -490,11 +428,7 @@ const calendarOptions = computed((): CalendarOptions => ({
 function getEventBackgroundColor(status: BookingStatus): string {
     switch (status) {
         case BookingStatus.Confirmed:
-            return '#fff'; // blue-500
-        case BookingStatus.Cancelled:
-            return '#6b7280'; // gray-500
-        case BookingStatus.Pending:
-            return '#f59e0b'; // yellow-500
+            return '#0ea5e9'; // sky-500
         case BookingStatus.Completed:
             return '#10b981'; // green-500
         default:
@@ -502,68 +436,6 @@ function getEventBackgroundColor(status: BookingStatus): string {
     }
 }
 
-// 獲取事件文字顏色
-function getEventTextColor(status: BookingStatus): string {
-    return '#ffffff'; // 所有狀態使用白色文字以確保可讀性
-}
-
-// 获取日历事件样式 - 優化為更清晰的樣式類
-function getEventClassNames(status: BookingStatus): string[] {
-    const baseClasses = ['event-booking', 'cursor-pointer', 'transition-all', 'hover:opacity-80'];
-
-    switch (status) {
-        case BookingStatus.Confirmed:
-            return [...baseClasses, 'event-confirmed'];
-        case BookingStatus.Cancelled:
-            return [...baseClasses, 'event-cancelled'];
-        case BookingStatus.Pending:
-            return [...baseClasses, 'event-pending'];
-        case BookingStatus.Completed:
-            return [...baseClasses, 'event-completed'];
-        default:
-            return [...baseClasses, 'event-default'];
-    }
-}
-
-// 获取状态标签
-const getStatusLabel = (status: BookingStatus) => {
-    switch (status) {
-        case BookingStatus.Pending:
-            return '待确认';
-        case BookingStatus.Confirmed:
-            return '已确认';
-        case BookingStatus.Completed:
-            return '已完成';
-        case BookingStatus.Cancelled:
-            return '已取消';
-        default:
-            return '未知状态';
-    }
-};
-
-// 获取状态严重性
-function getStatusSeverity(status: BookingStatus): string {
-    switch (status) {
-        case BookingStatus.Confirmed:
-            return 'success';
-        case BookingStatus.Cancelled:
-            return 'danger';
-        case BookingStatus.Pending:
-            return 'warning';
-        default:
-            return 'info';
-    }
-}
-
-// 获取即将到来的预约边框颜色
-function getUpcomingBorderClass(booking: Booking): string {
-    const bookingDate = booking.date || booking.createdAt;
-    const daysLeft = getDaysLeft(bookingDate);
-
-    if (daysLeft <= 1) return 'border-red-500';
-    if (daysLeft <= 3) return 'border-orange-500';
-    return 'border-green-500';
-}
 
 // 获取剩余时间标签
 function getTimeLeftLabel(booking: Booking): string {
@@ -601,8 +473,7 @@ function getDaysLeft(date: Date | string): number {
 
 // 是否可以取消预约
 const canCancel = (booking: Booking) => {
-    return booking.status === BookingStatus.Pending ||
-        booking.status === BookingStatus.Confirmed;
+    return booking.status === BookingStatus.Confirmed;
 };
 
 // 查看预约详情
@@ -634,11 +505,10 @@ function confirmCancelSelectedBooking(): void {
 
 // 同步至行事曆
 function syncToCalendar(platform: string): void {
-    // 顯示同步中提示
     toast.add({
         severity: 'info',
-        summary: '指定',
-        detail: `指定到 ${platform} 行事曆...`,
+        summary: '同步中',
+        detail: `正在同步到 ${platform} 行事曆...`,
         life: 2000
     });
 
@@ -655,7 +525,6 @@ function syncToCalendar(platform: string): void {
 
 // 下載 .ics 檔案
 function downloadIcsFile(): void {
-    // 顯示處理中提示
     toast.add({
         severity: 'info',
         summary: '處理中',
@@ -682,7 +551,6 @@ function addToCalendar(): void {
 // 打開導航
 function openNavigation(): void {
     if (selectedBooking.value) {
-        // 模擬打開導航
         toast.add({
             severity: 'info',
             summary: '導航',
@@ -706,14 +574,7 @@ watch(() => filter.value, () => {
     @apply bg-white;
 }
 
-:deep(a.fc-event) {
-    @apply rounded-md p-2 overflow-hidden;
-}
-
-:deep(.fc-event):hover {
-    @apply bg-sky-200;
-}
-
+/* DataTable 樣式 */
 :deep(.p-datatable-sm .p-datatable-thead > tr > th) {
     @apply py-2 px-3 text-sm;
 }
@@ -726,10 +587,12 @@ watch(() => filter.value, () => {
     @apply bg-sky-50/50;
 }
 
+/* 下拉選單樣式 */
 :deep(.p-dropdown:not(.p-disabled).p-focus) {
     @apply border-sky-500 shadow-none ring-1 ring-sky-200;
 }
 
+/* 分頁器樣式 */
 :deep(.p-paginator) {
     @apply border-t border-sky-100 bg-white;
 }
@@ -738,6 +601,7 @@ watch(() => filter.value, () => {
     @apply bg-sky-500 text-white;
 }
 
+/* 對話框樣式 */
 :deep(.p-dialog-header) {
     @apply bg-sky-50 text-sky-700;
 }
@@ -746,6 +610,7 @@ watch(() => filter.value, () => {
     @apply bg-gray-50;
 }
 
+/* 按鈕樣式 */
 :deep(.p-button.p-button-outlined) {
     @apply border-sky-500 text-sky-500;
 }
@@ -754,6 +619,7 @@ watch(() => filter.value, () => {
     @apply bg-sky-50;
 }
 
+/* FullCalendar 樣式 */
 :deep(.fc .fc-button-primary) {
     @apply bg-sky-500 border-sky-500;
 }
@@ -764,10 +630,6 @@ watch(() => filter.value, () => {
 
 :deep(.fc .fc-button-primary.fc-button-active) {
     @apply bg-sky-700 border-sky-700;
-}
-
-:deep(.fc .fc-button-primary:disabled) {
-    @apply bg-sky-300 border-sky-300;
 }
 
 :deep(.fc-theme-standard .fc-scrollgrid) {
@@ -786,71 +648,35 @@ watch(() => filter.value, () => {
     @apply bg-sky-50;
 }
 
-:deep(.fc-event.bg-blue-100) {
-    @apply bg-sky-100;
+:deep(.fc-daygrid-day.fc-day-today .fc-daygrid-day-number) {
+    @apply bg-sky-500 text-white rounded-full font-bold;
 }
 
-/* 新增的日曆事件樣式 */
-:deep(.fc-event.event-booking) {
-    @apply rounded-md overflow-hidden shadow-sm;
+/* 日曆事件樣式 */
+:deep(.fc-event) {
+    @apply rounded-md overflow-hidden shadow-sm cursor-pointer;
 }
-
-/* :deep(.fc-event.event-confirmed) {
-    
-}
-
-:deep(.fc-event.event-pending) {
-    background-color: #f59e0b !important;
-    border-color: #d97706 !important;
-}
-
-:deep(.fc-event.event-cancelled) {
-    background-color: #6b7280 !important;
-    border-color: #374151 !important;
-    opacity: 0.7;
-}
-
-:deep(.fc-event.event-completed) {
-    background-color: #10b981 !important;
-    border-color: #047857 !important;
-}
-
-:deep(.fc-event.event-default) {
-    background-color: #8b5cf6 !important;
-    border-color: #7c3aed !important;
-} */
 
 :deep(.fc-event:hover) {
     @apply shadow-md transform scale-105;
     transition: all 0.2s ease-in-out;
 }
 
-:deep(.fc-event-title) {
-    @apply font-medium text-white;
+/* 橫向滾動樣式 */
+.overflow-x-auto::-webkit-scrollbar {
+    height: 6px;
 }
 
-:deep(.fc-event-time) {
-    @apply text-xs text-white opacity-90;
+.overflow-x-auto::-webkit-scrollbar-track {
+    @apply bg-gray-100 rounded-full;
 }
 
-/* 日曆格子樣式優化 */
-:deep(.fc-daygrid-day-events) {
-    margin-bottom: 2px;
+.overflow-x-auto::-webkit-scrollbar-thumb {
+    @apply bg-sky-300 rounded-full;
 }
 
-:deep(.fc-daygrid-event-harness) {
-    margin-bottom: 2px;
-}
-
-/* 今天的背景色 */
-:deep(.fc-daygrid-day.fc-day-today .fc-daygrid-day-number) {
-    @apply bg-sky-500 text-white rounded-full font-bold;
-}
-
-/* 週末樣式 */
-:deep(.fc-day-sat),
-:deep(.fc-day-sun) {
-    @apply bg-gray-50;
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+    @apply bg-sky-400;
 }
 
 /* 響應式設計 */
@@ -865,8 +691,8 @@ watch(() => filter.value, () => {
         justify-content: center;
     }
 
-    :deep(.fc-event) {
-        font-size: 0.75rem;
+    .flex-none.w-80 {
+        @apply w-72;
     }
 }
 </style>

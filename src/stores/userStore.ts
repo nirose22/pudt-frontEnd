@@ -1,13 +1,13 @@
 import { defineStore } from 'pinia'
 import { reactive, computed, toRefs } from 'vue'
-import type { User, Course, UserProfile } from '@/types'
+import type { User, Course,  UserBehaviorProfile } from '@/types'
 import { ActivityLevel } from '@/types/activity'
 import { UserRole, MainCategory, RegionCode } from '@/enums'
 import { userService } from '@/services/UserService'
 
 interface State {
   user: User
-  profile: UserProfile
+  profile: UserBehaviorProfile
   favs: Course[]
   error: string | null
   isLoading: boolean
@@ -18,7 +18,8 @@ export const useUserStore = defineStore('user', () => {
   /* ---------- state ---------- */
   const state = reactive<State>({
     user: {} as User,
-    profile: {} as UserProfile,
+    profile: {} as UserBehaviorProfile,
+    favs: [],
     error: null,
     isLoading: false,
     lastProfileUpdate: null,
@@ -56,11 +57,11 @@ export const useUserStore = defineStore('user', () => {
 
 
   /* ---------- actions ---------- */
-  async function fetchProfile(id: number) {
+  async function fetchUserProfile(id: number) {
     if (state.isLoading) return
     state.isLoading = true
     try {
-      const userData = await userService.fetchProfile(id)
+      const userData = await userService.fetchUserProfile(id)
       if (userData.success && userData.data) {
         state.user = userData.data
         state.lastProfileUpdate = new Date()
@@ -113,7 +114,9 @@ export const useUserStore = defineStore('user', () => {
 
     try {
       state.isLoading = true
-      const result = await userService.updateUserInterests(userId.value, newInterests)
+      // 使用正確的API方法，發送對象格式
+      const interestsRequest = { categories: newInterests }
+      const result = await userService.updateUserInterestsAndRegions(userId.value, interestsRequest)
       if (result.success) {
         state.profile.interests = newInterests
       }
@@ -144,7 +147,7 @@ export const useUserStore = defineStore('user', () => {
   async function refreshProfile() {
     if (!userId.value) return
     state.lastProfileUpdate = null
-    await fetchProfile(userId.value)
+    await fetchUserProfile(userId.value)
   }
 
   async function logout() {
@@ -161,7 +164,7 @@ export const useUserStore = defineStore('user', () => {
 
   function clearUserData() {
     state.user = {} as User;
-    state.profile = {} as UserProfile;
+    state.profile = {} as UserBehaviorProfile;
     state.favs = [];
     state.error = null;
     state.isLoading = false;
@@ -201,7 +204,7 @@ export const useUserStore = defineStore('user', () => {
     primaryInterests,
 
     // 方法
-    fetchProfile,
+    fetchUserProfile,
     fetchBehaviorProfile,
     adjustPoints,
     updateProfile,

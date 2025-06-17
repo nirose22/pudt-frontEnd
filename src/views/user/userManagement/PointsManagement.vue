@@ -318,7 +318,7 @@ const purchasePointsCard = async (cardId: number) => {
             showSuccess(response.message || '點數卡購買成功', '成功');
             // 重新載入用戶資料和交易記錄
             await Promise.all([
-                userStore.fetchProfile(userStore.user.id),
+                userStore.fetchUserProfile(userStore.user.id),
                 loadPointsHistory()
             ]);
         } else {

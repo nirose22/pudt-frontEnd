@@ -18,17 +18,26 @@ export interface User {
   token?: string
 }
 
-export interface UserProfile {
+export interface UserBehaviorProfile {
   userId: number
   name?: string
   points?: number
   interests: MainCategory[]
   preferredRegions: RegionCode[]
-  timePreferences: Record<number, number>
   activityLevel: number
-  priceSensitivity: number
-  profileGeneratedAt: string
-  validityHours: number
+  createdAt: string
+  updatedAt: string
+  recentBookingIds?: number[]
+  lastActiveAt?: string
+}
+
+export interface UserInterestsRequest {
+  categories: MainCategory[]
+}
+
+export interface UserPreferencesRequest {
+  interests: MainCategory[]
+  preferredRegions: RegionCode[]
 }
 
 export interface UserSetting {

@@ -47,6 +47,8 @@ export const API_ROUTES = {
         PURCHASE_HISTORY: (userId: number) => `/users/${userId}/purchase-history`,
         UNPAID_ITEMS: (userId: number) => `/users/${userId}/unpaid-items`,
         ABSENCES: (userId: number | string) => `/users/${userId}/absences`,
+        UPDATE_INTERESTS: (userId: number) => `/users/${userId}/interests`,
+        UPDATE_REGIONS: (userId: number) => `/users/${userId}/regions`,
     },
     BOOKING: {
         LIST: (userId: number, queryString: string) => `/booking/users/${userId}${queryString}`,
