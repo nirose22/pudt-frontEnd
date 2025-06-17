@@ -21,7 +21,7 @@ export const API_ROUTES = {
         LOGOUT: '/auth/logout',
         GOOGLE_LOGIN: '/auth/google/login',
         FACEBOOK_LOGIN: '/auth/facebook/login',
-        PROFILE: (id: number | 'me') => `/users/${id}`,
+        PROFILE: (id: number) => `/users/${id}`,
     },
     COURSE: {
         LIST: '/courses',
@@ -78,6 +78,7 @@ export const API_ROUTES = {
         HISTORY: '/points/history',
         BUY: '/points/buy',
         TRANSFER: '/points/transfer',
+        ADJUST: (userId: number) => `/points/users/${userId}/adjust`,
     }
 }
 

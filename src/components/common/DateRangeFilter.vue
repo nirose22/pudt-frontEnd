@@ -24,17 +24,17 @@ const props = defineProps({
     startDate: {
         type: Date,
         default: () => {
-            const LocalDate = new Date();
-            date.setDate(date.getDate() - 30);
-            return date;
+            const localDate = new Date();
+            localDate.setDate(localDate.getDate() - 30);
+            return localDate;
         }
     },
     endDate: {
         type: Date,
         default: () => {
-            const LocalDate = new Date();
-            date.setDate(date.getDate());
-            return date;
+            const localDate = new Date();
+            localDate.setDate(localDate.getDate()+ 30);
+            return localDate;
         }
     },
     defaultRangeDays: {

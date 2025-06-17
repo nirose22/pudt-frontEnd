@@ -1,6 +1,5 @@
-import { BookingStatus } from '@/enums/BookingStatus';
-import { ActivityKind } from '@/enums/Activity';
 import { InstructorDTO } from './course';
+import { BookingStatus, ActivityKind } from '@/enums';
 
 // 课程记录接口
 export interface CourseRecord {

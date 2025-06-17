@@ -314,7 +314,6 @@
 
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted } from 'vue';
-import { type PropType } from 'vue';
 import Select from 'primevue/select';
 import DatePicker from 'primevue/datepicker';
 import Button from 'primevue/button';
@@ -329,7 +328,7 @@ import type { User } from '@/types';
 import { useToast } from 'primevue/usetoast';
 import { Form, FormField } from '@primevue/forms';
 import Dialog from 'primevue/dialog';
-import { UserGender, UserGenderLabel, UserGenderLabelShort } from '@/enums/User';
+import { UserGender, UserGenderLabelShort } from '@/enums/User';
 import { MainCategory, MainCategoryLabel, SubCategory, SubCategoryLabel } from '@/enums/CourseCategory';
 import { useUserStore } from '@/stores/userStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -361,7 +360,7 @@ const updateProfile = async (updatedProfile: Partial<User>) => {
 // 初始化數據
 onMounted(() => {
     if (authStore.isLoggedIn) {
-        userStore.fetchProfile();
+        userStore.fetchProfile(userStore.user.id);
     }
 });
 

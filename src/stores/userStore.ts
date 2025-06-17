@@ -56,7 +56,7 @@ export const useUserStore = defineStore('user', () => {
 
 
   /* ---------- actions ---------- */
-  async function fetchProfile(id?: number) {
+  async function fetchProfile(id: number) {
     if (state.isLoading) return
     state.isLoading = true
     try {

@@ -6,7 +6,7 @@
 
         <!-- 活動統計卡片 -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-2">
-            <div class="card p-4 shadow-sm rounded-lg border-l-4 border-sky-500 bg-white border border-sky-100">
+            <div class="card p-4 shadow-sm rounded-lg border-l-4 bg-white border border-sky-100">
                 <div class="flex justify-between items-center">
                     <div>
                         <div class="text-sm text-gray-500">總課程數</div>
@@ -17,7 +17,7 @@
                     </div>
                 </div>
             </div>
-            <div class="card p-4 shadow-sm rounded-lg border-l-4 border-green-500 bg-white border border-sky-100">
+            <div class="card p-4 shadow-sm rounded-lg border-l-4  bg-white border border-sky-100">
                 <div class="flex justify-between items-center">
                     <div>
                         <div class="text-sm text-gray-500">完成課程</div>
@@ -28,7 +28,7 @@
                     </div>
                 </div>
             </div>
-            <div class="card p-4 shadow-sm rounded-lg border-l-4 border-red-500 bg-white border border-sky-100">
+            <div class="card p-4 shadow-sm rounded-lg border-l-4  bg-white border border-sky-100">
                 <div class="flex justify-between items-center">
                     <div>
                         <div class="text-sm text-gray-500">缺席次數</div>
@@ -39,7 +39,7 @@
                     </div>
                 </div>
             </div>
-            <div class="card p-4 shadow-sm rounded-lg border-l-4 border-purple-500 bg-white border border-sky-100">
+            <div class="card p-4 shadow-sm rounded-lg border-l-4 bg-white border border-sky-100">
                 <div class="flex justify-between items-center">
                     <div>
                         <div class="text-sm text-gray-500">課程評價</div>
@@ -91,16 +91,17 @@
             </div>
 
             <!-- 標籤頁 -->
-            <Tabs v-model:activeIndex="activeTabIndex" class="flex-1 flex flex-col activity-tabs" :tabindex="0">
+            <Tabs v-model:activeIndex="activeTabIndex" class="flex-1 flex flex-col activity-tabs" 
+                  :tabindex="0" value="預約紀錄">
                 <TabList>
-                    <Tab v-for="tab in tabItems" :key="tab.label" :value="tab.label" class="text-sky-700">
+                    <Tab v-for="tab in tabItems" :key="tab.label" :value="tab.value" class="text-sky-700">
                         <i :class="tab.icon + ' mr-2'"></i>
                         {{ tab.label }}
                         <Badge v-if="tab.count" :value="tab.count" class="ml-2 bg-sky-100 text-sky-700" />
                     </Tab>
                 </TabList>
                 <TabPanels>
-                    <TabPanel :value="tabItems[0].label">
+                    <TabPanel :value="tabItems[0].value">
                         <!-- 預約紀錄面板 -->
                         <DataTable :value="filteredCourseHistory" stripedRows paginator :rows="10"
                             responsiveLayout="stack" :loading="loading" class="!flex-1 flex flex-col">
@@ -139,7 +140,7 @@
                             </template>
                         </DataTable>
                     </TabPanel>
-                    <TabPanel :value="tabItems[1].label">
+                    <TabPanel :value="tabItems[1].value">
                         <!-- 缺席紀錄面板 -->
                         <DataTable :value="filteredAbsenceRecords" stripedRows paginator :rows="10"
                             responsiveLayout="stack" :loading="loading" class="!flex-1 flex flex-col">
@@ -162,7 +163,7 @@
                             </template>
                         </DataTable>
                     </TabPanel>
-                    <TabPanel :value="tabItems[2].label">
+                    <TabPanel :value="tabItems[2].value">
                         <!-- 評價紀錄面板 -->
                         <DataTable :value="filteredRatingHistory" stripedRows paginator :rows="10"
                             responsiveLayout="stack" :loading="loading" class="!flex-1 flex flex-col">
@@ -223,44 +224,66 @@ import Badge from 'primevue/badge';
 import Rating from 'primevue/rating';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
-import type { AbsenceRecord } from '@/types/activity';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import { useBookingStore } from '@/stores/bookingStore';
 import { useUserStore } from '@/stores/userStore';
 import { useAuthStore } from '@/stores/authStore';
+import type { Booking } from '@/types/booking';
+import { ActivityService, type ActivityStatsResponse } from '@/services/activityService';
 
 // 使用 stores
 const bookingStore = useBookingStore();
 const userStore = useUserStore();
 const authStore = useAuthStore();
 
+// 活動統計數據
+const activityStatsData = ref<ActivityStatsResponse>({
+    totalCourses: 0,
+    completedCourses: 0,
+    absenceCourses: 0,
+    averageRating: 0,
+    totalPointsSpent: 0,
+    monthlyActivities: 0
+});
+
+// 評價記錄數據
+const ratingHistoryData = ref<Booking[]>([]);
+
+// 缺席記錄數據
+const absenceRecordsData = ref<Booking[]>([]);
+
 // 計算屬性 - 課程歷史
 const courseHistory = computed(() => {
-    return bookingStore.bookings.filter(booking => 
-        booking.status === BookingStatus.Completed
-    );
+    return bookingStore.bookings;
 });
 
 // 計算屬性 - 缺席記錄
 const absenceRecords = computed(() => {
-    return bookingStore.bookings.filter(booking => 
-        booking.status === BookingStatus.Cancelled || 
-        booking.status === BookingStatus.NoShow
-    );
+    return absenceRecordsData.value;
+});
+
+// 評價記錄
+const ratingHistory = computed(() => {
+    return ratingHistoryData.value;
 });
 
 // 初始化數據
-onMounted(() => {
+onMounted(async () => {
     if (authStore.isLoggedIn) {
-        bookingStore.fetchSchedule();
+        await Promise.all([
+            bookingStore.fetchSchedule(),
+            fetchActivityStats(),
+            fetchRatingHistory(),
+            fetchAbsenceRecords()
+        ]);
     }
 });
 
 // 狀態與過濾
 const toast = useToast();
 const loading = ref(false);
-const selectedCourse = ref<CourseRecord | null>(null);
+const selectedCourse = ref<Booking | null>(null);
 const showDetailDialog = ref(false);
 const showRatingDialog = ref(false);
 const activeTabIndex = ref(0);
@@ -268,7 +291,7 @@ const isEditRating = ref(false);
 
 // 日期範圍
 const startDate = ref<Date>();
-const endDate = ref<Date>();
+const endDate = ref<Date>(new Date(new Date().setDate(new Date().getDate() + 20)));
 const range = ref<{ start: Date; end: Date } | null>(null);
 
 // 篩選條件
@@ -305,10 +328,10 @@ const statusOptions = [
 // 活動統計
 const activityStats = computed(() => {
     return {
-        totalCourses: courseHistory.value.length,
-        completedCourses: courseHistory.value.filter(c => c.status === BookingStatus.Confirmed).length,
-        absenceCourses: absenceRecords.value.length,
-        averageRating: calculateAverageRating()
+        totalCourses: activityStatsData.value.totalCourses,
+        completedCourses: activityStatsData.value.completedCourses,
+        absenceCourses: activityStatsData.value.absenceCourses,
+        averageRating: activityStatsData.value.averageRating.toFixed(1)
     };
 });
 
@@ -317,29 +340,22 @@ const tabItems = computed(() => [
     {
         label: '預約紀錄',
         icon: 'pi pi-calendar',
-        count: filteredCourseHistory.value.length
+        count: filteredCourseHistory.value.length,
+        value: '預約紀錄'
     },
     {
         label: '缺席紀錄',
         icon: 'pi pi-calendar-times',
-        count: filteredAbsenceRecords.value.length
+        count: filteredAbsenceRecords.value.length,
+        value: '缺席紀錄'
     },
     {
         label: '評價紀錄',
         icon: 'pi pi-star',
-        count: filteredRatingHistory.value.length
+        count: filteredRatingHistory.value.length,
+        value: '評價紀錄'
     }
 ]);
-
-// 計算平均評分
-function calculateAverageRating(): string {
-    if (!ratingHistory.value || ratingHistory.value.length === 0) {
-        return '0.0';
-    }
-
-    const sum = ratingHistory.value.reduce((total, item) => total + (item.rating || 0), 0);
-    return (sum / ratingHistory.value.length).toFixed(1);
-}
 
 // 過濾後的課程歷史
 const filteredCourseHistory = computed(() => {
@@ -347,9 +363,10 @@ const filteredCourseHistory = computed(() => {
 
     // 日期範圍過濾
     if (range.value) {
-        filtered = inRange(range.value.start, range.value.end, filtered);
+        filtered = inRange(range.value.start, range.value.end, filtered, (item) => new Date(item.date));
     }
-
+    console.log(filtered);
+    
     // 搜尋過濾
     if (filters.value.search) {
         const searchLower = filters.value.search.toLowerCase();
@@ -374,7 +391,7 @@ const filteredAbsenceRecords = computed(() => {
 
     // 日期範圍過濾
     if (range.value) {
-        filtered = inRange(range.value.start, range.value.end, filtered);
+        filtered = inRange(range.value.start, range.value.end, filtered, (item) => new Date(item.date));
     }
 
     // 搜尋過濾
@@ -414,9 +431,17 @@ const handleDateRangeChange = (dateRange: { start: Date; end: Date }) => {
 };
 
 // 應用篩選器
-const applyFilters = () => {
+const applyFilters = async () => {
     loading.value = true;
-    setTimeout(() => loading.value = false, 300);
+    try {
+        await Promise.all([
+            fetchActivityStats(),
+            fetchRatingHistory(),
+            fetchAbsenceRecords()
+        ]);
+    } finally {
+        loading.value = false;
+    }
 };
 
 // 重置篩選器
@@ -424,8 +449,7 @@ const resetFilters = () => {
     range.value = null;
     startDate.value = undefined;
     endDate.value = undefined;
-    loading.value = true;
-    setTimeout(() => loading.value = false, 300);
+    applyFilters();
 };
 
 // 重置所有篩選器
@@ -444,20 +468,20 @@ watch(() => [filters.value.status, filters.value.search], () => {
 }, { deep: true });
 
 // 查看课程详情
-const viewCourseDetail = (course: CourseRecord) => {
+const viewCourseDetail = (course: Booking) => {
     selectedCourse.value = course;
     showDetailDialog.value = true;
 };
 
 // 判斷是否可以評價
-const canRate = (course: CourseRecord): boolean => {
+const canRate = (course: Booking): boolean => {
     // 只有已完成的課程才能評價，且未評價過
     return course.status === BookingStatus.Confirmed &&
         (!course.rating || course.rating === 0);
 };
 
 // 打開評價對話框
-const openRatingDialog = (course: CourseRecord, isEdit = false) => {
+const openRatingDialog = (course: Booking, isEdit = false) => {
     selectedCourse.value = course;
     isEditRating.value = isEdit;
 
@@ -553,6 +577,67 @@ const getStatusSeverity = (status: BookingStatus) => {
             return 'info';
         default:
             return 'secondary';
+    }
+};
+
+// 獲取活動統計數據
+const fetchActivityStats = async () => {
+    if (!authStore.isLoggedIn || !userStore.profile?.userId) return;
+    
+    try {
+        const query = {
+            startDate: startDate.value?.toISOString().split('T')[0],
+            endDate: endDate.value?.toISOString().split('T')[0],
+            search: filters.value.search,
+            status: filters.value.status
+        };
+        
+        const result = await ActivityService.getActivityStats(userStore.profile.userId, query);
+        if (result.success && result.data) {
+            activityStatsData.value = result.data;
+        }
+    } catch (error) {
+        console.error('獲取活動統計失敗:', error);
+    }
+};
+
+// 獲取評價記錄
+const fetchRatingHistory = async () => {
+    if (!authStore.isLoggedIn || !userStore.profile?.userId) return;
+    
+    try {
+        const query = {
+            startDate: startDate.value?.toISOString().split('T')[0],
+            endDate: endDate.value?.toISOString().split('T')[0],
+            search: filters.value.search
+        };
+        
+        const result = await ActivityService.getRatingHistory(userStore.profile.userId, query);
+        if (result.success && result.data) {
+            ratingHistoryData.value = result.data;
+        }
+    } catch (error) {
+        console.error('獲取評價記錄失敗:', error);
+    }
+};
+
+// 獲取缺席記錄
+const fetchAbsenceRecords = async () => {
+    if (!authStore.isLoggedIn || !userStore.profile?.userId) return;
+    
+    try {
+        const query = {
+            startDate: startDate.value?.toISOString().split('T')[0],
+            endDate: endDate.value?.toISOString().split('T')[0],
+            search: filters.value.search
+        };
+        
+        const result = await ActivityService.getAbsenceRecords(userStore.profile.userId, query);
+        if (result.success && result.data) {
+            absenceRecordsData.value = result.data;
+        }
+    } catch (error) {
+        console.error('獲取缺席記錄失敗:', error);
     }
 };
 </script>

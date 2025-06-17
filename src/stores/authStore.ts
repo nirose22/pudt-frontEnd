@@ -49,7 +49,7 @@ export const useAuthStore = defineStore('auth', () => {
 			token.value = res.data.token || null;
 			role.value = res.data.role as UserRole;
 			if (res.data.role === UserRole.User) {
-				useUserStore().fetchProfile();
+				useUserStore().fetchProfile(res.data.id);
 			}
 		}
 		return res;
@@ -61,7 +61,7 @@ export const useAuthStore = defineStore('auth', () => {
 			token.value = res.data.token || null;
 			role.value = res.data.role as UserRole;
 			if (res.data.role === UserRole.User) {
-				useUserStore().fetchProfile();
+				useUserStore().fetchProfile(res.data.id);
 			}
 		}
 		return res;
@@ -77,7 +77,7 @@ export const useAuthStore = defineStore('auth', () => {
 			localStorage.setItem('userInterests', JSON.stringify(data.interests));
 			localStorage.setItem('userAge', data.age?.toString() || '');
 			
-			useUserStore().fetchProfile();
+			useUserStore().fetchProfile(res.data.id);
 		}
 		return res;
 	}

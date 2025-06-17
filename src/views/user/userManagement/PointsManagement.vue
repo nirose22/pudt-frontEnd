@@ -15,7 +15,7 @@
                 </div>
                 <div class="flex flex-wrap gap-2">
                     <Button label="儲值點數" icon="pi pi-plus" class="p-button-raised p-button-rounded" @click="showPurchaseDialog = true" />
-                    <Button label="點數歷史" icon="pi pi-history" class="p-button-raised p-button-rounded p-button-outlined" @click="showHistoryDialog = true" />
+                    <Button label="點數歷史" icon="pi pi-history" class="p-button-raised p-button-rounded p-button-outlined" @click="loadHistoryAndShow" />
                 </div>
             </div>
         </div>
@@ -25,108 +25,40 @@
             <h3 class="text-lg font-bold mb-4 text-sky-700 flex items-center">
                 <i class="pi pi-ticket mr-2"></i>PUDT 課卡儲值方案
             </h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- 新手卡 -->
-                <div class="bg-white rounded-xl shadow-md overflow-hidden border border-sky-100 hover:shadow-lg transition-all">
-                    <div class="bg-sky-50 p-4 relative overflow-hidden">
-                        <div class="absolute top-0 right-0 text-4xl opacity-10 transform rotate-12">🌱</div>
-                        <h4 class="text-lg font-bold text-sky-700">新手卡</h4>
-                        <div class="text-sm text-sky-600">輕量探索</div>
+            
+            <!-- 載入狀態 -->
+            <div v-if="loadingPointsCards" class="flex justify-center items-center py-8">
+                <i class="pi pi-spinner pi-spin text-2xl text-sky-600"></i>
+                <span class="ml-2 text-sky-600">載入點數卡中...</span>
+            </div>
+            
+            <!-- 點數卡列表 -->
+            <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div v-for="card in pointsCards" :key="card.id" 
+                     class="bg-white rounded-xl shadow-md overflow-hidden border border-sky-100 hover:shadow-lg transition-all">
+                    <div :class="getCardHeaderClass(card.points)" class="p-4 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 text-4xl opacity-10 transform rotate-12">{{ getCardEmoji(card.points) }}</div>
+                        <div v-if="card.points === 100" class="absolute top-2 left-2 text-xs bg-yellow-400 text-sky-800 px-2 py-0.5 rounded-full font-bold">最划算</div>
+                        <h4 class="text-lg font-bold" :class="card.points === 100 ? 'text-white' : 'text-sky-700'">{{ card.name }}</h4>
+                        <div class="text-sm" :class="card.points === 100 ? 'text-white' : 'text-sky-600'">{{ getCardType(card.points) }}</div>
                         <div class="mt-2 flex items-end">
-                            <span class="text-3xl font-bold text-sky-700">15</span>
-                            <span class="ml-1 text-sky-600">點數</span>
+                            <span class="text-3xl font-bold" :class="card.points === 100 ? 'text-white' : 'text-sky-700'">{{ card.points }}</span>
+                            <span class="ml-1" :class="card.points === 100 ? 'text-white' : 'text-sky-600'">點數</span>
                         </div>
-                        <div class="mt-1 text-xs text-sky-500">NT$ 1,500</div>
+                        <div class="mt-1 text-xs" :class="card.points === 100 ? 'text-sky-100' : 'text-sky-500'">NT$ {{ card.price.toLocaleString() }}</div>
                     </div>
                     <div class="p-4">
-                        <p class="text-sm text-gray-600 mb-4">適合偶而上課的你，輕鬆探索各種課程</p>
+                        <p class="text-sm text-gray-600 mb-4">{{ card.description }}</p>
                         <div class="text-xs text-gray-500 mb-3 flex items-center">
                             <i class="pi pi-users mr-1"></i>
-                            <span>適合對象：偶爾體驗、初次使用者</span>
+                            <span>{{ getCardTarget(card.points) }}</span>
                         </div>
                         <div class="flex justify-end">
                             <Button label="購買課卡" icon="pi pi-shopping-cart" 
                                 class="p-button-sm"
-                                @click="handlePurchaseCard(1)" />
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 標準卡 -->
-                <div class="bg-white rounded-xl shadow-md overflow-hidden border border-sky-100 hover:shadow-lg transition-all">
-                    <div class="bg-sky-100 p-4 relative overflow-hidden">
-                        <div class="absolute top-0 right-0 text-4xl opacity-10 transform rotate-12">🍃</div>
-                        <h4 class="text-lg font-bold text-sky-700">標準卡</h4>
-                        <div class="text-sm text-sky-600">穩定學習</div>
-                        <div class="mt-2 flex items-end">
-                            <span class="text-3xl font-bold text-sky-700">30</span>
-                            <span class="ml-1 text-sky-600">點數</span>
-                        </div>
-                        <div class="mt-1 text-xs text-sky-500">NT$ 2,800</div>
-                    </div>
-                    <div class="p-4">
-                        <p class="text-sm text-gray-600 mb-4">每週一堂，打造穩定的學習節奏 💪</p>
-                        <div class="text-xs text-gray-500 mb-3 flex items-center">
-                            <i class="pi pi-users mr-1"></i>
-                            <span>適合對象：每週固定學習者</span>
-                        </div>
-                        <div class="flex justify-end">
-                            <Button label="購買課卡" icon="pi pi-shopping-cart" 
-                                class="p-button-sm"
-                                @click="handlePurchaseCard(2)" />
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 進階卡 -->
-                <div class="bg-white rounded-xl shadow-md overflow-hidden border border-sky-200 hover:shadow-lg transition-all">
-                    <div class="bg-sky-200 p-4 relative overflow-hidden">
-                        <div class="absolute top-0 right-0 text-4xl opacity-10 transform rotate-12">🌼</div>
-                        <h4 class="text-lg font-bold text-sky-700">進階卡</h4>
-                        <div class="text-sm text-sky-600">持續進修</div>
-                        <div class="mt-2 flex items-end">
-                            <span class="text-3xl font-bold text-sky-700">60</span>
-                            <span class="ml-1 text-sky-600">點數</span>
-                        </div>
-                        <div class="mt-1 text-xs text-sky-500">NT$ 5,400</div>
-                    </div>
-                    <div class="p-4">
-                        <p class="text-sm text-gray-600 mb-4">每週 2–3 堂課的你，持續累積實力 🔥</p>
-                        <div class="text-xs text-gray-500 mb-3 flex items-center">
-                            <i class="pi pi-users mr-1"></i>
-                            <span>適合對象：一週多堂、持續進修者</span>
-                        </div>
-                        <div class="flex justify-end">
-                            <Button label="購買課卡" icon="pi pi-shopping-cart" 
-                                class="p-button-sm"
-                                @click="handlePurchaseCard(3)" />
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 無限卡 -->
-                <div class="bg-white rounded-xl shadow-md overflow-hidden border border-sky-300 hover:shadow-lg transition-all">
-                    <div class="bg-gradient-to-r from-sky-300 to-sky-400 p-4 relative overflow-hidden">
-                        <div class="absolute top-0 right-0 text-4xl opacity-10 transform rotate-12">🌲</div>
-                        <div class="absolute top-2 left-2 text-xs bg-yellow-400 text-sky-800 px-2 py-0.5 rounded-full font-bold">最划算</div>
-                        <h4 class="text-lg font-bold text-white">無限卡</h4>
-                        <div class="text-sm text-white">高效學習</div>
-                        <div class="mt-2 flex items-end">
-                            <span class="text-3xl font-bold text-white">100</span>
-                            <span class="ml-1 text-white">點數</span>
-                        </div>
-                        <div class="mt-1 text-xs text-sky-100">NT$ 8,000</div>
-                    </div>
-                    <div class="p-4">
-                        <p class="text-sm text-gray-600 mb-4">高效學習、自由預約，享受最划算的成長方案 ✨</p>
-                        <div class="text-xs text-gray-500 mb-3 flex items-center">
-                            <i class="pi pi-users mr-1"></i>
-                            <span>適合對象：重度學習者／密集預約者</span>
-                        </div>
-                        <div class="flex justify-end">
-                            <Button label="購買課卡" icon="pi pi-shopping-cart" 
-                                class="p-button-sm"
-                                @click="handlePurchaseCard(4)" />
+                                :loading="purchasingCardId === card.id"
+                                :disabled="purchasing"
+                                @click="handlePurchaseCard(card.id)" />
                         </div>
                     </div>
                 </div>
@@ -142,25 +74,34 @@
                 <div class="flex flex-wrap gap-2">
                     <Select v-model="filter.month" :options="monthOptions" optionLabel="label" optionValue="value" placeholder="月份" class="w-24" />
                     <Select v-model="filter.type" :options="typeOptions" optionLabel="label" optionValue="value" placeholder="類型" class="w-28" />
+                    <Button icon="pi pi-refresh" class="p-button-outlined p-button-sm" @click="loadPointsHistory" :loading="loadingHistory" />
                 </div>
             </div>
-            <DataTable :value="filteredPointsHistory" stripedRows responsiveLayout="stack" :paginator="true" :rows="5"
+            
+            <!-- 載入狀態 -->
+            <div v-if="loadingHistory" class="flex justify-center items-center py-8">
+                <i class="pi pi-spinner pi-spin text-xl text-sky-600"></i>
+                <span class="ml-2 text-sky-600">載入交易記錄中...</span>
+            </div>
+            
+            <!-- 交易記錄表格 -->
+            <DataTable v-else :value="filteredPointsHistory" stripedRows responsiveLayout="stack" :paginator="true" :rows="5"
                 class="p-datatable-sm" emptyMessage="無交易記錄" :rowHover="true">
-                <Column field="date" header="日期" headerClass="text-sky-700 bg-sky-50" bodyClass="text-gray-700">
+                <Column field="createdAt" header="日期" headerClass="text-sky-700 bg-sky-50" bodyClass="text-gray-700">
                     <template #body="{ data }">
-                        {{ formatDate(data.date) }}
+                        {{ formatDate(data.createdAt) }}
                     </template>
                 </Column>
-                <Column field="type" header="類型" headerClass="text-sky-700 bg-sky-50" bodyClass="text-gray-700">
+                <Column field="kind" header="類型" headerClass="text-sky-700 bg-sky-50" bodyClass="text-gray-700">
                     <template #body="{ data }">
-                        <Tag :severity="getTypeSeverity(data.type)" :value="getTypeLabel(data.type)" />
+                        <Tag :severity="getTypeSeverity(data.kind)" :value="getTypeLabel(data.kind)" />
                     </template>
                 </Column>
-                <Column field="description" header="說明" headerClass="text-sky-700 bg-sky-50" bodyClass="text-gray-700" />
-                <Column field="points" header="點數" headerClass="text-sky-700 bg-sky-50" bodyClass="text-gray-700">
+                <Column field="note" header="說明" headerClass="text-sky-700 bg-sky-50" bodyClass="text-gray-700" />
+                <Column field="amount" header="點數" headerClass="text-sky-700 bg-sky-50" bodyClass="text-gray-700">
                     <template #body="{ data }">
-                        <span :class="isPositiveType(data.type) ? 'text-green-600 font-medium' : 'text-red-600 font-medium'">
-                            {{ isPositiveType(data.type) ? '+' : '-' }}{{ data.points }}
+                        <span :class="isPositiveType(data.kind) ? 'text-green-600 font-medium' : 'text-red-600 font-medium'">
+                            {{ isPositiveType(data.kind) ? '+' : '-' }}{{ data.amount }}
                         </span>
                     </template>
                 </Column>
@@ -195,7 +136,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import Button from 'primevue/button';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
@@ -206,32 +147,11 @@ import { useConfirm } from 'primevue/useconfirm';
 import PurchaseDialog from '@/components/user/PurchaseDialog.vue';
 import HistoryDialog from '@/components/user/HistoryDialog.vue';
 import { useUserStore } from '@/stores/userStore';
-import { usePointsStore } from '@/stores/pointsStore';
-import { usePurchaseStore } from '@/stores/orderStore';
 import { useAuthStore } from '@/stores/authStore';
 import { showSuccess, showError } from '@/utils/toastHelper';
-
+import { pointsApi, type PointsCard, type PointTransaction } from '@/services/pointsApi';
+import { PointKind, PointKindLabel } from '@/enums/Point';
 // 定義數據類型
-interface PointsCard {
-    id: number;
-    name: string;
-    type: string;
-    description: string;
-    points: number;
-    price: number;
-    discount?: string;
-}
-
-interface TransactionRecord {
-    id: number;
-    date: string | Date;
-    type: string;
-    description: string;
-    points: number;
-    balance: number;
-    remark?: string;
-}
-
 interface FilterOptions {
     month: string;
     type: string;
@@ -244,48 +164,18 @@ interface HistoryFilterOptions {
 
 // 使用 stores
 const userStore = useUserStore();
-const pointsStore = usePointsStore();
-const purchaseStore = usePurchaseStore();
 const authStore = useAuthStore();
 const toast = useToast();
 const confirm = useConfirm();
 
-// 初始化數據
-onMounted(() => {
-    if (authStore.isLoggedIn) {
-        pointsStore.init();
-    }
-});
-
-// 計算屬性 - 當前點數
-const currentPoints = computed(() => userStore.user?.points || 0);
-
-// 計算屬性 - 點數歷史記錄
-const pointsHistory = computed(() => {
-    return pointsStore.pointsHistory.map(txn => ({
-        id: txn.id,
-        date: txn.createdAt,
-        type: txn.kind,
-        description: txn.note || '點數交易',
-        points: txn.amount,
-        balance: txn.balance,
-        remark: txn.refType?.toString()
-    }));
-});
-
-// 計算屬性 - 可用點數卡
-const availablePointsCards = computed(() => {
-    return pointsStore.pointsCards.map(card => ({
-        id: card.id,
-        name: `${card.points}點數卡`,
-        description: card.description,
-        points: card.points,
-        price: card.price,
-        discount: card.discount
-    }));
-});
-
 // 響應式狀態
+const pointsCards = ref<PointsCard[]>([]);
+const pointsHistory = ref<PointTransaction[]>([]);
+const loadingPointsCards = ref(false);
+const loadingHistory = ref(false);
+const purchasing = ref(false);
+const purchasingCardId = ref<number | null>(null);
+
 const expiringPoints = ref(50); 
 const expiryDate = ref('2023/12/31');
 const selectedCard = ref<number | null>(null);
@@ -323,14 +213,20 @@ const typeOptions = [
     { label: '過期', value: 'expire' }
 ];
 
-// 業務邏輯方法
-const isPositiveType = (type: string): boolean => {
-    return ['add', 'reward'].includes(type);
-};
+// 計算屬性 - 當前點數
+const currentPoints = computed(() => userStore.user?.points || 0);
 
-const sortByDateDesc = (a: TransactionRecord, b: TransactionRecord): number => {
-    return new Date(b.date).getTime() - new Date(a.date).getTime();
-};
+// 計算屬性 - 可用點數卡
+const availablePointsCards = computed(() => {
+    return pointsCards.value.map(card => ({
+        id: card.id,
+        name: `${card.points}點數卡`,
+        description: card.description,
+        points: card.points,
+        price: card.price,
+        discount: undefined
+    }));
+});
 
 // 篩選後的點數歷史
 const filteredPointsHistory = computed(() => {
@@ -338,14 +234,14 @@ const filteredPointsHistory = computed(() => {
     
     if (filter.value.month) {
         result = result.filter(item => {
-            const itemDate = new Date(item.date);
+            const itemDate = new Date(item.createdAt);
             const itemMonth = (itemDate.getMonth() + 1).toString().padStart(2, '0');
             return itemMonth === filter.value.month;
         });
     }
     
     if (filter.value.type) {
-        result = result.filter(item => item.type === filter.value.type);
+        result = result.filter(item => item.kind === filter.value.type);
     }
     
     return result.sort(sortByDateDesc);
@@ -363,17 +259,135 @@ const filteredHistoryRecords = computed(() => {
         endDate.setHours(23, 59, 59, 999);
         
         result = result.filter(item => {
-            const itemDate = new Date(item.date);
+            const itemDate = new Date(item.createdAt);
             return itemDate >= startDate && itemDate <= endDate;
         });
     }
     
     if (historyFilter.value.type) {
-        result = result.filter(item => item.type === historyFilter.value.type);
+        result = result.filter(item => item.kind === historyFilter.value.type);
     }
     
     return result.sort(sortByDateDesc);
 });
+
+// API 調用方法
+const loadPointsCards = async () => {
+    loadingPointsCards.value = true;
+    try {
+        const response = await pointsApi.getPointsCards();
+        if (response.success) {
+            pointsCards.value = response.data || [];
+        } else {
+            showError(response.message || '載入點數卡失敗', '錯誤');
+        }
+    } catch (error) {
+        console.error('載入點數卡失敗:', error);
+        showError('載入點數卡時發生網路錯誤', '錯誤');
+    } finally {
+        loadingPointsCards.value = false;
+    }
+};
+
+const loadPointsHistory = async () => {
+    if (!authStore.isLoggedIn) return;
+    
+    loadingHistory.value = true;
+    try {
+        const response = await pointsApi.getPointsHistory();
+        if (response.success) {
+            pointsHistory.value = response.data || [];
+        } else {
+            showError(response.message || '載入交易記錄失敗', '錯誤');
+        }
+    } catch (error) {
+        console.error('載入交易記錄失敗:', error);
+        showError('載入交易記錄時發生網路錯誤', '錯誤');
+    } finally {
+        loadingHistory.value = false;
+    }
+};
+
+const purchasePointsCard = async (cardId: number) => {
+    purchasing.value = true;
+    purchasingCardId.value = cardId;
+    
+    try {
+        const response = await pointsApi.buyPointsCard(cardId);
+        if (response.success) {
+            showSuccess(response.message || '點數卡購買成功', '成功');
+            // 重新載入用戶資料和交易記錄
+            await Promise.all([
+                userStore.fetchProfile(userStore.user.id),
+                loadPointsHistory()
+            ]);
+        } else {
+            showError(response.message || '購買點數失敗', '失敗');
+        }
+    } catch (error: any) {
+        console.error('購買點數卡失敗:', error);
+        if (error.response?.status === 401) {
+            showError('請先登入再進行購買', '未授權');
+        } else if (error.response?.status >= 500) {
+            showError('伺服器錯誤，請稍後再試', '錯誤');
+        } else {
+            showError('購買點數卡時發生錯誤', '錯誤');
+        }
+    } finally {
+        purchasing.value = false;
+        purchasingCardId.value = null;
+    }
+};
+
+// 業務邏輯方法
+const isPositiveType = (type: string): boolean => {
+    type = type.toLowerCase();
+    return ['add', 'reward'].includes(type);
+};
+
+const sortByDateDesc = (a: PointTransaction, b: PointTransaction): number => {
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+};
+
+const getCardHeaderClass = (points: number): string => {
+    const classMap: Record<number, string> = {
+        15: 'bg-sky-50',
+        30: 'bg-sky-100',
+        60: 'bg-sky-200',
+        100: 'bg-gradient-to-r from-sky-300 to-sky-400'
+    };
+    return classMap[points] || 'bg-sky-50';
+};
+
+const getCardEmoji = (points: number): string => {
+    const emojiMap: Record<number, string> = {
+        15: '🌱',
+        30: '🍃',
+        60: '🌼',
+        100: '🌲'
+    };
+    return emojiMap[points] || '🎁';
+};
+
+const getCardType = (points: number): string => {
+    const typeMap: Record<number, string> = {
+        15: '輕量探索',
+        30: '穩定學習',
+        60: '持續進修',
+        100: '高效學習'
+    };
+    return typeMap[points] || '課卡方案';
+};
+
+const getCardTarget = (points: number): string => {
+    const targetMap: Record<number, string> = {
+        15: '適合對象：偶爾體驗、初次使用者',
+        30: '適合對象：每週固定學習者',
+        60: '適合對象：一週多堂、持續進修者',
+        100: '適合對象：重度學習者／密集預約者'
+    };
+    return targetMap[points] || '適合所有學習者';
+};
 
 // 業務方法
 const handlePurchaseCard = (cardId: number) => {
@@ -382,29 +396,34 @@ const handlePurchaseCard = (cardId: number) => {
         return;
     }
     
+    if (purchasing.value) {
+        return;
+    }
+    
+    const card = pointsCards.value.find(c => c.id === cardId);
+    if (!card) {
+        showError('找不到指定的點數卡', '錯誤');
+        return;
+    }
+    
     confirm.require({
-        message: '確認購買此點數卡？',
+        message: `確認購買 ${card.name}（${card.points}點數，NT$ ${card.price.toLocaleString()}）？`,
         header: '購買確認',
         acceptLabel: '確認購買',
         rejectLabel: '取消',
         icon: 'pi pi-exclamation-triangle',
         acceptClass: 'p-button-primary',
-        accept: async () => {
-            try {
-                const res = await purchaseStore.buyPointsCard(cardId);
-                if (res.success) {
-                    showSuccess(res.message || '點數卡購買成功', '成功');
-                    // 重新載入用戶點數
-                    await userStore.fetchProfile();
-                } else {
-                    showError(res.message || '購買點數失敗', '失敗');
-                }
-            } catch (error) {
-                console.error('處理購買請求時出錯:', error);
-                showError('處理您的購買請求時出錯', '錯誤');
-            }
+        accept: () => {
+            purchasePointsCard(cardId);
         }
     });
+};
+
+const loadHistoryAndShow = async () => {
+    showHistoryDialog.value = true;
+    if (pointsHistory.value.length === 0) {
+        await loadPointsHistory();
+    }
 };
 
 const confirmPurchase = () => {
@@ -448,19 +467,17 @@ const resetHistoryFilter = () => {
 };
 
 // 格式化方法
-const formatDate = (dateString: string | Date): string => {
+const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
     return `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
 };
 
 const getTypeLabel = (type: string): string => {
-    const typeMap: Record<string, string> = {
-        'add': '儲值',
-        'use': '消費',
-        'reward': '獎勵',
-        'expire': '過期'
-    };
-    return typeMap[type] || type;
+    let label = PointKindLabel[type as PointKind];
+    if (!label) {
+        label = type;
+    }
+    return label;
 };
 
 const getTypeSeverity = (type: string): string => {
@@ -472,6 +489,27 @@ const getTypeSeverity = (type: string): string => {
     };
     return severityMap[type] || 'secondary';
 };
+
+// 初始化
+onMounted(async () => {
+    if (authStore.isLoggedIn) {
+        await Promise.all([
+            loadPointsCards(),
+            loadPointsHistory()
+        ]);
+    }
+});
+
+// 監聽登入狀態變化
+watch(() => authStore.isLoggedIn, (isLoggedIn) => {
+    if (isLoggedIn) {
+        loadPointsCards();
+        loadPointsHistory();
+    } else {
+        pointsCards.value = [];
+        pointsHistory.value = [];
+    }
+});
 </script>
 
 <style scoped>

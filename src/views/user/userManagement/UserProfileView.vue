@@ -194,7 +194,7 @@ onMounted(async () => {
     }
     
     if (authStore.isLoggedIn) {
-        userStore.fetchProfile();
+        userStore.fetchProfile(userStore.user.id);
     } else {
         router.push('/Search');
     }
@@ -208,7 +208,7 @@ const menuItems = [
     { id: 'points', label: '點數與課卡', icon: 'pi-wallet', path: '/profile/points' },
     { id: 'bookings', label: '預約行程管理', icon: 'pi-calendar', path: '/profile/bookings' },
     { id: 'history', label: '活動紀錄', icon: 'pi-history', path: '/profile/history' },
-    { id: 'purchase', label: '購買紀錄', icon: 'pi-shopping-cart', path: '/profile/purchase' }
+    // { id: 'purchase', label: '購買紀錄', icon: 'pi-shopping-cart', path: '/profile/purchase' }
 ];
 
 // 頭像相關方法

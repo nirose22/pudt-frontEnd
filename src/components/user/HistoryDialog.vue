@@ -13,31 +13,31 @@
             
             <DataTable :value="pointsHistory" stripedRows responsiveLayout="stack" :paginator="true" :rows="10"
                 class="p-datatable-sm" emptyMessage="無交易記錄">
-                <Column field="date" header="日期" sortable>
+                <Column field="createdAt" header="日期" sortable>
                     <template #body="{ data }">
-                        {{ formatDate(data.date) }}
+                        {{ formatDate(data.createdAt) }}
                     </template>
                 </Column>
-                <Column field="time" header="時間">
+                <Column field="createdAt" header="時間">
                     <template #body="{ data }">
-                        {{ formatTime(data.date) }}
+                        {{ formatTime(data.createdAt) }}
                     </template>
                 </Column>
-                <Column field="type" header="類型" sortable>
+                <Column field="kind" header="類型" sortable>
                     <template #body="{ data }">
-                        <Tag :severity="getTypeSeverity(data.type)" :value="getTypeLabel(data.type)" />
+                        <Tag :severity="getTypeSeverity(data.kind)" :value="getTypeLabel(data.kind)" />
                     </template>
                 </Column>
-                <Column field="description" header="說明" />
-                <Column field="points" header="點數" sortable>
+                <Column field="note" header="說明" />
+                <Column field="amount" header="點數" sortable>
                     <template #body="{ data }">
-                        <span :class="isPositiveType(data.type) ? 'text-green-600' : 'text-red-600'">
-                            {{ isPositiveType(data.type) ? '+' : '-' }}{{ data.points }}
+                        <span :class="isPositiveType(data.kind) ? 'text-green-600' : 'text-red-600'">
+                            {{ isPositiveType(data.kind) ? '+' : '-' }}{{ data.amount }}
                         </span>
                     </template>
                 </Column>
                 <Column field="balance" header="餘額" sortable />
-                <Column field="remark" header="備註" />
+                <Column field="refType" header="關聯類型" />
             </DataTable>
         </div>
         <template #footer>
@@ -57,16 +57,17 @@ import Select from 'primevue/select';
 import Calendar from 'primevue/calendar';
 import Tag from 'primevue/tag';
 
-
 // 定義數據類型
-interface TransactionRecord {
+interface PointTransaction {
     id: number;
-    date: string | Date;
-    type: string;
-    description: string;
-    points: number;
+    userId: number;
+    kind: string;
+    amount: number;
     balance: number;
-    remark?: string;
+    refType: string;
+    refId?: number;
+    note: string;
+    createdAt: string;
 }
 
 interface HistoryFilterOptions {
@@ -83,7 +84,7 @@ const visible = defineModel<boolean>('visible', { required: true });
 
 const props = defineProps({
     pointsHistory: {
-        type: Array as PropType<TransactionRecord[]>,
+        type: Array as PropType<PointTransaction[]>,
         required: true
     },
     typeOptions: {
@@ -145,13 +146,13 @@ const getTypeSeverity = (type: string): string => {
 };
 
 // 格式化日期
-const formatDate = (dateString: string | Date): string => {
+const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
     return `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
 };
 
 // 格式化時間
-const formatTime = (dateString: string | Date): string => {
+const formatTime = (dateString: string): string => {
     const date = new Date(dateString);
     return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
 };
