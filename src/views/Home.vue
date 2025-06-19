@@ -77,7 +77,6 @@ const userStore = useUserStore();
 
 const visible = ref(false);
 const router = useRouter();
-const bookingStore = useBookingStore();
 const toast = useToast();
 // 初始化toast
 onMounted(() => {
@@ -119,9 +118,13 @@ const loadCourses = async () => {
         }
 
         // 獲取為您推薦的課程
-        const recommendedResult = await CourseService.getRecommendedCourses(6);
-        if (recommendedResult.success && Array.isArray(recommendedResult.data)) {
-            recommendedCourses.value = recommendedResult.data;
+        if (userStore.user?.id) {
+            const recommendedResult = await CourseService.getRecommendedCourses(6);
+            if (recommendedResult.success && Array.isArray(recommendedResult.data)) {
+                recommendedCourses.value = recommendedResult.data;
+            }
+        } else {
+            recommendedCourses.value = popularCourses.value;
         }
     } catch (error) {
         console.error('獲取課程數據失敗:', error);

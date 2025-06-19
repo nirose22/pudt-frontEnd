@@ -29,7 +29,8 @@ export const useAuthStore = defineStore('auth', () => {
 	const role = ref<UserRole | null>(null)
 
 	/* ---------- getters ---------- */
-	const isLoggedIn = computed(() => !!token.value && !!role.value)
+	const isLoggedIn = computed(() => !!token.value && (role.value === UserRole.User || role.value === UserRole.Admin))
+	const isMerchant = computed(() => !!token.value && role.value === UserRole.Merchant)
 
 	/* ---------- actions ---------- */
 	async function login(creds: LoginCredentials): Promise<Result<User>> {
@@ -112,6 +113,7 @@ export const useAuthStore = defineStore('auth', () => {
 		token,
 		role,
 		isLoggedIn,
+		isMerchant,
 		login,
 		loginWithGoogle,
 		loginWithFacebook,

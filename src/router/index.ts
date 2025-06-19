@@ -24,48 +24,42 @@ const routes: RouteRecordRaw[] = [
         path: 'profile',
         name: 'UserProfile',
         component: () => import('@/views/user/userManagement/UserProfileView.vue'),
+        meta: { title: '會員中心', allowedRoles: [UserRole.User, UserRole.Admin] },
         children: [
           {
             path: 'management',
             name: 'ProfileManagement',
             component: () => import('@/views/user/userManagement/ProfileManagement.vue'),
-            meta: { title: '會員資料管理', allowedRoles: [UserRole.User] }
           },
           {
             path: 'inbox',
             name: 'InboxMessages',
             component: () => import('@/views/user/userManagement/InboxMessages.vue'),
-            meta: { title: '站內收件夾', allowedRoles: [UserRole.User] }
           },
           {
             path: 'points',
             name: 'UserPointsManagement',
             component: () => import('@/views/user/userManagement/PointsManagement.vue'),
-            meta: { title: '點數管理', allowedRoles: [UserRole.User] }
           },
           {
             path: 'bookings',
             name: 'BookingsManagement',
             component: () => import('@/views/user/userManagement/BookingsManagement.vue'),
-            meta: { title: '預約行程管理', allowedRoles: [UserRole.User] }
           },
           {
             path: 'history',
             name: 'ActivityHistory',
             component: () => import('@/views/user/userManagement/ActivityHistory.vue'),
-            meta: { title: '活動紀錄', allowedRoles: [UserRole.User] }
           },
           {
             path: 'purchase',
             name: 'PurchaseHistory',
             component: () => import('@/views/user/userManagement/PurchaseHistory.vue'),
-            meta: { title: '購買紀錄', allowedRoles: [UserRole.User] }
           },
           {
             path: 'favorite',
             name: 'FavoriteCourses',
             component: () => import('@/views/user/userManagement/FavoriteCourses.vue'),
-            meta: { title: '收藏課程', allowedRoles: [UserRole.User] }
           }
         ]
       },
@@ -90,6 +84,7 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
   const isLoggedIn = authStore.isLoggedIn;
+  const isMerchant = authStore.isMerchant;
   const userRole = authStore.role;
   
   // 檢查是否需要認證
@@ -101,8 +96,7 @@ router.beforeEach((to, from, next) => {
   
   // 檢查商家權限
   if (to.meta.requiresMerchantAuth) {
-    if (!isLoggedIn) {
-      console.log('hasnt login!!!!!!');
+    if (!isMerchant) {
       next({ name: 'MerchantLogin' });
       return;
     }
@@ -124,8 +118,6 @@ router.beforeEach((to, from, next) => {
         next({ name: 'MerchantDashboard' });
         break;
       case UserRole.Admin:
-        next({ name: 'MerchantDashboard' }); // 管理員也可以訪問商家面板
-        break;
       case UserRole.User:
       default:
         next({ name: 'Home' });

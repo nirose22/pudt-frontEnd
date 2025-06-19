@@ -98,16 +98,6 @@ export const useUserStore = defineStore('user', () => {
     return { success: true, data: state.user.points }
   }
 
-  async function updateProfile(data: Partial<User>) {
-    if (!userId.value) return { success: false, message: '用戶未登入' }
-
-    const updated = await userService.updateProfile(userId.value, data)
-    if (updated.success && updated.data) {
-      Object.assign(state.profile, updated.data)
-    }
-    return updated
-  }
-
   // 統一的興趣更新方法
   async function updateInterests(newInterests: MainCategory[]) {
     if (!userId.value) return { success: false, message: '用戶未登入' }
@@ -207,7 +197,6 @@ export const useUserStore = defineStore('user', () => {
     fetchUserProfile,
     fetchBehaviorProfile,
     adjustPoints,
-    updateProfile,
     updateInterests,
     updateAddress,
     refreshProfile,

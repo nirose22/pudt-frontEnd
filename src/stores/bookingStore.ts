@@ -9,11 +9,13 @@ import { type BookingQuery, BookingService } from '@/services/UserBookingService
 import { useCourseStore } from './courseStore'
 import { errorHandler } from '@/utils/errorHandler'
 import { ERROR_MESSAGES } from '@/utils/apiConfig'
+import { useAuthStore } from './authStore'
 
 export const useBookingStore = defineStore('booking', () => {
     /* ---------- state ---------- */
     const userStore = useUserStore()
     const courseStore = useCourseStore()
+    const authStore = useAuthStore()
     const bookings = ref<Booking[]>([])
     const loading = ref(false)
     const error = ref<string | null>(null)
@@ -43,6 +45,9 @@ export const useBookingStore = defineStore('booking', () => {
     const fetchSchedule = async (query?: BookingQuery): Promise<Result> => {
         loading.value = true
         error.value = null
+        if (!authStore.isLoggedIn) {
+            return errorHandler.handleBusinessError(null, '請先登入')
+        }
         const result = await BookingService.getSchedule(userStore.profile.userId, query);
         if (result.success && result.data) {
             bookings.value = result.data

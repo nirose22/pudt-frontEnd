@@ -26,9 +26,20 @@
                                 <!-- 頭像區域 -->
                                 <div class="relative flex-shrink-0">
                                     <div
-                                        class="w-24 h-24 md:w-28 md:h-28 rounded-full border-4 border-white shadow-md flex items-center justify-center bg-white relative">
-                                        <Avatar :label="userStore.profile?.name?.charAt(0)" size="xlarge" shape="circle"
-                                            class="!w-full !h-full !bg-blue-100 !text-blue-700" />
+                                        class="w-24 h-24 md:w-28 md:h-28 rounded-full border-4 border-white shadow-md flex items-center justify-center bg-white relative ">
+                                        <!-- 如果有頭像圖片且載入正常就顯示圖片，否則顯示文字 -->
+                                        <div v-if="userStore.user.avatarUrl && !imageLoadError" class="w-full h-full">
+                                            <img :src="getAvatarUrl(userStore.user.avatarUrl)" 
+                                                 :alt="userStore.user.name || '使用者頭像'"
+                                                 class="w-full h-full object-cover rounded-full"
+                                                 @error="handleImageError"
+                                                 @load="handleImageLoad" />
+                                        </div>
+                                        <Avatar v-else 
+                                                :label="userStore.user.name?.charAt(0) || 'U'" 
+                                                size="xlarge" 
+                                                shape="circle"
+                                                class="!w-full !h-full !bg-blue-100 !text-blue-700" />
                                         <div class="absolute -bottom-3 -left-3 bg-gray-100 w-10 h-10 rounded-full cursor-pointer shadow-md z-10 flex items-center justify-center"
                                             @click="handlePhotoUpload">
                                             <i class="pi pi-camera text-xs"></i>
@@ -137,17 +148,42 @@
         <ConfirmDialog class="max-w-lg w-full" />
 
         <!-- 頭像上傳對話框 -->
-        <Dialog v-model:visible="showPhotoDialog" header="更新頭像" :style="{ width: '450px' }">
+        <Dialog v-model:visible="showPhotoDialog" header="更新頭像" :style="{ width: '500px' }">
             <div class="flex flex-col items-center gap-4">
-                <div class="border-2 border-dashed border-gray-300 p-6 rounded-lg text-center">
-                    <i class="pi pi-cloud-upload text-4xl text-gray-400 mb-2"></i>
-                    <p>拖拽照片到此處或點擊上傳</p>
-                    <input type="file" accept="image/*" class="hidden" ref="fileInput" @change="onPhotoSelected">
-                    <Button label="選擇照片" class="mt-3" @click="triggerFileInput()" />
+                <!-- 照片預覽區域 -->
+                <div v-if="previewUrl" class="w-full flex flex-col items-center gap-4">
+                    <div class="text-sm text-gray-600">預覽圖片</div>
+                    <div class="w-32 h-32 rounded-full overflow-hidden border-4 border-gray-200 shadow-md">
+                        <img :src="previewUrl" 
+                             :alt="selectedPhoto?.name || '預覽圖片'"
+                             class="w-full h-full object-cover" />
+                    </div>
+                    <div class="text-xs text-gray-500 text-center">
+                        檔案名稱：{{ selectedPhoto?.name }}<br>
+                        檔案大小：{{ formatFileSize(selectedPhoto?.size || 0) }}
+                    </div>
+                    <Button label="重新選擇" severity="secondary" @click="resetSelection" />
                 </div>
-                <div class="flex justify-end w-full mt-4">
-                    <Button label="取消" class="p-button-text" @click="showPhotoDialog = false" />
-                    <Button label="確定上傳" @click="confirmPhotoUpload" />
+                
+                <!-- 選擇照片區域 -->
+                <div v-else 
+                     class="border-2 border-dashed border-gray-300 p-6 rounded-lg text-center w-full transition-colors hover:border-blue-400 hover:bg-blue-50"
+                     @dragover.prevent
+                     @dragenter.prevent
+                     @drop.prevent="handleDrop">
+                    <i class="pi pi-cloud-upload text-4xl text-gray-400 mb-2"></i>
+                    <p class="text-gray-600 mb-2">拖拽照片到此處或點擊上傳</p>
+                    <p class="text-xs text-gray-500 mb-3">支援 JPG、PNG、GIF、WebP 格式，最大 5MB</p>
+                    <input type="file" accept="image/*" class="hidden" ref="fileInput" @change="onPhotoSelected">
+                    <Button label="選擇照片" @click="triggerFileInput()" />
+                </div>
+                
+                <!-- 按鈕區域 -->
+                <div class="flex justify-end w-full mt-4 gap-2">
+                    <Button label="取消" severity="secondary" @click="cancelUpload" />
+                    <Button label="確定上傳" 
+                            :disabled="!selectedPhoto" 
+                            @click="confirmPhotoUpload" />
                 </div>
             </div>
         </Dialog>
@@ -166,17 +202,21 @@ import { useUserStore } from '@/stores/userStore';
 import { useConfirm } from 'primevue/useconfirm';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'vue-router';
-import { showSuccess, initToastSafely } from '@/utils/toastHelper';
+import { showSuccess, showError, initToastSafely } from '@/utils/toastHelper';
+import { userService } from '@/services/UserService';
 import { UserLevel } from '@/enums/UserLevel';
 import {
     levelNames
 } from '@/utils/userLevelUtils';
+import { API_CONFIG } from '@/utils/apiConfig';
 
 const toast = useToast();
 const showPhotoDialog = ref(false);
 const showLoginDialog = inject<Ref<boolean>>('showLoginDialog', ref(false));
 const fileInput = ref<HTMLInputElement | null>(null);
 const selectedPhoto = ref<File | null>(null);
+const imageLoadError = ref(false);
+const previewUrl = ref<string | null>(null);
 
 const confirm = useConfirm();
 const userStore = useUserStore();
@@ -219,8 +259,41 @@ const handlePhotoUpload = () => {
     showPhotoDialog.value = true;
 };
 
+// 取得完整的頭像URL
+const getAvatarUrl = (avatarUrl: string) => {
+    if (!avatarUrl) return '';
+    // 如果已經是完整URL，直接返回
+    if (avatarUrl.startsWith('http')) {
+        return avatarUrl;
+    }
+    // 如果是相對路徑，加上後端基礎URL
+    return `${API_CONFIG.BASE_URL}${avatarUrl}`;
+};
+
+// 處理圖片載入成功
+const handleImageLoad = () => {
+    imageLoadError.value = false;
+};
+
+// 處理圖片載入錯誤
+const handleImageError = (event: Event) => {
+    imageLoadError.value = true;
+};
+
 const onPhotoSelected = (event: Event) => {
-    selectedPhoto.value = (event.target as HTMLInputElement).files?.[0] ?? null;
+    const file = (event.target as HTMLInputElement).files?.[0] ?? null;
+    selectedPhoto.value = file;
+    
+    // 如果選擇了檔案，產生預覽圖片
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            previewUrl.value = e.target?.result as string;
+        };
+        reader.readAsDataURL(file);
+    } else {
+        previewUrl.value = null;
+    }
 };
 
 const triggerFileInput = () => {
@@ -228,18 +301,85 @@ const triggerFileInput = () => {
     input?.click();
 };
 
-const confirmPhotoUpload = () => {
+// 格式化檔案大小
+const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+// 重新選擇照片
+const resetSelection = () => {
+    selectedPhoto.value = null;
+    previewUrl.value = null;
+    // 清除檔案輸入框的值
+    if (fileInput.value) {
+        fileInput.value.value = '';
+    }
+};
+
+// 取消上傳
+const cancelUpload = () => {
+    resetSelection();
+    showPhotoDialog.value = false;
+};
+
+// 處理拖拽上傳
+const handleDrop = (event: DragEvent) => {
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+        const file = files[0];
+        // 檢查檔案類型
+        if (file.type.startsWith('image/')) {
+            selectedPhoto.value = file;
+            
+            // 產生預覽圖片
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewUrl.value = e.target?.result as string;
+            };
+            reader.readAsDataURL(file);
+        } else {
+            showError('請選擇圖片檔案', '檔案類型錯誤');
+        }
+    }
+};
+
+const confirmPhotoUpload = async () => {
     if (selectedPhoto.value) {
-        // 在實際應用中，這裡應該上傳照片到服務器
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            if (userStore.profile) {
-                userStore.user.avatarUrl = e.target?.result as string;
+        try {
+            // 調用後端API上傳頭像
+            const response = await userService.uploadAvatar(selectedPhoto.value);
+            
+            if (response.success && response.data) {
+                // 立即更新用戶頭像URL
+                userStore.user.avatarUrl = response.data.url;
+                
+                // 重置圖片載入錯誤狀態
+                imageLoadError.value = false;
+                
+                // 關閉對話框並清除選擇的檔案
                 showPhotoDialog.value = false;
-                showSuccess('頭像已更新', '成功');
+                resetSelection();
+                
+                // 顯示成功訊息
+                showSuccess('頭像上傳成功', '成功');
+                
+                // 強制重新獲取用戶資料以確保同步
+                if (userStore.user.id) {
+                    await userStore.fetchUserProfile(userStore.user.id);
+                }
+                
+                console.log('頭像更新成功，新URL:', response.data.url);
+            } else {
+                showError(response.message || '頭像上傳失敗', '錯誤');
             }
-        };
-        reader.readAsDataURL(selectedPhoto.value);
+        } catch (error) {
+            console.error('頭像上傳失敗:', error);
+            showError('頭像上傳失敗，請稍後再試', '錯誤');
+        }
     }
 };
 

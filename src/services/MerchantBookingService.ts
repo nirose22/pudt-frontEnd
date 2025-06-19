@@ -31,7 +31,7 @@ export class MerchantBookingService {
     ): Promise<Result<MerchantBookingDetail[]>> {
         const queryString = buildQueryString(query);
         const url = `${API_ROUTES.MERCHANT.BOOKINGS(merchantId)}${queryString}`;
-        return request<MerchantBookingDetail[]>(() => api.get(url), ERROR_MESSAGES.BOOKING_ERROR);
+        return request<MerchantBookingDetail[]>(() => api.get(url));
     }
 
     /** 單筆訂單詳情 */
@@ -40,8 +40,7 @@ export class MerchantBookingService {
         bookingId: number
     ): Promise<Result<MerchantBookingDetail>> {
         return request<MerchantBookingDetail>(
-            () => api.get(API_ROUTES.MERCHANT.BOOKING_DETAIL(merchantId, bookingId)),
-            ERROR_MESSAGES.BOOKING_ERROR
+            () => api.get(API_ROUTES.MERCHANT.BOOKING_DETAIL(merchantId, bookingId))
         );
     }
 
@@ -52,8 +51,7 @@ export class MerchantBookingService {
         status: BookingStatus
     ): Promise<Result<void>> {
         return request<void>(
-            () => api.put(API_ROUTES.MERCHANT.BOOKING_STATUS(merchantId, bookingId), { status }),
-            ERROR_MESSAGES.BOOKING_ERROR
+            () => api.put(API_ROUTES.MERCHANT.BOOKING_STATUS(merchantId, bookingId), { status })
         );
     }
 
@@ -64,8 +62,7 @@ export class MerchantBookingService {
         notes: string
     ): Promise<Result<void>> {
         return request<void>(
-            () => api.put(API_ROUTES.MERCHANT.BOOKING_NOTES(merchantId, bookingId), { notes }),
-            ERROR_MESSAGES.BOOKING_ERROR
+            () => api.put(API_ROUTES.MERCHANT.BOOKING_NOTES(merchantId, bookingId), { notes })
         );
     }
 
@@ -77,11 +74,10 @@ export class MerchantBookingService {
         options: SendOption = {}
     ): Promise<Result<void>> {
         return request<void>(
-            () => api.post(API_ROUTES.MERCHANT.BOOKING_MESSAGE(merchantId, bookingId), {
+            () => api.post(API_ROUTES.MERCHANT.BOOKING_NOTES(merchantId, bookingId), {
                 content,
                 options
-            }),
-            ERROR_MESSAGES.BOOKING_ERROR
+            })
         );
     }
 }

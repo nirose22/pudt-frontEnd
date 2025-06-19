@@ -12,12 +12,8 @@ const merchantRoutes: RouteRecordRaw[] = [
       allowedRoles: [UserRole.Merchant, UserRole.Admin] 
     },
     children: [
-      // {
-      //   path: 'dashboard',
-      //   redirect: { name: 'MerchantDashboard' }
-      // },
       {
-        path: 'dashboard',
+        path: '/merchant',
         name: 'MerchantDashboard',
         component: () => import('@/views/merchant/dashboard/MerchantDashboard.vue'),
         meta: { 
@@ -45,7 +41,7 @@ const merchantRoutes: RouteRecordRaw[] = [
         }
       },
       {
-        path: 'courses/edit/:id',
+        path: 'courses/:id/edit',
         name: 'CourseEdit',
         component: () => import('@/views/merchant/courses/CourseForm.vue'),
         meta: { 

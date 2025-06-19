@@ -56,11 +56,12 @@ app.directive('tooltip', Tooltip);
 app.config.errorHandler = (err, vm, info) => {
     console.error('全局錯誤:', err);
     console.error('組件信息:', info);
-    
-    // 如果是 Toast 相關錯誤，使用降級處理
-    if (err.message && err.message.includes('$pcTabs')) {
-        console.warn('Toast 組件錯誤，使用降級處理');
-        return;
+    if (err instanceof Error) {
+        // 如果是 Toast 相關錯誤，使用降級處理
+        if (err.message && err.message.includes('$pcTabs')) {
+            console.warn('Toast 組件錯誤，使用降級處理');
+            return;
+        }
     }
 };
 

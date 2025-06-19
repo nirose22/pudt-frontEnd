@@ -5,7 +5,7 @@ import { API_ROUTES } from '@/utils/apiConfig'
 import { request, buildQueryString } from '@/utils/requestHelper'
 import { useUserStore } from '@/stores/userStore'
 import type { SearchRequest } from '@/types/searchRequest';
-import type { PageDTO } from '@/types/PageDTO';
+import type { PageDTO } from '@/types/pageDTO';
 
 
 export class CourseService {
@@ -62,19 +62,8 @@ export class CourseService {
      * @returns Promise<Result<Course[]>>
      */
     static getRecommendedCourses(limit: number = 6): Promise<Result<Course[]>> {
-        // 嘗試獲取當前用戶ID，如果未登錄則返回空數組
         const userStore = useUserStore?.(); // 可選鏈以防止錯誤
         const userId = userStore?.user?.id;
-        
-        if (!userId) {
-            // 如果未登錄，返回空的推薦課程列表
-            return Promise.resolve({
-                success: true,
-                data: [],
-                message: '未登錄用戶暫無推薦課程'
-            } as Result<Course[]>);
-        }
-        
         const queryString = buildQueryString({ limit: limit.toString() })
         const url = `${API_ROUTES.COURSE.RECOMMENDED(userId)}${queryString}`
         return request<Course[]>(() => api.get(url))

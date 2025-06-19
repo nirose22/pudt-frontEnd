@@ -81,62 +81,26 @@
                 </div>
             </div>
 
-            <Dialog v-model:visible="showDetailDialog" header="課程詳情" :modal="true" :closable="true"
-                :style="{ width: '500px' }" :contentStyle="{ 'background-color': '#f8fafc' }">
-                <div v-if="selectedBooking" class="space-y-4">
-                    <div class="p-4 rounded-lg bg-white border border-sky-100">
-                        <div class="flex justify-between mb-2">
-                            <span class="text-gray-600">課程名稱：</span>
-                            <span class="font-medium text-sky-700">{{ selectedBooking.courseTitle }}</span>
-                        </div>
-                        <div class="flex justify-between mb-2">
-                            <span class="text-gray-600">日期：</span>
-                            <span>{{ selectedBooking.date }}</span>
-                        </div>
-                        <div class="flex justify-between mb-2">
-                            <span class="text-gray-600">時間：</span>
-                            <span>{{ selectedBooking.start }} - {{ selectedBooking.end }}</span>
-                        </div>
-                        <div class="flex justify-between mb-2">
-                            <span class="text-gray-600">講師：</span>
-                            <span>{{ selectedBooking.instructor?.name }}</span>
-                        </div>
-                        <div class="flex justify-between mb-2">
-                            <span class="text-gray-600">地點：</span>
-                            <span>{{ selectedBooking.merchantName }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">點數：</span>
-                            <span class="font-bold text-sky-600">{{ selectedBooking.points }}</span>
-                        </div>
-                    </div>
-                </div>
-                <template #footer>
-                    <Button label="取消預約" icon="pi pi-times" severity="danger" outlined
-                        @click="selectedBooking && cancelBooking(selectedBooking)" class="mr-2" />
-                    <Button label="關閉" @click="showDetailDialog = false" class="!bg-sky-500 !border-sky-500" />
-                </template>
-            </Dialog>
             <Toast />
-            <ConfirmDialog class="max-w-md w-full" group="schedule" />
+            <BookingDetailDialog v-model:showDetailDialog="showDetailDialog" v-model:selectedBooking="selectedBooking" @confirmCancelSelectedBooking="confirmCancelBooking" /> 
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, provide, inject, type Ref } from 'vue';
+import { ref, computed, onMounted, inject, type Ref } from 'vue';
 import DateRangeFilter from '@/components/common/DateRangeFilter.vue';
 import { useBookingStore } from '@/stores/bookingStore';
-import { byDate, formatDateString } from '@/utils/dateUtils';
+import { byDate } from '@/utils/dateUtils';
 import { BookingStatus } from '@/enums/BookingStatus';
 import DataView from 'primevue/dataview';
 import type { Booking } from '@/types/booking';
 import { useConfirm } from 'primevue/useconfirm';
-import { showSuccess, showError } from '@/utils/toastHelper';
+import { showError, showSuccess } from '@/utils/toastHelper';
 import Dialog from 'primevue/dialog';
-import { useToast } from 'primevue/usetoast';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
+import BookingDetailDialog from '@/components/user/BookingDetailDialog.vue';
 
 const showLoginDialog = inject('showLoginDialog') as Ref<boolean>;
 
@@ -144,12 +108,11 @@ const router = useRouter();
 const bookingStore = useBookingStore();
 const confirm = useConfirm();
 const layout = ref('list');
-const toast = useToast();
 
 const showDetailDialog = ref(false);
-const selectedBooking = ref<Booking | null>(null);
+const selectedBooking = ref<Booking>({} as Booking);
 const loading = ref(false);
-
+const showCancelDialog = ref(false);
 // 日期範圍
 const startDate = ref(new Date());
 const endDate = ref(new Date(startDate.value.getTime() + 7 * 24 * 60 * 60 * 1000));
@@ -187,7 +150,7 @@ const fetchFilteredBookings = async () => {
 
 
 const bookingsByDate = computed(() => {
-    return byDate(bookingsInRange.value, booking => booking.date instanceof Date ? booking.date : booking.createdAt);
+    return byDate(bookingsInRange.value, booking => new Date(booking.date));
 });
 
 // 显示课程详情
@@ -196,35 +159,10 @@ const showBookingDetail = (booking: Booking) => {
     showDetailDialog.value = true;
 };
 
-// 取消课程预约
-const cancelBooking = async (booking: Booking) => {
-    if (!booking) return;
-    confirm.require({
-        message: '確認取消預約？',
-        header: '取消預約',
-        acceptLabel: '確認取消',
-        rejectLabel: '返回',
-        acceptClass: 'p-button-danger',
-        rejectClass: 'p-button-secondary',
-        group: 'schedule',
-        accept: async () => {
-            try {
-                const result = await bookingStore.cancel(booking.id);
-                if (result.success) {
-                    showSuccess(result.message ?? '預約已取消', '預約已取消');
-                    showDetailDialog.value = false;
-                    // 重新获取数据
-                    fetchFilteredBookings();
-                } else {
-                    showError(result.message ?? '操作失敗', '操作失敗');
-                }
-            } catch (error) {
-                console.error('取消預約失敗:', error);
-                showError('取消預約時發生錯誤');
-            }
-        }
-    });
+const confirmCancelBooking = async () => {
+    showCancelDialog.value = true;
 };
+
 
 const handleLogin = () => {
     showLoginDialog.value = true;
@@ -236,6 +174,8 @@ onMounted(() => {
         start: startDate.value,
         end: endDate.value
     };
+    console.log(1111);
+    
     // 獲取預約數據
     fetchFilteredBookings();
 });

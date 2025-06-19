@@ -378,7 +378,7 @@ const getSessionBooking = (sessionId: number): Booking | undefined => {
 
 // 加載用戶預約狀態
 const loadUserBookings = async () => {
-    if (!useAuthStore().isLoggedIn || !userProfile.value?.id) {
+    if (!useAuthStore().isLoggedIn) {
         return;
     }
     const dateRange = startDate.value.toISOString() + '~' + endDate.value.toISOString();
@@ -639,7 +639,7 @@ const handleBooking = async () => {
         return;
     }
 
-    if (!userProfile.value?.id) {
+    if (!useAuthStore().isLoggedIn) {
         confirm.require({
             message: '請先登入',
             header: '提示',

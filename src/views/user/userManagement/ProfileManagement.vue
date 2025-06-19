@@ -41,20 +41,20 @@
                     <h3 class="text-lg font-semibold mb-4 pb-2 border-b border-sky-100 text-sky-700">
                         <i class="pi pi-phone mr-2"></i>聯絡資訊
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 gap-4">
                         <FormField name="email" class="col-span-1">
                             <div class="form-label">電子郵件</div>
                             <InputText class="w-full bg-gray-50" disabled />
                             <small class="text-gray-500">郵件地址無法修改</small>
                         </FormField>
 
-                        <FormField name="phone" class="col-span-1">
+                        <!-- <FormField name="phone" class="col-span-1">
                             <div class="form-label">手機號碼</div>
                             <InputText class="w-full border-sky-200 focus:border-sky-500" />
                             <Message v-if="$form.phone?.invalid" severity="secondary" size="small" variant="simple">
                                 {{ $form.phone?.error?.message }}
                             </Message>
-                        </FormField>
+                        </FormField> -->
 
                         <FormField name="address" class="col-span-2">
                             <div class="form-label">地址</div>
@@ -185,17 +185,17 @@
                 </div>
 
                 <!-- 通知設定 -->
-                <div class="card p-4 shadow-sm rounded-lg col-span-1 lg:col-span-2 border border-sky-100">
+                <div class="card p-4 shadow-sm rounded-lg border border-sky-100">
                     <h3 class="text-lg font-semibold mb-4 pb-2 border-b border-sky-100 text-sky-700">
                         <i class="pi pi-bell mr-2"></i>通知設定
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2  gap-4">
                         <div class="flex items-center justify-between p-3 border rounded-lg border-sky-100 bg-white hover:bg-sky-50 transition-colors">
                             <div>
                                 <h4 class="font-medium text-sky-700">電子郵件通知</h4>
                                 <p class="text-sm text-gray-500">接收系統重要通知</p>
                             </div>
-                            <InputSwitch v-model="form.notifications.email" class="!bg-sky-500" />
+                            <InputSwitch v-model="form.notifications.email"/>
                         </div>
 
                         <div class="flex items-center justify-between p-3 border rounded-lg border-sky-100 bg-white hover:bg-sky-50 transition-colors">
@@ -203,7 +203,7 @@
                                 <h4 class="font-medium text-sky-700">推播通知</h4>
                                 <p class="text-sm text-gray-500">即時接收最新消息</p>
                             </div>
-                            <InputSwitch v-model="form.notifications.push" class="!bg-sky-500" />
+                            <InputSwitch v-model="form.notifications.push"/>
                         </div>
 
                         <div class="flex items-center justify-between p-3 border rounded-lg border-sky-100 bg-white hover:bg-sky-50 transition-colors">
@@ -211,23 +211,16 @@
                                 <h4 class="font-medium text-sky-700">活動提醒</h4>
                                 <p class="text-sm text-gray-500">課程與活動開始前提醒</p>
                             </div>
-                            <InputSwitch v-model="form.notifications.activity" class="!bg-sky-500" />
+                            <InputSwitch v-model="form.notifications.activity"/>
                         </div>
 
-                        <div class="flex items-center justify-between p-3 border rounded-lg border-sky-100 bg-white hover:bg-sky-50 transition-colors">
-                            <div>
-                                <h4 class="font-medium text-sky-700">優惠資訊</h4>
-                                <p class="text-sm text-gray-500">最新優惠與促銷通知</p>
-                            </div>
-                            <InputSwitch v-model="form.notifications.promotion" class="!bg-sky-500" />
-                        </div>
 
                         <div class="flex items-center justify-between p-3 border rounded-lg border-sky-100 bg-white hover:bg-sky-50 transition-colors">
                             <div>
                                 <h4 class="font-medium text-sky-700">新課程通知</h4>
                                 <p class="text-sm text-gray-500">新課程上架時通知</p>
                             </div>
-                            <InputSwitch v-model="form.notifications.newCourse" class="!bg-sky-500" />
+                            <InputSwitch v-model="form.notifications.newCourse"/>
                         </div>
                     </div>
                 </div>
@@ -395,7 +388,7 @@ import { zodResolver } from '@primevue/forms/resolvers/zod';
 import { z } from 'zod';
 import InputText from 'primevue/inputtext';
 import Message from 'primevue/message';
-import type { User } from '@/types';
+import type { User, UserUpdateRequest } from '@/types';
 import { Form, FormField } from '@primevue/forms';
 import Dialog from 'primevue/dialog';
 import { UserGender, UserGenderLabelShort } from '@/enums/User';
@@ -415,12 +408,28 @@ const profile = computed(() => userStore.user);
 const behaviorProfile = computed(() => userStore.profile);
 
 // 業務方法 - 更新用戶資料
-const updateProfile = async (updatedProfile: Partial<User>) => {
-    const res = await userStore.updateProfile(updatedProfile);
-    if (res.success) {
-        showSuccess(res.message || '個人資料更新成功', '成功');
-    } else {
-        showError(res.message || '個人資料更新失敗', '失敗');
+const updateProfile = async (updatedProfile: UserUpdateRequest) => {
+    if (!userStore.user.id) {
+        showError('用戶未登入', '錯誤')
+        return { success: false, message: '用戶未登入' }
+    }
+
+    try {
+        const res = await userService.updateProfile(userStore.user.id, updatedProfile)
+        
+        if (res.success && res.data) {
+            // 更新本地用戶資料
+            await userStore.fetchUserProfile(userStore.user.id)
+            showSuccess(res.message || '個人資料更新成功', '成功')
+            return { success: true, message: res.message || '個人資料更新成功' }
+        } else {
+            showError(res.message || '個人資料更新失敗', '失敗')
+            return { success: false, message: res.message || '個人資料更新失敗' }
+        }
+    } catch (error) {
+        console.error('更新用戶資料時發生錯誤:', error)
+        showError('網路錯誤，請稍後再試', '錯誤')
+        return { success: false, message: '網路錯誤，請稍後再試' }
     }
 };
 
@@ -598,11 +607,7 @@ const clearAllInterests = () => {
 const resolver = zodResolver(
     z.object({
         name: z.string({ required_error: '姓名為必填欄位' })
-            .regex(
-                /^[a-zA-Z0-9_]*$/,
-                '只能包含英文、數字及底線，不可包含空白及特殊符號'
-            ),
-        phone: z.string().min(1, { message: '手機號碼不能為空' }),
+            .min(1, { message: '姓名不能為空' }),
         birthday: z.date().max(new Date(), { message: '生日不能早於今天' }).optional(),
         address: z.string().min(1, { message: '地址不能為空' }).optional(),
         gender: z.nativeEnum(UserGender).optional()
@@ -737,14 +742,14 @@ const resetForm = () => {
 const saveProfile = async (values: any) => {
     if (!updateProfile) return;
     
-    // 合併基本資料和擴展資料
-    const profileData = {
-        ...values,
-        twoFactorEnabled: form.twoFactorEnabled,
-        socialAccounts: form.socialAccounts,
-        interests: form.interests,
-        notifications: form.notifications,
-        preferences: form.preferences
+    // 構建符合 UserUpdateRequest 格式的數據
+    const profileData: UserUpdateRequest = {
+        name: values.name,
+        avatarUrl: values.avatarUrl,
+        address: values.address,
+        birthday: values.birthday ? values.birthday.toISOString() : undefined,
+        gender: values.gender,
+        regionCode: values.regionCode
     };
     
     // 保存基本資料到用戶表

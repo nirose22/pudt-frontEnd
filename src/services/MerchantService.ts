@@ -3,17 +3,16 @@ import { API_ROUTES, ERROR_MESSAGES } from '@/utils/apiConfig'
 import type { Merchant, MerchantStats, Instructor, Course, Result } from '@/types'
 import { request } from '@/utils/requestHelper'
 
-type MerchantId = number | 'me'
+type MerchantId = number
 
 export class MerchantService {
     /**
      * 獲取商家資料
      * @param id 商家ID，不傳則獲取當前登入商家
      */
-    static async fetchMerchant(id?: MerchantId): Promise<Result<Merchant>> {
+    static async fetchMerchant(id: MerchantId): Promise<Result<Merchant>> {
         return request<Merchant>(
-            () => api.get(API_ROUTES.MERCHANT.DETAIL(id ?? 'me')),
-            ERROR_MESSAGES.MERCHANT_ERROR
+            () => api.get(API_ROUTES.MERCHANT.DETAIL(id))
         )
     }
 
@@ -24,8 +23,7 @@ export class MerchantService {
      */
     static async updateMerchant(id: MerchantId, payload: Partial<Merchant>): Promise<Result<Merchant>> {
         return request<Merchant>(
-            () => api.put(API_ROUTES.MERCHANT.DETAIL(id), payload),
-            ERROR_MESSAGES.MERCHANT_ERROR
+            () => api.put(API_ROUTES.MERCHANT.DETAIL(id), payload)
         )
     }
 
@@ -33,10 +31,9 @@ export class MerchantService {
      * 獲取商家課程列表
      * @param id 商家ID，不傳則獲取當前登入商家
      */
-    static async fetchMerchantCourses(id?: MerchantId): Promise<Result<Course[]>> {
+    static async fetchMerchantCourses(id: MerchantId): Promise<Result<Course[]>> {
         return request<Course[]>(
-            () => api.get(API_ROUTES.MERCHANT.COURSES(id ?? 'me')),
-            ERROR_MESSAGES.MERCHANT_ERROR
+            () => api.get(API_ROUTES.MERCHANT.COURSES(id))
         )
     }
 
@@ -44,10 +41,9 @@ export class MerchantService {
      * 獲取商家統計資料
      * @param id 商家ID
      */
-    static async fetchMerchantStats(id?: MerchantId): Promise<Result<MerchantStats>> {
+    static async fetchMerchantStats(id: MerchantId): Promise<Result<MerchantStats>> {
         return request<MerchantStats>(
-            () => api.get(API_ROUTES.MERCHANT.STATS(id ?? 'me')),
-            ERROR_MESSAGES.MERCHANT_ERROR
+            () => api.get(API_ROUTES.MERCHANT.STATS(id))
         )
     }
 
@@ -55,10 +51,9 @@ export class MerchantService {
      * 獲取商家講師列表
      * @param id 商家ID
      */
-    static async fetchInstructors(id?: MerchantId): Promise<Result<Instructor[]>> {
+    static async fetchInstructors(id: MerchantId): Promise<Result<Instructor[]>> {
         return request<Instructor[]>(
-            () => api.get(API_ROUTES.MERCHANT.INSTRUCTORS(id ?? 'me')),
-            ERROR_MESSAGES.MERCHANT_ERROR
+            () => api.get(API_ROUTES.MERCHANT.INSTRUCTORS(id))
         )
     }
 

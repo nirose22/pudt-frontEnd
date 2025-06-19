@@ -15,7 +15,7 @@
                 </div>
                 <div class="flex flex-wrap gap-2">
                     <Button label="儲值點數" icon="pi pi-plus" class="p-button-raised p-button-rounded" @click="showPurchaseDialog = true" />
-                    <Button label="點數歷史" icon="pi pi-history" class="p-button-raised p-button-rounded p-button-outlined" @click="loadHistoryAndShow" />
+                    <Button label="點數歷史" icon="pi pi-history" raised rounded variant="" @click="loadHistoryAndShow" />
                 </div>
             </div>
         </div>
@@ -23,7 +23,7 @@
         <!-- PUDT 課卡儲值方案 -->
         <div class="mb-8">
             <h3 class="text-lg font-bold mb-4 text-sky-700 flex items-center">
-                <i class="pi pi-ticket mr-2"></i>PUDT 課卡儲值方案
+                <i csass="pi pi-ticket mr-2"></i>PUDT 課卡儲值方案
             </h3>
             
             <!-- 載入狀態 -->

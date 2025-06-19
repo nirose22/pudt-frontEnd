@@ -21,14 +21,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { useBookingStore } from '@/stores/bookingStore';
+import { showSuccess, showError } from '@/utils/toastHelper';
+import type { Booking } from '@/types/booking';
+
+const bookingStore = useBookingStore();
+const selectedBooking = defineModel<Booking>('selectedBooking', { required: true });
 
 const showCancelDialog = defineModel<boolean>('showCancelDialog', { required: true });
-
 const emit = defineEmits(['cancel']);
 
-const handleCancelBooking = () => {
-    emit('cancel');
-    showCancelDialog.value = false;
+const handleCancelBooking = async () => {
+    const result = await bookingStore.cancel(selectedBooking.value.id);
+    if (result.success) {
+        showSuccess(result.message ?? '預約已取消', '預約已取消');
+        emit('cancel');
+        showCancelDialog.value = false;
+    } else {
+        showError(result.message ?? '操作失敗', '操作失敗');
+    }
+
 };
 </script>

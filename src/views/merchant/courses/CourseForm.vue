@@ -269,7 +269,6 @@ import type { Course, CourseDetailDTO } from '@/types/course';
 import { CourseStatus, CourseStatusLabel } from '@/enums/Course';
 import { MainCategory, MainCategoryLabel, SubCategory, SubCategoryLabel } from '@/enums/CourseCategory';
 import { formatDate, formatTime } from '@/utils/dateUtils';
-import { getCourseStatusLabel, getCourseStatusSeverity } from '@/utils/statusUtils';
 import {
     Card, InputText, InputNumber, Select, MultiSelect,
     Calendar, Button, Dialog, Tag
@@ -277,6 +276,8 @@ import {
 import Editor from 'primevue/editor';
 import { mockRegions } from '@/services/MockService';
 import { useCourseStore } from '@/stores/courseStore';
+import { RegionCode } from '@/enums';
+import { CourseService } from '@/services/CourseService';
 
 const route = useRoute();
 const router = useRouter();
@@ -298,10 +299,8 @@ const course = ref<CourseDetailDTO>({
     description: '',
     status: CourseStatus.ACTIVE,
     points: 0,
-    region: undefined,
-    publishDate: null,
-    categories: [],
-    coverUrl: undefined,
+    region: '' as RegionCode,
+    coverUrl: '',
     images: [],
     sessions: [],
     merchantId: 0,
@@ -489,8 +488,8 @@ function addTimeSlot(): void {
     id: 0,
     courseId: course.value.id,
     date: new Date(),
-    start: now,
-    end: oneHourLater,
+    start: now.toISOString(),
+    end: oneHourLater.toISOString(),
     seats: 10,
     seatsLeft: 10
   });
@@ -525,7 +524,10 @@ async function uploadImage(): Promise<void> {
     
     // 添加新圖片
     course.value.images.push({
+      id: 0,
+      courseId: course.value.id,
       url: 'https://via.placeholder.com/400x300?text=課程圖片',
+      thumbnailUrl: 'https://via.placeholder.com/400x300?text=課程圖片',
       alt: '課程圖片'
     });
     
@@ -551,13 +553,13 @@ async function saveCourse(): Promise<void> {
   saving.value = true;
   try {
     if (isEditMode.value) {
-      const result = await courseStore.updateCourse(courseId.value, course.value);
+      const result = await CourseService.updateCourse(courseId.value, course.value);
       if (result.success) {
         showSuccess('課程已成功更新', '更新成功');
         router.push('/merchant/courses');
       }
     } else {
-      const result = await courseStore.createCourse(course.value);
+      const result = await CourseService.createCourse(course.value);
       if (result.success) {
         showSuccess('課程已成功建立', '建立成功');
         router.push('/merchant/courses');

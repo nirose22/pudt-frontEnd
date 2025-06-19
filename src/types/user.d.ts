@@ -18,6 +18,39 @@ export interface User {
   token?: string
 }
 
+/**
+ * 用戶資料更新請求
+ */
+export interface UserUpdateRequest {
+  name?: string
+  email?: string
+  avatarUrl?: string
+  address?: string
+  birthday?: string
+  gender?: UserGender
+  regionCode?: RegionCode
+  phone?: string
+}
+
+/**
+ * 用戶資料更新響應
+ */
+export interface UserUpdateResponse {
+  id: number
+  name: string
+  email: string
+  points: number
+  avatarUrl?: string
+  address?: string
+  birthday?: string
+  gender?: UserGender
+  regionCode?: RegionCode
+  role: UserRole
+  phone?: string
+  createdAt: string
+  lastLogin?: string
+}
+
 export interface UserBehaviorProfile {
   userId: number
   name?: string

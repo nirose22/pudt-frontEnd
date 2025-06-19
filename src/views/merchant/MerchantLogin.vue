@@ -118,10 +118,8 @@ const onFormSubmit = async (e: any) => {
         rememberMe: rememberMe.value
       })
       if (res.success) {
-        console.log(1111);
-        
         showSuccess(res.message || '登入成功')
-        router.push('/merchant/dashboard')
+        router.push('/merchant')
       } else {
         showError(res.message || '登入失敗')
       }

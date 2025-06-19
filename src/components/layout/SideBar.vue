@@ -69,7 +69,7 @@ const { isLoggedIn } = useAuthStore();
 
 const userStore = useUserStore();
 const authStore = useAuthStore();
-const profile = computed(() => userStore.profile);
+const profile = computed(() => userStore.user);
 
 const menuDt = ref({
     mask: {

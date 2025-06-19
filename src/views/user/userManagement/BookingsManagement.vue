@@ -126,7 +126,7 @@
             @addToCalendar="addToCalendar" />
 
         <!-- 取消預約確認對話框 -->
-        <CancelCourseDialog v-model:showCancelDialog="showCancelDialog" @cancel="handleCancelBooking" />
+        <CancelBookingDialog v-model:showCancelDialog="showCancelDialog" @cancel="handleCancelBooking" />
 
         <!-- 行事曆同步對話框 -->
         <Dialog v-model:visible="showCalendarSyncDialog" header="同步至行事曆" :style="{ width: '450px' }"
@@ -197,7 +197,7 @@ import { useUserStore } from '@/stores/userStore';
 import { useAuthStore } from '@/stores/authStore';
 import { BookingService } from '@/services/UserBookingService';
 import { showSuccess, showError } from '@/utils/toastHelper';
-import CancelCourseDialog from '@/components/user/CancelCourseDialog.vue';
+import CancelBookingDialog from '@/components/user/CancelBookingDialog.vue';
 import { getBookingStatusLabel, getBookingStatusSeverity } from '@/utils/statusUtil';
 import BookingDetailDialog from '@/components/user/BookingDetailDialog.vue';
 import Carousel from 'primevue/carousel';

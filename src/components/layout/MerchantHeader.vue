@@ -1,6 +1,6 @@
 <template>
     <!-- 頂部導航欄 -->
-    <header v-if="shouldShowHeader" class="bg-white w-full shadow-sm">
+    <header class="bg-white w-full shadow-sm">
         <div class="flex justify-between items-center px-4 py-2">
             <RouterLink to="/merchant" class="flex gap-2 w-40 flex-1 items-center">
                 <!-- 菜單按鈕 - 始終可見 -->
@@ -42,11 +42,6 @@ import { UserRole } from '@/enums/User';
 import BaseLogo from '@/components/layout/BaseLogo.vue';
 const router = useRouter();
 const authStore = useAuthStore();
-
-// 检查当前用户是否为商家角色
-const shouldShowHeader = computed(() => {
-    return authStore.role === UserRole.Merchant;
-});
 
 // 侧边栏状态
 const toggleSidebar = () => {

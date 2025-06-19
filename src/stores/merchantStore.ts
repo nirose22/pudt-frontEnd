@@ -52,10 +52,9 @@ export const useMerchantStore = defineStore('merchant', () => {
     }
   }
 
-  const normalizeId = (id?: number | 'me') => id ?? 'me'
 
-  async function fetchMerchant(id?: number | 'me') {
-    const data = await withLoading(() => MerchantService.fetchMerchant(normalizeId(id)), '無法加載商家資料')
+  async function fetchMerchant(id: number) {
+    const data = await withLoading(() => MerchantService.fetchMerchant(id), '無法加載商家資料')
     if (data) state.profile = data as Merchant
   }
 
@@ -71,31 +70,31 @@ export const useMerchantStore = defineStore('merchant', () => {
     }
   }
 
-  async function fetchMerchantCourses(id?: number | 'me') {
-    const list = await withLoading(() => MerchantService.fetchMerchantCourses(normalizeId(id)), '無法加載課程資料')
+  async function fetchMerchantCourses(id: number) {
+    const list = await withLoading(() => MerchantService.fetchMerchantCourses(id), '無法加載課程資料')
     if (list) state.courses = list as Course[]
   }
 
-  async function fetchMerchantStats(id: number | 'me') {
-    const s = await withLoading(() => MerchantService.fetchMerchantStats(normalizeId(id)), '無法加載統計資料')
+  async function fetchMerchantStats(id: number) {
+    const s = await withLoading(() => MerchantService.fetchMerchantStats(id), '無法加載統計資料')
     if (s) state.stats = s as MerchantStats
   }
 
-  async function fetchInstructors(id: number | 'me') {
-    const list = await withLoading(() => MerchantService.fetchInstructors(normalizeId(id)), '無法加載講師資料')
+  async function fetchInstructors(id: number) {
+    const list = await withLoading(() => MerchantService.fetchInstructors(id), '無法加載講師資料')
     if (list) state.instructors = list as Instructor[]
   }
 
-  async function addInstructor(id: number | 'me', payload: Omit<Instructor, 'id' | 'merchantId'>) {
-    const instructor = await withLoading(() => MerchantService.addInstructor(normalizeId(id), payload), '新增講師失敗')
+  async function addInstructor(id: number, payload: Omit<Instructor, 'id' | 'merchantId'>) {
+    const instructor = await withLoading(() => MerchantService.addInstructor(id, payload), '新增講師失敗')
     if (instructor) {
       state.instructors.push(instructor as Instructor)
       showSuccess('講師已新增')
     }
   }
 
-  async function updateInstructor(id: number | 'me', instructorId: number, payload: Partial<Instructor>) {
-    const updated = await withLoading(() => MerchantService.updateInstructor(normalizeId(id), instructorId, payload), '更新講師資料失敗')
+  async function updateInstructor(id: number, instructorId: number, payload: Partial<Instructor>) {
+    const updated = await withLoading(() => MerchantService.updateInstructor(id, instructorId, payload), '更新講師資料失敗')
     if (updated) {
       const idx = state.instructors.findIndex(i => i.id === instructorId)
       if (idx !== -1) state.instructors[idx] = updated as Instructor
@@ -103,8 +102,8 @@ export const useMerchantStore = defineStore('merchant', () => {
     }
   }
 
-  async function deleteInstructor(id: number | 'me', instructorId: number) {
-    const ok = await withLoading(() => MerchantService.deleteInstructor(normalizeId(id), instructorId), '刪除講師失敗')
+  async function deleteInstructor(id: number, instructorId: number) {
+    const ok = await withLoading(() => MerchantService.deleteInstructor(id, instructorId), '刪除講師失敗')
     if (ok !== undefined) {
       state.instructors = state.instructors.filter(i => i.id !== instructorId)
       showSuccess('講師已刪除')

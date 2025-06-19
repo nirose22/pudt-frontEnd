@@ -67,11 +67,11 @@
                 class="!border-gray-300 !text-gray-700" />
             <Button v-if="selectedBooking && canCancel(selectedBooking)" label="取消預約" icon="pi pi-times"
                 severity="danger" @click="confirmCancelSelectedBooking" />
-            <Button label="加入行事曆" icon="pi pi-calendar-plus" @click="addToCalendar"
+            <Button v-if="selectedBooking && canCancel(selectedBooking)" label="加入行事曆" icon="pi pi-calendar-plus" @click="addToCalendar"
                 class="!bg-sky-500 !border-sky-500" />
         </template>
     </Dialog>
-
+    <CancelBookingDialog v-model:showCancelDialog="showCancelDialog" v-model:selectedBooking="selectedBooking" @cancel="confirmCancelSelectedBooking"/> 
 </template>
 
 <script setup lang="ts">
@@ -79,11 +79,13 @@ import type { Booking } from '@/types';
 import { BookingStatus } from '@/enums';
 import { getBookingStatusSeverity, getBookingStatusLabel } from '@/utils/statusUtil';
 import Avatar from 'primevue/avatar';
+import CancelBookingDialog from '@/components/user/CancelBookingDialog.vue';
 import Tag from 'primevue/tag';
+import { ref } from 'vue';
 
 const showDetailDialog = defineModel<boolean>('showDetailDialog', { required: true });
 const selectedBooking = defineModel<Booking>('selectedBooking', { required: true });
-
+const showCancelDialog = ref(false);
 const emit = defineEmits(['confirmCancelSelectedBooking', 'addToCalendar']);
 
 // 是否可以取消预约
@@ -95,8 +97,7 @@ const canCancel = (booking: Booking) => {
 // 确认取消选中的预约
 function confirmCancelSelectedBooking(): void {
     if (selectedBooking.value) {
-        emit('confirmCancelSelectedBooking', selectedBooking.value);
-        showDetailDialog.value = false;
+        showCancelDialog.value = true;
     }
 }
 
