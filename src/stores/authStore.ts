@@ -17,7 +17,7 @@ export interface RegisterData {
 	name: string
 	email: string
 	password: string
-	age: number | null
+	birthDate: Date | null
 	gender?: string
 	location?: string
 	interests: string[]
@@ -38,11 +38,8 @@ export const useAuthStore = defineStore('auth', () => {
 		if (res.success && res.data) {
 			token.value = res.data.token || null;
 			role.value = res.data.role as UserRole;
-			console.log('role', role.value);
-			console.log('token', token.value);
-			
-			useUserStore().fetchUserProfile(res.data.id);
-			useUserStore().fetchBehaviorProfile(res.data.id)
+			useUserStore().user = res.data
+			useUserStore().refreshProfile(res.data.id);
 		}
 		return res;
 	}
@@ -76,12 +73,11 @@ export const useAuthStore = defineStore('auth', () => {
 		if (res.success && res.data) {
 			token.value = res.data.token || null;
 			role.value = res.data.role as UserRole;
-			
-			// 保存用戶偏好到本地存儲
-			localStorage.setItem('userInterests', JSON.stringify(data.interests));
-			localStorage.setItem('userAge', data.age?.toString() || '');
-			
-			useUserStore().fetchUserProfile(res.data.id);
+			login({
+				account: data.email,
+				password: data.password,
+				rememberMe: true
+			});
 		}
 		return res;
 	}

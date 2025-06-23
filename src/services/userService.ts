@@ -2,11 +2,9 @@ import api from '@/utils/api'
 import { API_ROUTES } from '@/utils/apiConfig'
 import type { 
   User, 
-  Course, 
   Result, 
   UserBehaviorProfile, 
   UserInterestsRequest, 
-  UserPreferencesRequest,
   UserUpdateRequest,
   UserUpdateResponse
 } from '@/types'

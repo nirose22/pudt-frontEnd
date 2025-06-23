@@ -26,8 +26,8 @@ export const useUserStore = defineStore('user', () => {
   })
 
   /* ---------- getters ---------- */
-  const userName = computed(() => state.profile?.name || UserRole.Guest)
-  const userId = computed(() => state.profile?.userId ?? 0)
+  const userName = computed(() => state.profile?.name)
+  const userId = computed(() => state.user?.id ?? 0)
   const userInterests = computed(() => state.profile?.interests ?? [])
   const userAvatar = computed(() => state.user?.avatarUrl)
   const userRegion = computed(() => state.profile?.preferredRegions)
@@ -50,13 +50,14 @@ export const useUserStore = defineStore('user', () => {
     if (!state.lastProfileUpdate) return true
     const now = new Date()
     const diff = now.getTime() - state.lastProfileUpdate.getTime()
-    return diff > 24 * 60 * 60 * 1000
+    return diff > 24 * 60 * 60 * 1000 // 24小時
   })
 
   const primaryInterests = computed(() => state.profile?.interests.slice(0, 3))
 
 
   /* ---------- actions ---------- */
+
   async function fetchUserProfile(id: number) {
     if (state.isLoading) return
     state.isLoading = true
@@ -134,22 +135,12 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  async function refreshProfile() {
-    if (!userId.value) return
+  async function refreshProfile(id?: number) {
+    const userUid = id ?? userId.value
+    if (!userUid) return
     state.lastProfileUpdate = null
-    await fetchUserProfile(userId.value)
-  }
-
-  async function logout() {
-    try {
-      if (userId.value) {
-        await userService.logout()
-      }
-    } catch (error) {
-      console.warn('登出 API 調用失敗:', error)
-    } finally {
-      clearUserData()
-    }
+    await fetchUserProfile(userUid)
+    await fetchBehaviorProfile(userUid)
   }
 
   function clearUserData() {
@@ -200,7 +191,6 @@ export const useUserStore = defineStore('user', () => {
     updateInterests,
     updateAddress,
     refreshProfile,
-    logout,
     clearUserData,
     initialize,
     hasInterest,

@@ -1,4 +1,5 @@
 <template>
+    <Toast />
     <div class="min-h-screen flex items-center justify-center bg-gray-50 py-8">
         <div class="max-w-lg w-full p-6 bg-white rounded-lg shadow-lg">
             <div class="text-center mb-6">
@@ -57,11 +58,12 @@
 
                         <div>
                             <IftaLabel>
-                                <InputNumber id="age" v-model="formData.age" class="w-full" placeholder="請輸入您的年齡"
-                                    :min="1" :max="120" :class="{ 'p-invalid': errors.age }" />
-                                <label for="age">年齡</label>
+                                <Calendar id="birthDate" v-model="formData.birthDate" class="w-full" placeholder="請選擇您的生日"
+                                    :maxDate="new Date()" yearRange="1900:2024" showIcon dateFormat="yy/mm/dd"
+                                    :class="{ 'p-invalid': errors.birthDate }" />
+                                <label for="birthDate">生日</label>
                             </IftaLabel>
-                            <small v-if="errors.age" class="p-error">{{ errors.age }}</small>
+                            <small v-if="errors.birthDate" class="p-error">{{ errors.birthDate }}</small>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -123,7 +125,7 @@
                 <h2 class="text-2xl font-semibold mb-2">註冊成功！</h2>
                 <p class="text-gray-600 mb-6">感謝您的註冊，即將為您跳轉到首頁並顯示推薦課程</p>
                 <div class="flex justify-center">
-                    <Button type="button" label="開始探索" severity="success" @click="goToHomePage" />
+                    <Button type="button" label="開始探索" severity="success" @click="router.push('/')" />
                 </div>
             </div>
 
@@ -144,12 +146,12 @@ import { ref, reactive, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import { MainCategory, MainCategoryLabel } from '@/enums/CourseCategory';
-import { z } from 'zod';
+import { number, z } from 'zod';
 import { Form } from '@primevue/forms';
 
 import Steps from 'primevue/steps';
 import InputText from 'primevue/inputtext';
-import InputNumber from 'primevue/inputnumber';
+import Calendar from 'primevue/calendar';
 import Password from 'primevue/password';
 import Select from 'primevue/select';
 import Button from 'primevue/button';
@@ -157,10 +159,12 @@ import IftaLabel from 'primevue/iftalabel';
 import { useAuthStore } from '@/stores/authStore';
 import { UserGender, UserGenderLabel } from '@/enums/User';
 import { RegionCode, RegionCodeLabel } from '@/enums/RegionCode';
+import { useUserStore } from '@/stores/userStore';
 
 const router = useRouter();
 const toast = useToast();
 const authStore = useAuthStore();
+const userStore = useUserStore();
 const errors = reactive<Record<string, string>>({});
 const showLoginDialog = inject('showLoginDialog');
 
@@ -211,7 +215,7 @@ const formData = reactive({
     email: '',
     password: '',
     confirmPassword: '',
-    age: null as number | null,
+    birthDate: null as Date | null,
     gender: '',
     location: '',
     interests: [] as string[]
@@ -228,10 +232,10 @@ const registerSchema = z.object({
             .regex(/^(?=.*[A-Za-z])(?=.*\d)/, '密碼需包含字母和數字'),
     confirmPassword: z.string()
         .min(1, '請確認您的密碼'),
-    age: z.number({
-        required_error: '請輸入您的年齡',
-        invalid_type_error: '年齡必須是數字'
-    }).min(1, '年齡必須大於或等於 1').max(120, '年齡必須小於或等於 120')
+    birthDate: z.date({
+        required_error: '請選擇您的生日',
+        invalid_type_error: '請輸入有效的日期'
+    }).refine(date => date <= new Date(), '生日不能是未來日期')
 }).refine(data => data.password === data.confirmPassword, {
     message: '密碼不匹配',
     path: ['confirmPassword']
@@ -304,7 +308,7 @@ const submitRegistration = async () => {
             name: formData.name,
             email: formData.email,
             password: formData.password,
-            age: formData.age,
+            birthDate: formData.birthDate,
             gender: formData.gender || undefined,
             location: formData.location || undefined,
             interests: formData.interests
@@ -314,13 +318,8 @@ const submitRegistration = async () => {
         const result = await authStore.register(userData);
 
         if (result.success) {
-            // 保存用戶偏好到本地存儲，以便在首頁使用
-            localStorage.setItem('userInterests', JSON.stringify(formData.interests));
-            localStorage.setItem('userAge', formData.age?.toString() || '');
-
             // 進入完成步驟
             currentStep.value++;
-
             toast.add({
                 severity: 'success',
                 summary: '註冊成功',
@@ -348,10 +347,6 @@ const submitRegistration = async () => {
     }
 };
 
-// 完成註冊，前往首頁
-const goToHomePage = () => {
-    router.push('/');
-};
 </script>
 
 <style scoped>
