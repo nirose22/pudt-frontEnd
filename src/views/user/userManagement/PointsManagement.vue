@@ -14,7 +14,6 @@
                     </div>
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <Button label="儲值點數" icon="pi pi-plus" class="p-button-raised p-button-rounded" @click="showPurchaseDialog = true" />
                     <Button label="點數歷史" icon="pi pi-history" raised rounded variant="" @click="loadHistoryAndShow" />
                 </div>
             </div>
@@ -58,7 +57,7 @@
                                 class="p-button-sm"
                                 :loading="purchasingCardId === card.id"
                                 :disabled="purchasing"
-                                @click="handlePurchaseCard(card.id)" />
+                                @click="openCardPurchaseDialog(card.id)" />
                         </div>
                     </div>
                 </div>
@@ -109,16 +108,21 @@
             </DataTable>
         </div>
 
-        <!-- 儲值對話框組件 -->
-        <PurchaseDialog
-            v-model:visible="showPurchaseDialog"
-            :points-cards="availablePointsCards"
-            :purchase-card-id="purchaseCardId"
-            :payment-method="paymentMethod"
-            @update:purchase-card-id="purchaseCardId = $event"
-            @update:payment-method="paymentMethod = $event"
-            @purchase="confirmPurchase"
-            @cancel="cancelPurchase"
+        <!-- 課卡購買對話框組件 -->
+        <CardPurchaseDialog
+            v-model:visible="showCardPurchaseDialog"
+            :points-cards="pointsCards"
+            :purchase-card-id="selectedCardId ?? undefined"
+            :payment-method="selectedPaymentMethod ?? undefined"
+            :purchase-type="selectedPurchaseType"
+            :recipient-info="recipientInfo"
+            :purchasing="purchasing"
+            @update:purchase-card-id="selectedCardId = $event"
+            @update:payment-method="selectedPaymentMethod = $event"
+            @update:purchase-type="selectedPurchaseType = $event"
+            @update:recipient-info="recipientInfo = $event"
+            @purchase="handleCardPurchase"
+            @cancel="cancelCardPurchase"
         />
 
         <!-- 點數歷史對話框組件 -->
@@ -144,7 +148,7 @@ import Select from 'primevue/select';
 import Tag from 'primevue/tag';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
-import PurchaseDialog from '@/components/user/PurchaseDialog.vue';
+import CardPurchaseDialog from '@/components/user/CardPurchaseDialog.vue';
 import HistoryDialog from '@/components/user/HistoryDialog.vue';
 import { useUserStore } from '@/stores/userStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -183,6 +187,17 @@ const showPurchaseDialog = ref(false);
 const purchaseCardId = ref<number | undefined>(undefined);
 const paymentMethod = ref<string | undefined>(undefined);
 const showHistoryDialog = ref(false);
+
+// 課卡購買對話框相關狀態
+const showCardPurchaseDialog = ref(false);
+const selectedCardId = ref<number | null>(null);
+const selectedPaymentMethod = ref<string | null>(null);
+const selectedPurchaseType = ref<string>('direct');
+const recipientInfo = ref({
+    name: '',
+    email: '',
+    message: ''
+});
 
 // 篩選條件
 const filter = ref<FilterOptions>({
@@ -463,6 +478,72 @@ const resetHistoryFilter = () => {
     historyFilter.value = {
         dateRange: null,
         type: ''
+    };
+};
+
+// 課卡購買相關方法
+const openCardPurchaseDialog = (cardId: number) => {
+    if (!authStore.isLoggedIn) {
+        showError('請先登入', '未登入');
+        return;
+    }
+    
+    selectedCardId.value = cardId;
+    showCardPurchaseDialog.value = true;
+};
+
+const handleCardPurchase = async (purchaseData: any) => {
+    purchasing.value = true;
+    
+    try {
+        // 這裡可以根據購買類型調用不同的API
+        if (purchaseData.purchaseType === 'thirdparty') {
+            // 第三方購買邏輯
+            showSuccess('課卡已成功贈送！收件人將收到通知信件。', '贈送成功');
+        } else {
+            // 直接購買邏輯
+            const response = await pointsApi.buyPointsCard(purchaseData.cardId);
+            if (response.success) {
+                showSuccess(response.message || '課卡購買成功', '購買成功');
+                // 重新載入用戶資料和交易記錄
+                await Promise.all([
+                    userStore.fetchUserProfile(userStore.user.id),
+                    loadPointsHistory()
+                ]);
+            } else {
+                showError(response.message || '購買課卡失敗', '購買失敗');
+            }
+        }
+        
+        showCardPurchaseDialog.value = false;
+        resetCardPurchaseState();
+    } catch (error: any) {
+        console.error('購買課卡失敗:', error);
+        if (error.response?.status === 401) {
+            showError('請先登入再進行購買', '未授權');
+        } else if (error.response?.status >= 500) {
+            showError('伺服器錯誤，請稍後再試', '錯誤');
+        } else {
+            showError('購買課卡時發生錯誤', '錯誤');
+        }
+    } finally {
+        purchasing.value = false;
+    }
+};
+
+const cancelCardPurchase = () => {
+    showCardPurchaseDialog.value = false;
+    resetCardPurchaseState();
+};
+
+const resetCardPurchaseState = () => {
+    selectedCardId.value = null;
+    selectedPaymentMethod.value = null;
+    selectedPurchaseType.value = 'direct';
+    recipientInfo.value = {
+        name: '',
+        email: '',
+        message: ''
     };
 };
 

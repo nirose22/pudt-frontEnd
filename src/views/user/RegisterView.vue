@@ -58,12 +58,12 @@
 
                         <div>
                             <IftaLabel>
-                                <Calendar id="birthDate" v-model="formData.birthDate" class="w-full" placeholder="請選擇您的生日"
+                                <Calendar id="birthday" v-model="formData.birthday" class="w-full" placeholder="請選擇您的生日"
                                     :maxDate="new Date()" yearRange="1900:2024" showIcon dateFormat="yy/mm/dd"
-                                    :class="{ 'p-invalid': errors.birthDate }" />
-                                <label for="birthDate">生日</label>
+                                    :class="{ 'p-invalid': errors.birthday }" />
+                                <label for="birthday">生日</label>
                             </IftaLabel>
-                            <small v-if="errors.birthDate" class="p-error">{{ errors.birthDate }}</small>
+                            <small v-if="errors.birthday" class="p-error">{{ errors.birthday }}</small>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -77,9 +77,9 @@
 
                             <div>
                                 <IftaLabel>
-                                    <Select id="location" v-model="formData.location" :options="locationOptions"
+                                    <Select id="region" v-model="formData.region" :options="locationOptions"
                                         optionLabel="name" optionValue="value" placeholder="請選擇地區（選填）" class="w-full" />
-                                    <label for="location">地區</label>
+                                    <label for="region">地區</label>
                                 </IftaLabel>
                             </div>
                         </div>
@@ -186,16 +186,16 @@ const genderOptions = [
 
 // 地區選項
 const locationOptions = [
-    { name: RegionCodeLabel.TPE, value:  RegionCode.TPE},
-    { name: RegionCodeLabel.KHH, value:  RegionCode.KHH},
-    { name: RegionCodeLabel.TNN, value:  RegionCode.TNN},
-    { name: RegionCodeLabel.TCH, value:  RegionCode.TCH},
-    { name: RegionCodeLabel.HSZ, value:  RegionCode.HSZ},
-    { name: RegionCodeLabel.TAO, value:  RegionCode.TAO},
-    { name: RegionCodeLabel.ILA, value:  RegionCode.ILA},
-    { name: RegionCodeLabel.HUA, value:  RegionCode.HUA},
-    { name: RegionCodeLabel.TTT, value:  RegionCode.TTT},
-    { name: RegionCodeLabel.PIF, value:  RegionCode.PIF},
+    { name: RegionCodeLabel.TPE, value: RegionCode.TPE },
+    { name: RegionCodeLabel.KHH, value: RegionCode.KHH },
+    { name: RegionCodeLabel.TNN, value: RegionCode.TNN },
+    { name: RegionCodeLabel.TCH, value: RegionCode.TCH },
+    { name: RegionCodeLabel.HSZ, value: RegionCode.HSZ },
+    { name: RegionCodeLabel.TAO, value: RegionCode.TAO },
+    { name: RegionCodeLabel.ILA, value: RegionCode.ILA },
+    { name: RegionCodeLabel.HUA, value: RegionCode.HUA },
+    { name: RegionCodeLabel.TTT, value: RegionCode.TTT },
+    { name: RegionCodeLabel.PIF, value: RegionCode.PIF },
 ];
 
 // 類別圖標映射
@@ -215,9 +215,9 @@ const formData = reactive({
     email: '',
     password: '',
     confirmPassword: '',
-    birthDate: null as Date | null,
+    birthday: null as Date | null,
     gender: '',
-    location: '',
+    region: '',
     interests: [] as string[]
 });
 
@@ -232,7 +232,7 @@ const registerSchema = z.object({
             .regex(/^(?=.*[A-Za-z])(?=.*\d)/, '密碼需包含字母和數字'),
     confirmPassword: z.string()
         .min(1, '請確認您的密碼'),
-    birthDate: z.date({
+    birthday: z.date({
         required_error: '請選擇您的生日',
         invalid_type_error: '請輸入有效的日期'
     }).refine(date => date <= new Date(), '生日不能是未來日期')
@@ -274,18 +274,17 @@ const toggleInterestSelection = (interest: string) => {
     const index = formData.interests.indexOf(interest);
     if (index >= 0) {
         formData.interests.splice(index, 1);
+    } else if (formData.interests.length < 4) {
+        formData.interests.push(interest);
     } else {
-        if (formData.interests.length < 4) {
-            formData.interests.push(interest);
-        } else {
-            toast.add({
-                severity: 'warn',
-                summary: '已達上限',
-                detail: '您最多只能選擇 4 個興趣類別',
-                life: 3000
-            });
-        }
+        toast.add({
+            severity: 'warn',
+            summary: '已達上限',
+            detail: '您最多只能選擇 4 個興趣類別',
+            life: 3000
+        });
     }
+
 };
 
 // 提交註冊
@@ -308,13 +307,12 @@ const submitRegistration = async () => {
             name: formData.name,
             email: formData.email,
             password: formData.password,
-            birthDate: formData.birthDate,
+            birthday: formData.birthday || null,
             gender: formData.gender || undefined,
-            location: formData.location || undefined,
+            regionCode: formData.region || undefined,
             interests: formData.interests
         };
 
-        // 在實際應用中直接調用 authStore.register
         const result = await authStore.register(userData);
 
         if (result.success) {

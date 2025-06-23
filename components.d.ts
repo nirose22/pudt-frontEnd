@@ -14,6 +14,7 @@ declare module 'vue' {
     BookingDetailDialog: typeof import('./src/components/user/BookingDetailDialog.vue')['default']
     CalendarSyncDialog: typeof import('./src/components/common/CalendarSyncDialog.vue')['default']
     CancelBookingDialog: typeof import('./src/components/user/CancelBookingDialog.vue')['default']
+    CardPurchaseDialog: typeof import('./src/components/user/CardPurchaseDialog.vue')['default']
     CourseCard: typeof import('./src/components/user/CourseCard.vue')['default']
     CourseCarousel: typeof import('./src/components/user/CourseCarousel.vue')['default']
     CourseDetail: typeof import('./src/components/user/CourseDetail.vue')['default']

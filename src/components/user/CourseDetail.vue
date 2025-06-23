@@ -196,11 +196,7 @@
                                                     <i class="pi pi-user text-white text-sm"></i>
                                                 </div>
                                             </div>
-                                            <div class="flex-1 min-w-0">
-                                                <div class="font-medium text-gray-800 text-sm truncate">
-                                                    {{ getInstructorInfo(slot).name }}
-                                                </div>
-                                            </div>
+
                                         </div>
 
                                         <!-- 時間資訊 -->
@@ -282,11 +278,11 @@
                         </p>
                     </div>
                     <div class="flex items-center gap-3">
-                            <Button text rounded :icon="isFavorite ? 'pi pi-heart-fill' : 'pi pi-heart'" :class="{
-                                'text-red-400!': isFavorite,
-                                'hover:bg-red-50': !isFavorite
-                            }" @click="toggleFavorite" :loading="favoriteLoading" aria-label="收藏課程" />
-                            <Button text rounded icon="pi pi-share-alt" class="hover:bg-sky-50" @click="shareCourse" />
+                        <Button text rounded :icon="isFavorite ? 'pi pi-heart-fill' : 'pi pi-heart'" :class="{
+                            'text-red-400!': isFavorite,
+                            'hover:bg-red-50': !isFavorite
+                        }" @click="toggleFavorite" :loading="favoriteLoading" aria-label="收藏課程" />
+                        <Button text rounded icon="pi pi-share-alt" class="hover:bg-sky-50" @click="shareCourse" />
                         <ConfirmDialog id="confirm" style="width: 450px;" />
                         <Button @click="handleBooking" :disabled="!canBook"
                             class="booking-btn px-6 py-2 text-white transition-all" :class="{

@@ -17,9 +17,9 @@ export interface RegisterData {
 	name: string
 	email: string
 	password: string
-	birthDate: Date | null
+	birthday: Date | null
 	gender?: string
-	location?: string
+	regionCode?: string
 	interests: string[]
 }
 
