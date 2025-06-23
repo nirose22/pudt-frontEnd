@@ -76,13 +76,12 @@
                     <i class="pi pi-calendar-times text-6xl text-sky-200 mb-4"></i>
                     <p class="text-sky-600 text-lg mb-2">您目前沒有任何預約</p>
                     <p class="text-gray-500 mb-4">選擇課程並預約參加吧！</p>
-                    <Button label="瀏覽課程" icon="pi pi-search" @click="router.push('/courses')"
+                    <Button label="瀏覽課程" icon="pi pi-search" @click="router.push('/search')"
                         class="!bg-sky-500 !border-sky-500" />
                 </div>
             </div>
-
             <Toast />
-            <BookingDetailDialog v-model:showDetailDialog="showDetailDialog" v-model:selectedBooking="selectedBooking" @confirmCancelSelectedBooking="confirmCancelBooking" /> 
+            <BookingDetailDialog v-model:showDetailDialog="showDetailDialog" v-model:selectedBooking="selectedBooking" @refresh="fetchFilteredBookings" /> 
         </div>
     </div>
 </template>
@@ -95,9 +94,7 @@ import { byDate } from '@/utils/dateUtils';
 import { BookingStatus } from '@/enums/BookingStatus';
 import DataView from 'primevue/dataview';
 import type { Booking } from '@/types/booking';
-import { useConfirm } from 'primevue/useconfirm';
-import { showError, showSuccess } from '@/utils/toastHelper';
-import Dialog from 'primevue/dialog';
+import { showError } from '@/utils/toastHelper';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import BookingDetailDialog from '@/components/user/BookingDetailDialog.vue';
@@ -106,7 +103,6 @@ const showLoginDialog = inject('showLoginDialog') as Ref<boolean>;
 
 const router = useRouter();
 const bookingStore = useBookingStore();
-const confirm = useConfirm();
 const layout = ref('list');
 
 const showDetailDialog = ref(false);
@@ -174,8 +170,6 @@ onMounted(() => {
         start: startDate.value,
         end: endDate.value
     };
-    console.log(1111);
-    
     // 獲取預約數據
     fetchFilteredBookings();
 });

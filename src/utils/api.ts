@@ -46,7 +46,7 @@ api.interceptors.response.use(
       sessionStorage.removeItem('user')
       
       console.log('🚫 檢測到401錯誤，已清除所有登入數據')
-      window.location.href = '/login'
+      window.location.href = '/home'
     }
     return Promise.reject(error)
   }

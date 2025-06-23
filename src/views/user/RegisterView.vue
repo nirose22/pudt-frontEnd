@@ -4,7 +4,7 @@
             <div class="text-center mb-6">
                 <div class="flex justify-center mb-4">
                     <router-link to="/" class="inline-block">
-                        <img src="../../assets/image/pudt_logo-md.png" alt="PUDT Logo" class="h-16" />
+                        <img src="@/assets/image/pudt_logo-sm.png" alt="PUDT Logo" class="h-16" />
                     </router-link>
                 </div>
                 <h1 class="text-3xl font-bold text-gray-800">創建帳號</h1>
@@ -130,9 +130,9 @@
             <div class="text-center mt-8">
                 <p class="text-sm text-gray-600">
                     已有帳號？
-                    <router-link to="/login" class="text-blue-600 hover:text-blue-800">
+                    <a @click="showLoginDialog = true" class="text-blue-600 hover:text-blue-800">
                         立即登入
-                    </router-link>
+                    </a>
                 </p>
             </div>
         </div>
@@ -140,7 +140,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref, reactive, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import { MainCategory, MainCategoryLabel } from '@/enums/CourseCategory';
@@ -162,6 +162,7 @@ const router = useRouter();
 const toast = useToast();
 const authStore = useAuthStore();
 const errors = reactive<Record<string, string>>({});
+const showLoginDialog = inject('showLoginDialog');
 
 // 步驟
 const steps = [
@@ -174,9 +175,9 @@ const loading = ref(false);
 
 // 性別選項
 const genderOptions = [
-    { name: UserGenderLabel.MALE, value: UserGender.Male },
-    { name: UserGenderLabel.FAMALE, value: UserGender.Female },
-    { name: UserGenderLabel.OTHER, value: UserGender.Other },
+    { name: UserGenderLabel[UserGender.Male], value: UserGender.Male },
+    { name: UserGenderLabel[UserGender.Female], value: UserGender.Female },
+    { name: UserGenderLabel[UserGender.Other], value: UserGender.Other },
 ]
 
 // 地區選項

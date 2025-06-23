@@ -12,6 +12,7 @@ declare module 'vue' {
     AsyncState: typeof import('./src/components/common/AsyncState.vue')['default']
     BaseLogo: typeof import('./src/components/layout/BaseLogo.vue')['default']
     BookingDetailDialog: typeof import('./src/components/user/BookingDetailDialog.vue')['default']
+    CalendarSyncDialog: typeof import('./src/components/common/CalendarSyncDialog.vue')['default']
     CancelBookingDialog: typeof import('./src/components/user/CancelBookingDialog.vue')['default']
     CourseCard: typeof import('./src/components/user/CourseCard.vue')['default']
     CourseCarousel: typeof import('./src/components/user/CourseCarousel.vue')['default']

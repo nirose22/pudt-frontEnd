@@ -67,8 +67,7 @@ export class MerchantService {
         payload: Omit<Instructor, 'id' | 'merchantId'>
     ): Promise<Result<Instructor>> {
         return request<Instructor>(
-            () => api.post(API_ROUTES.MERCHANT.INSTRUCTORS(id), payload),
-            ERROR_MESSAGES.MERCHANT_ERROR
+            () => api.post(API_ROUTES.MERCHANT.INSTRUCTORS(id), payload)
         )
     }
 
@@ -84,8 +83,7 @@ export class MerchantService {
         payload: Partial<Instructor>
     ): Promise<Result<Instructor>> {
         return request<Instructor>(
-            () => api.put(API_ROUTES.MERCHANT.INSTRUCTOR_DETAIL(id, instructorId), payload),
-            ERROR_MESSAGES.MERCHANT_ERROR
+            () => api.put(API_ROUTES.MERCHANT.INSTRUCTOR_DETAIL(id, instructorId), payload)
         )
     }
 
@@ -96,8 +94,7 @@ export class MerchantService {
      */
     static async deleteInstructor(id: MerchantId, instructorId: number): Promise<Result<void>> {
         return request<void>(
-            () => api.delete(API_ROUTES.MERCHANT.INSTRUCTOR_DETAIL(id, instructorId)),
-            ERROR_MESSAGES.MERCHANT_ERROR
+            () => api.delete(API_ROUTES.MERCHANT.INSTRUCTOR_DETAIL(id, instructorId))
         )
     }
 }

@@ -73,6 +73,7 @@ export const API_ROUTES = {
         COURSES: (id: number) => `/merchants/${id}/courses`,
         STATS: (id: number) => `/merchants/${id}/stats`,
         INSTRUCTORS: (id: number) => `/merchants/${id}/instructors`,
+        INSTRUCTOR_DETAIL: (id: number, instructorId: number) => `/merchants/${id}/instructors/${instructorId}`,
         BOOKINGS: (id: number) => `/merchants/${id}/bookings`,
         DASHBOARD: (merchantId: number) => `/merchant/dashboard/data?merchantId=${merchantId}`,
         REVENUE_TREND: (merchantId: number) => `/merchant/dashboard/revenue-trend?merchantId=${merchantId}`,

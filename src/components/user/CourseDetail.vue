@@ -319,14 +319,13 @@ import ConfirmDialog from 'primevue/confirmdialog';
 import { useUserStore } from '@/stores/userStore';
 import { useBookingStore } from '@/stores/bookingStore';
 import { useAuthStore } from '@/stores/authStore';
-import type { CourseSession } from '@/types';
 import { useRouter } from 'vue-router';
 import { UserRole } from '@/enums/User';
 import { showSuccess, showError, showInfo, initToast } from '@/utils/toastHelper';
 import DateRangeFilter from '@/components/common/DateRangeFilter.vue';
 import { inject, type Ref } from 'vue';
 import { BookingStatus } from '@/enums';
-import type { Booking } from '@/types';
+import type { Booking, CourseSession } from '@/types';
 import { formatDate, formatTime } from '@/utils/dateUtils';
 
 const props = defineProps<{
@@ -707,31 +706,13 @@ const toggleFavorite = async () => {
         return;
     }
 
-    if (userStore.user.role === UserRole.Guest) {
-        // 用戶未登入時的處理
-        showInfo('請先登入以使用收藏功能', '提示');
-        return;
-    }
-
-    const userId = userStore.userId;
-    if (!userId) {
-        showError('用戶資料未載入', '錯誤');
-        return;
-    }
-
     favoriteLoading.value = true;
     try {
-        const fav = currentCourse.value.isFavorite;
         const result = await courseStore.toggleFavoriteCourse(currentCourse.value.id);
-        if (result) {
-            if (fav) {
-                showSuccess(result.message || '已從收藏中移除', '成功');
-                currentCourse.value.isFavorite = false;
-
-            } else {
-                showSuccess(result.message || '已加入收藏', '成功');
-                currentCourse.value.isFavorite = true;
-            }
+        if (result.success) {
+            showSuccess(result.message || '收藏狀態已更新', '成功');
+        } else {
+            showError(result.message || '收藏狀態更新失敗', '錯誤');
         }
     } catch (error) {
         showError('操作失敗，請稍後再試', '錯誤');

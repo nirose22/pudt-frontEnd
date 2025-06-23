@@ -79,12 +79,18 @@ export class CourseService {
         return request<Course[]>(() => api.get(API_ROUTES.COURSE.FAVORITES(userId)))
     }
 
-    static toggleFavorite(courseId: number): Promise<Result<void>> {
+    static addFavorite(courseId: number): Promise<Result<void>> {
         if (!courseId || typeof courseId !== 'number') {
-            console.error('CourseService.toggleFavorite: 無效的 courseId', courseId, typeof courseId);
             throw new Error('無效的課程ID');
         }
         return request<void>(() => api.post(API_ROUTES.COURSE.FAVORITE(courseId)))
+    }
+
+    static removeFavorite(courseId: number): Promise<Result<void>> {
+        if (!courseId || typeof courseId !== 'number') {
+            throw new Error('無效的課程ID');
+        }
+        return request<void>(() => api.delete(API_ROUTES.COURSE.FAVORITE(courseId)))
     }
 
     /* ----------------- Images ----------------- */

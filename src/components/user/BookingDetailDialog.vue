@@ -67,11 +67,14 @@
                 class="!border-gray-300 !text-gray-700" />
             <Button v-if="selectedBooking && canCancel(selectedBooking)" label="取消預約" icon="pi pi-times"
                 severity="danger" @click="confirmCancelSelectedBooking" />
-            <Button v-if="selectedBooking && canCancel(selectedBooking)" label="加入行事曆" icon="pi pi-calendar-plus" @click="addToCalendar"
-                class="!bg-sky-500 !border-sky-500" />
+            <Button v-if="selectedBooking && canCancel(selectedBooking)" label="加入行事曆" icon="pi pi-calendar-plus"
+                @click="addToCalendar" class="!bg-sky-500 !border-sky-500" />
         </template>
     </Dialog>
-    <CancelBookingDialog v-model:showCancelDialog="showCancelDialog" v-model:selectedBooking="selectedBooking" @cancel="confirmCancelSelectedBooking"/> 
+    <CancelBookingDialog v-model:showCancelDialog="showCancelDialog" v-model:selectedBooking="selectedBooking"
+        @cancel="cancelBooking" />
+    <!-- 行事曆同步對話框 -->
+    <CalendarSyncDialog v-model:visible="showCalendarSyncDialog" :booking-data="selectedBookingForCalendar" />
 </template>
 
 <script setup lang="ts">
@@ -82,11 +85,14 @@ import Avatar from 'primevue/avatar';
 import CancelBookingDialog from '@/components/user/CancelBookingDialog.vue';
 import Tag from 'primevue/tag';
 import { ref } from 'vue';
+import CalendarSyncDialog from '@/components/common/CalendarSyncDialog.vue';
 
 const showDetailDialog = defineModel<boolean>('showDetailDialog', { required: true });
 const selectedBooking = defineModel<Booking>('selectedBooking', { required: true });
 const showCancelDialog = ref(false);
-const emit = defineEmits(['confirmCancelSelectedBooking', 'addToCalendar']);
+const showCalendarSyncDialog = ref(false);
+const selectedBookingForCalendar = ref<any>(null);
+const emit = defineEmits(['addToCalendar', 'refresh']);
 
 // 是否可以取消预约
 const canCancel = (booking: Booking) => {
@@ -101,10 +107,21 @@ function confirmCancelSelectedBooking(): void {
     }
 }
 
+const cancelBooking = () => {
+    emit('refresh');
+}
+
 // 添加到行事曆
 function addToCalendar(): void {
     if (selectedBooking.value) {
-        emit('addToCalendar', selectedBooking.value);
+        selectedBookingForCalendar.value = {
+            id: selectedBooking.value.id,
+            courseTitle: selectedBooking.value.courseTitle || `預約 #${selectedBooking.value.id}`,
+            start: `${selectedBooking.value.date || selectedBooking.value.createdAt}T${selectedBooking.value.start || '09:00'}:00`,
+            end: `${selectedBooking.value.date || selectedBooking.value.createdAt}T${selectedBooking.value.end || '10:00'}:00`,
+            merchantName: selectedBooking.value.merchantName
+        };
+        showCalendarSyncDialog.value = true;
     }
 }
 

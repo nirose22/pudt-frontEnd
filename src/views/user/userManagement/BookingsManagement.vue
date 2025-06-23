@@ -39,7 +39,7 @@
                         <Button icon="pi pi-eye" text rounded size="small" aria-label="查看詳情"
                             @click.stop="viewBookingDetail(slotProps.data)" class="hover:bg-sky-50" />
                         <Button v-if="canCancel(slotProps.data)" icon="pi pi-times" text rounded size="small"
-                            aria-label="取消預約" @click.stop="confirmCancelBooking(slotProps.data.id)"
+                            aria-label="取消預約" @click.stop="showCancelDialog = true"
                             class="hover:bg-red-50" />
                         </div>
                     </div>
@@ -121,56 +121,9 @@
         </div>
 
         <!-- 預約詳情對話框 -->
-        <BookingDetailDialog v-if="selectedBooking" v-model:showDetailDialog="showDetailDialog"
-            :selectedBooking="selectedBooking" @confirmCancelSelectedBooking="confirmCancelSelectedBooking"
-            @addToCalendar="addToCalendar" />
+        <BookingDetailDialog  v-model:showDetailDialog="showDetailDialog"
+            v-model:selectedBooking="selectedBooking" @refresh="loadBookings" />
 
-        <!-- 取消預約確認對話框 -->
-        <CancelBookingDialog v-model:showCancelDialog="showCancelDialog" @cancel="handleCancelBooking" />
-
-        <!-- 行事曆同步對話框 -->
-        <Dialog v-model:visible="showCalendarSyncDialog" header="同步至行事曆" :style="{ width: '450px' }"
-            :contentStyle="{ 'background-color': '#f8fafc' }">
-            <div class="p-4">
-                <p class="mb-4">選擇您要同步的行事曆平台：</p>
-                <div class="grid grid-cols-1 gap-3">
-                    <Button label="Google 行事曆" icon="pi pi-google" class="p-button-raised !bg-sky-500 !border-sky-500"
-                        @click="syncToCalendar('google')" />
-                    <Button label="Apple 行事曆" icon="pi pi-apple" class="p-button-raised !bg-sky-600 !border-sky-600"
-                        @click="syncToCalendar('apple')" />
-                    <Button label="Outlook 行事曆" icon="pi pi-microsoft"
-                        class="p-button-raised !bg-sky-700 !border-sky-700" @click="syncToCalendar('outlook')" />
-                    <Button label="下載 .ics 檔案" icon="pi pi-download"
-                        class="p-button-raised !bg-gray-600 !border-gray-600" @click="downloadIcsFile()" />
-                </div>
-            </div>
-            <template #footer>
-                <Button label="關閉" icon="pi pi-times" @click="showCalendarSyncDialog = false" outlined
-                    class="!border-gray-300 !text-gray-700" />
-            </template>
-        </Dialog>
-
-        <!-- 地點地圖對話框 -->
-        <Dialog v-model:visible="showMapDialog" header="課程地點" :style="{ width: '600px' }"
-            :contentStyle="{ 'background-color': '#f8fafc' }">
-            <div class="p-4">
-                <div class="h-64 bg-sky-50 flex items-center justify-center mb-3 border border-sky-100 rounded-lg">
-                    <i class="pi pi-map-marker text-4xl text-sky-300"></i>
-                    <span class="ml-2 text-sky-600">{{ selectedBooking?.merchantName }}</span>
-                </div>
-                <div class="text-sm">
-                    <p class="font-medium text-sky-700">{{ selectedBooking?.merchantName }}</p>
-                    <p class="text-gray-600 mt-1">課程將於 {{ formatDateString((selectedBooking?.date ||
-                        selectedBooking?.createdAt)?.toString() || '') }} {{ selectedBooking?.start }} 開始</p>
-                </div>
-            </div>
-            <template #footer>
-                <Button label="關閉" icon="pi pi-times" @click="showMapDialog = false" outlined
-                    class="!border-gray-300 !text-gray-700" />
-                <Button label="導航" icon="pi pi-directions" @click="openNavigation"
-                    class="!bg-sky-500 !border-sky-500" />
-            </template>
-        </Dialog>
     </div>
 </template>
 
@@ -197,7 +150,6 @@ import { useUserStore } from '@/stores/userStore';
 import { useAuthStore } from '@/stores/authStore';
 import { BookingService } from '@/services/UserBookingService';
 import { showSuccess, showError } from '@/utils/toastHelper';
-import CancelBookingDialog from '@/components/user/CancelBookingDialog.vue';
 import { getBookingStatusLabel, getBookingStatusSeverity } from '@/utils/statusUtil';
 import BookingDetailDialog from '@/components/user/BookingDetailDialog.vue';
 import Carousel from 'primevue/carousel';
@@ -224,9 +176,9 @@ onMounted(async () => {
 const loadBookings = async () => {
     loading.value = true;
     try {
-        const res = await BookingService.getSchedule(userStore.user?.id);
+        const res = await bookingStore.fetchSchedule({status: BookingStatus.Confirmed});
         if (res.success) {
-            bookings.value = res.data || [];
+            bookings.value = res.data as Booking[];
         }
     } catch (error) {
         console.error('載入預約記錄失敗:', error);
@@ -247,34 +199,14 @@ const responsiveOptions = [
         numScroll: 1
     }
 ]
-// 業務方法 - 取消預約
-const handleCancelBooking = async () => {
-    if (!selectedBookingId.value) return;
 
-    try {
-        const res = await bookingStore.cancel(selectedBookingId.value);
-        if (res.success) {
-            showSuccess(res.message || '預約取消成功', '成功');
-            await loadBookings(); // 重新載入數據
-        } else {
-            showError(res.message || '預約取消失敗', '失敗');
-        }
-        showCancelDialog.value = false;
-        selectedBookingId.value = null;
-    } catch (error) {
-        console.error('取消預約失败', error);
-        showError('取消預約時發生錯誤', '錯誤');
-    }
-};
 
 // 视图模式
 const viewMode = ref('list');
 const showDetailDialog = ref(false);
-const showCancelDialog = ref(false);
 const showCalendarSyncDialog = ref(false);
-const showMapDialog = ref(false);
-const selectedBookingId = ref<number | null>(null);
-const selectedBooking = ref<Booking | null>(null);
+const selectedBooking = ref<Booking>({} as Booking);
+const showCancelDialog = ref(false);
 
 // 确认是否是即将到来的预约
 const isUpcoming = (date: Date | string, time: string | Date): boolean => {
@@ -485,68 +417,29 @@ function viewBookingDetail(booking: Booking): void {
 // 查看地点地图
 function showLocationMap(booking: Booking): void {
     selectedBooking.value = booking;
-    showMapDialog.value = true;
 }
 
-// 确认取消预约
-function confirmCancelBooking(bookingId: number): void {
-    selectedBookingId.value = bookingId;
-    showCancelDialog.value = true;
-}
 
-// 确认取消选中的预约
-function confirmCancelSelectedBooking(): void {
-    if (selectedBooking.value) {
-        selectedBookingId.value = selectedBooking.value.id;
-        showDetailDialog.value = false;
-        showCancelDialog.value = true;
+
+// 確認取消預約
+const confirmCancelBooking = async (bookingId: number) => {
+    const booking = bookings.value.find(b => b.id === bookingId);
+    if (!booking) return;
+    
+    try {
+        const confirmed = confirm('確定要取消這個預約嗎？');
+        if (!confirmed) return;
+        
+        // 這裡可以調用取消預約的 API
+        // await BookingService.cancelBooking(bookingId);
+        
+        showSuccess('預約已取消', '成功');
+        await loadBookings(); // 重新載入預約列表
+    } catch (error) {
+        console.error('取消預約失敗:', error);
+        showError('取消預約失敗，請稍後再試', '錯誤');
     }
-}
-
-// 同步至行事曆
-function syncToCalendar(platform: string): void {
-    toast.add({
-        severity: 'info',
-        summary: '同步中',
-        detail: `正在同步到 ${platform} 行事曆...`,
-        life: 2000
-    });
-
-    setTimeout(() => {
-        toast.add({
-            severity: 'success',
-            summary: '已同步',
-            detail: `已同步到 ${platform} 行事曆`,
-            life: 3000
-        });
-        showCalendarSyncDialog.value = false;
-    }, 1500);
-}
-
-// 下載 .ics 檔案
-function downloadIcsFile(): void {
-    toast.add({
-        severity: 'info',
-        summary: '處理中',
-        detail: '正在生成行事曆文件...',
-        life: 2000
-    });
-
-    setTimeout(() => {
-        toast.add({
-            severity: 'success',
-            summary: '成功',
-            detail: '行事曆文件已生成，正在下載...',
-            life: 3000
-        });
-        showCalendarSyncDialog.value = false;
-    }, 1500);
-}
-
-// 加入行事曆
-function addToCalendar(): void {
-    showCalendarSyncDialog.value = true;
-}
+};
 
 // 打開導航
 function openNavigation(): void {
@@ -557,7 +450,6 @@ function openNavigation(): void {
             detail: `正在導航至 ${selectedBooking.value.merchantName}`,
             life: 3000
         });
-        showMapDialog.value = false;
     }
 }
 

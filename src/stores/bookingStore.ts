@@ -87,7 +87,6 @@ export const useBookingStore = defineStore('booking', () => {
                     date: slot!.date,
                     courseTitle: currentCourse!.title,
                     merchantName: currentCourse!.merchant.name,
-                    location: currentCourse!.merchant.address || '',
                     rating: 0,
                     comment: '',
                     notes: ''
@@ -110,14 +109,18 @@ export const useBookingStore = defineStore('booking', () => {
         try {
             // 調用 BookingService 取消預約
             const result = await BookingService.cancelBooking(id)
-            
+            console.log(11);
             if (result.success) {
+                
                 // 更新本地數據
                 const booking = bookings.value.find(b => b.id === id)
                 if (booking) {
-                    booking.status = BookingStatus.Cancelled
+                    booking.status = BookingStatus.Cancelled;
+                    console.log(booking.sessionId);
+                    if (booking.sessionId) {
+                        courseStore.updateAvailableSeats(booking.sessionId, 1)
+                    }
                 }
-                
                 // 還原點數
                 const course = courseStore.currentCourse
                 if (course && booking && course.id === booking.courseId) {

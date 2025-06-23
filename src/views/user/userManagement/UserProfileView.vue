@@ -392,7 +392,7 @@ const handleLogout = () => {
         rejectLabel: '取消',
         accept: () => {
             authStore.logout().then(() => {
-                router.push('/login');
+                router.push('/home');
             });
         }
     });
