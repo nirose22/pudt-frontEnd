@@ -57,9 +57,14 @@
         </template>
         <template #footer>
             <div class="flex items-center justify-between">
-                <span class="bg-sky-50 border border-sky-200 rounded-md px-2 py-1 text-xs text-sky-600 font-medium">
-                    {{ course.points }} 點數
-                </span>
+                <div class="flex items-center gap-2">
+                    <span class="bg-sky-50 border border-sky-200 rounded-md px-2 py-1 text-xs text-sky-600 font-medium">
+                        {{ course.points }} 點數
+                    </span>
+                    <span v-if="course.mainCategory && MainCategoryLabel[course.mainCategory as MainCategory]" class="bg-purple-50 border border-purple-200 rounded-md px-2 py-1 text-xs text-purple-600 font-medium">
+                        {{ MainCategoryLabel[course.mainCategory as MainCategory] }}
+                    </span>
+                </div>
                 <Button label="預約" :disabled="disabled || loading" size="small" 
                         class="bg-sky-500 hover:bg-sky-600 border-sky-500 hover:border-sky-600" />
             </div>
@@ -70,6 +75,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { RegionCodeLabel } from '@/enums';
+import { MainCategory, MainCategoryLabel } from '@/enums/CourseCategory';
 import type { Course } from '@/types/course';
 import Card from 'primevue/card';
 import ProgressSpinner from 'primevue/progressspinner';

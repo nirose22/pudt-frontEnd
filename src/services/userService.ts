@@ -41,13 +41,6 @@ export const userService = {
   },
 
   /**
-   * 更新地址
-   */
-  async updateAddress(userId: number, address: string): Promise<Result<boolean>> {
-    return request<boolean>(() => api.put(API_ROUTES.USER.ADDRESS(userId), { address }))
-  },
-
-  /**
    * 登出
    */
   async logout(): Promise<Result<boolean>> {

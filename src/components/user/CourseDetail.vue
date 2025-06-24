@@ -196,6 +196,14 @@
                                                     <i class="pi pi-user text-white text-sm"></i>
                                                 </div>
                                             </div>
+                                            <div class="flex flex-col">
+                                                <span class="text-sm font-medium text-gray-800">
+                                                    {{ getInstructorInfo(slot).name }}
+                                                </span>
+                                                <span class="text-xs text-gray-500">
+                                                    {{ getInstructorInfo(slot).bio }}
+                                                </span>
+                                            </div>
 
                                         </div>
 
@@ -546,15 +554,28 @@ const getInstructorInfo = (slot: CourseSession) => {
         bio: undefined as string | undefined
     };
 
-    if (!currentCourse.value || !slot.instructorId) {
+    if (!slot) {
         return defaultInfo;
     }
 
-    return {
-        name: slot.instructorName,
-        avatarUrl: slot.instructorAvatar,
-        bio: undefined as string | undefined
-    };
+    // 處理兩種數據結構：嵌套對象或扁平化結構
+    if (slot.instructor) {
+        // 嵌套對象結構
+        return {
+            name: slot.instructor.name || defaultInfo.name,
+            avatarUrl: slot.instructor.avatarUrl,
+            bio: slot.instructor.bio
+        };
+    } else if ((slot as any).instructorName) {
+        // 扁平化結構（從後端 CourseSessionDTO 來的數據）
+        return {
+            name: (slot as any).instructorName || defaultInfo.name,
+            avatarUrl: (slot as any).instructorAvatar,
+            bio: undefined
+        };
+    }
+
+    return defaultInfo;
 };
 
 const handleImageError = (event: Event, slotId: number) => {

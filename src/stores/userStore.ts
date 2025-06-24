@@ -120,21 +120,6 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  async function updateAddress(newAddress: string) {
-    if (!userId.value) return false
-
-    try {
-      const result = await userService.updateAddress(userId.value, newAddress)
-      if (result.success && state.user) {
-        state.user.address = newAddress
-      }
-      return result.success
-    } catch (error) {
-      console.error('更新地址失敗:', error)
-      return false
-    }
-  }
-
   async function refreshProfile(id?: number) {
     const userUid = id ?? userId.value
     if (!userUid) return
@@ -189,7 +174,6 @@ export const useUserStore = defineStore('user', () => {
     fetchBehaviorProfile,
     adjustPoints,
     updateInterests,
-    updateAddress,
     refreshProfile,
     clearUserData,
     initialize,

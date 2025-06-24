@@ -45,9 +45,11 @@ export interface CourseSession extends TimeRange {
   seats: number               // 總席位
   seatsLeft: number           // 剩餘席位
 
-  instructorId?: number       // 講師ID (可選)
-  instructorName?: string   // 講師姓名
-  instructorAvatar?: string // 講師頭像
+  // 支持兩種數據結構：嵌套對象或扁平化
+  instructor?: InstructorDTO  // 嵌套對象結構
+  instructorId?: number       // 扁平化結構
+  instructorName?: string     // 扁平化結構
+  instructorAvatar?: string   // 扁平化結構
 }
 
 /* 講師資料傳輸對象 */

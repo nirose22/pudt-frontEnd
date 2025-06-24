@@ -3,8 +3,6 @@ import { reactive, computed, toRefs } from 'vue'
 import type { Course, CourseDetailDTO, CourseSession } from '@/types/course'
 import type { Booking } from '@/types/booking'
 import { CourseService } from '@/services/CourseService'
-import { useUserStore } from './userStore'
-import type { Result } from '@/types/result'
 import { withLoading, clearError as clearStateError } from '@/utils/storeUtils'
 
 interface State {
@@ -77,11 +75,11 @@ export const useCourseStore = defineStore('course', () => {
   }
 
   async function toggleFavoriteCourse(courseId: number) {
-    const isCurrentlyFavorite = isFavoriteCourse.value(courseId)
-
+    const isCurrentlyFavorite = isFavoriteCourse.value(courseId) || state.currentCourse?.isFavorite
+    console.log('isCurrentlyFavorite', isCurrentlyFavorite);
     const result = await withLoading(
       state,
-      () => isCurrentlyFavorite 
+      () => isCurrentlyFavorite
         ? CourseService.removeFavorite(courseId)
         : CourseService.addFavorite(courseId),
       () => {

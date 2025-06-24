@@ -48,12 +48,12 @@ export class PointsApiService {
         return request<PointTransaction[]>(() => api.get(API_ROUTES.POINTS.HISTORY));
     }
 
-    /**
-     * 獲取指定用戶的點數交易歷史（管理員功能）
-     */
-    static async getUserPointsHistory(userId: number): Promise<Result<PointTransaction[]>> {
-        return request<PointTransaction[]>(() => api.get(`${API_ROUTES.POINTS.HISTORY}/${userId}`));
-    }
+    // /**
+    //  * 獲取指定用戶的點數交易歷史（管理員功能）
+    //  */
+    // static async getUserPointsHistory(userId: number): Promise<Result<PointTransaction[]>> {
+    //     return request<PointTransaction[]>(() => api.get(`${API_ROUTES.POINTS.HISTORY}/${userId}`));
+    // }
 
     /**
      * 購買點數卡（簡化流程）
@@ -62,27 +62,27 @@ export class PointsApiService {
         return request<string>(() => api.post(API_ROUTES.POINTS.BUY, { cardId }));
     }
 
-    /**
-     * 點數轉移（預留功能）
-     */
-    static async transferPoints(data: {
-        fromUserId: number;
-        toUserId: number;
-        amount: number;
-        note?: string;
-    }): Promise<Result<string>> {
-        return request<string>(() => api.post(API_ROUTES.POINTS.TRANSFER, data));
-    }
+    // /**
+    //  * 點數轉移（預留功能）
+    //  */
+    // static async transferPoints(data: {
+    //     fromUserId: number;
+    //     toUserId: number;
+    //     amount: number;
+    //     note?: string;
+    // }): Promise<Result<string>> {
+    //     return request<string>(() => api.post(API_ROUTES.POINTS.TRANSFER, data));
+    // }
 
-    /**
-     * 調整用戶點數（管理員功能）
-     */
-    static async adjustUserPoints(userId: number, data: {
-        amount: number;
-        note?: string;
-     }): Promise<Result<PointTransaction>> {
-        return request<PointTransaction>(() => api.post(`${API_ROUTES.POINTS.ADJUST}/${userId}`, data));
-    }
+    // /**
+    //  * 調整用戶點數（管理員功能）
+    //  */
+    // static async adjustUserPoints(userId: number, data: {
+    //     amount: number;
+    //     note?: string;
+    //  }): Promise<Result<PointTransaction>> {
+    //     return request<PointTransaction>(() => api.post(`${API_ROUTES.POINTS.ADJUST}/${userId}`, data));
+    // }
 }
 
 // 導出便利方法

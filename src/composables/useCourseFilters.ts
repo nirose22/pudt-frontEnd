@@ -150,7 +150,6 @@ export function useCourseFilters(route: RouteLocationNormalizedLoaded, router: R
     const setupSearchWatcher = (searchFunction: () => Promise<void>) => {
         const debouncedSearch = debounce(searchFunction, 500);
         watch(searchRequest, () => {
-            console.log("searchRequest!!!!");
             debouncedSearch();
         }, { deep: true, immediate: false });
 

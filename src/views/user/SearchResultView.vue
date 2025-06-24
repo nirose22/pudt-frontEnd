@@ -465,8 +465,6 @@ async function fetchFilteredCourses(): Promise<void> {
 			})
 		);
 
-		console.log("fetchFilteredCourses");
-		
 		const result = await CourseService.searchCourses(cleanRequest);
 
 		if (result.success && result.data) {
@@ -576,14 +574,9 @@ onMounted(async () => {
 });
 
 // 監聽路由參數變化，當從 Header 搜尋時重新觸發搜尋
-watch(() => route.query, (newQuery, oldQuery) => {
+watch(() => route.query.keyword , (newQuery, oldQuery) => {
 	// 檢查是否為搜尋相關的參數變化
-	const searchParams = ['keyword', 'regions', 'categories', 'minPoints', 'maxPoints', 'hasOpenSlots', 'newCourses', 'favourites', 'sortBy'];
-	const hasSearchParamChange = searchParams.some(param => 
-		newQuery[param] !== oldQuery[param]
-	);
-	
-	if (hasSearchParamChange) {
+	if (newQuery !== oldQuery) {
 		console.log('路由搜尋參數變化，重新同步並搜尋:', newQuery);
 		// 同步新的 URL 參數到搜索請求
 		syncParamsToFilters();
