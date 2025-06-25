@@ -107,13 +107,47 @@ export const useUserStore = defineStore('user', () => {
       state.isLoading = true
       // 使用正確的API方法，發送對象格式
       const interestsRequest = { categories: newInterests }
+      
+      console.log('🔍 [userStore] 準備發送到 API:');
+      console.log('📊 用戶ID:', userId.value);
+      console.log('📊 請求資料:', interestsRequest);
+      console.log('📊 API 端點:', `PUT /users/${userId.value}/interests`);
+      
       const result = await userService.updateUserInterestsAndRegions(userId.value, interestsRequest)
+      
+      console.log('📨 [userStore] API 回應:');
+      console.log('📊 成功狀態:', result.success);
+      console.log('📊 回應訊息:', result.message);
+      console.log('📊 完整回應:', result);
+      
       if (result.success) {
+        console.log('✅ [userStore] 更新本地狀態');
         state.profile.interests = newInterests
+      } else {
+        console.error('❌ [userStore] API 回應失敗:', result.message);
       }
       return result
     } catch (error) {
-      console.error('更新興趣失敗:', error)
+      console.error('❌ [userStore] 更新興趣失敗:', error)
+      return { success: false, message: '更新失敗' }
+    } finally {
+      state.isLoading = false
+    }
+  }
+
+  // 統一的地區偏好更新方法
+  async function updatePreferredRegions(newRegions: RegionCode[]) {
+    if (!userId.value) return { success: false, message: '用戶未登入' }
+
+    try {
+      state.isLoading = true
+      const result = await userService.updateUserRegions(userId.value, newRegions)
+      if (result.success) {
+        state.profile.preferredRegions = newRegions
+      }
+      return result
+    } catch (error) {
+      console.error('更新地區偏好失敗:', error)
       return { success: false, message: '更新失敗' }
     } finally {
       state.isLoading = false
@@ -174,6 +208,7 @@ export const useUserStore = defineStore('user', () => {
     fetchBehaviorProfile,
     adjustPoints,
     updateInterests,
+    updatePreferredRegions,
     refreshProfile,
     clearUserData,
     initialize,

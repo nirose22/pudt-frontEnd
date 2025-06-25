@@ -51,7 +51,19 @@ export const userService = {
    * 更新用戶興趣和地區
    */
   async updateUserInterestsAndRegions(userId: number, interests: UserInterestsRequest): Promise<Result<boolean>> {
-    return request<boolean>(() => api.put(API_ROUTES.USER.UPDATE_INTERESTS(userId), interests))
+    console.log('🌐 [UserService] 發送 HTTP 請求:');
+    console.log('📊 URL:', API_ROUTES.USER.UPDATE_INTERESTS(userId));
+    console.log('📊 Method: PUT');
+    console.log('📊 Request Body:', JSON.stringify(interests, null, 2));
+    console.log('📊 Content-Type: application/json');
+    
+    const result = await request<boolean>(() => api.put(API_ROUTES.USER.UPDATE_INTERESTS(userId), interests));
+    
+    console.log('📨 [UserService] HTTP 回應:');
+    console.log('📊 Status:', result.success ? 'Success' : 'Failed');
+    console.log('📊 Response:', result);
+    
+    return result;
   },
 
   /**

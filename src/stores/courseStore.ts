@@ -4,6 +4,7 @@ import type { Course, CourseDetailDTO, CourseSession } from '@/types/course'
 import type { Booking } from '@/types/booking'
 import { CourseService } from '@/services/CourseService'
 import { withLoading, clearError as clearStateError } from '@/utils/storeUtils'
+import { debounce } from '@/utils/cmmonUtils'
 
 interface State {
   myBookings: Booking[]
@@ -75,8 +76,10 @@ export const useCourseStore = defineStore('course', () => {
   }
 
   async function toggleFavoriteCourse(courseId: number) {
+    console.log('isFavoriteCourse', isFavoriteCourse.value(courseId));
+    console.log('state.currentCourse.isFavorite', state.currentCourse?.isFavorite);
+    
     const isCurrentlyFavorite = isFavoriteCourse.value(courseId) || state.currentCourse?.isFavorite
-    console.log('isCurrentlyFavorite', isCurrentlyFavorite);
     const result = await withLoading(
       state,
       () => isCurrentlyFavorite
@@ -87,7 +90,6 @@ export const useCourseStore = defineStore('course', () => {
       },
       isCurrentlyFavorite ? '取消收藏失敗' : '添加收藏失敗'
     )
-
     return result
   }
 

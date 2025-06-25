@@ -1,10 +1,10 @@
 import { ref, computed, watch } from 'vue';
 import type { RouteLocationNormalizedLoaded, Router } from 'vue-router';
 import { MainCategory, SubCategory } from '@/enums/CourseCategory';
-import { mockRegions } from '@/services/MockService';
 import { useToast } from 'primevue/usetoast';
 import type { SearchRequest } from '@/types/searchRequest';
 import { debounce } from '@/utils/cmmonUtils';
+import { RegionCode } from '@/enums/RegionCode';
 
 export function useCourseFilters(route: RouteLocationNormalizedLoaded, router: Router) {
     const toast = useToast();
@@ -60,7 +60,7 @@ export function useCourseFilters(route: RouteLocationNormalizedLoaded, router: R
         searchRequest.value = {
             keyword: params.keyword as string || '',
             regions: params.regions ? String(params.regions).split(',').filter(code =>
-                mockRegions.some(r => r.code === code)
+                Object.values(RegionCode).some(r => r === code)
             ) : [],
             categories: params.categories ? String(params.categories).split(',').filter(code =>
                 Object.values(SubCategory).includes(code as SubCategory) ||

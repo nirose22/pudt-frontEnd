@@ -70,6 +70,11 @@ const routes: RouteRecordRaw[] = [
     name: 'Register',
     component: () => import('@/views/user/RegisterView.vue')
   },
+  {
+    path: '/auth/line/callback',
+    name: 'LineCallback',
+    component: () => import('@/views/auth/LineCallback.vue')
+  },
 ];
 
 // 添加商家路由

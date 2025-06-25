@@ -274,7 +274,6 @@ import {
     Calendar, Button, Dialog, Tag
 } from 'primevue';
 import Editor from 'primevue/editor';
-import { mockRegions } from '@/services/MockService';
 import { useCourseStore } from '@/stores/courseStore';
 import { RegionCode } from '@/enums';
 import { CourseService } from '@/services/CourseService';

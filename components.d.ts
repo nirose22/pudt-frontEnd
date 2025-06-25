@@ -23,6 +23,7 @@ declare module 'vue' {
     Header: typeof import('./src/components/layout/Header.vue')['default']
     HistoryDialog: typeof import('./src/components/user/HistoryDialog.vue')['default']
     InterestsSelectionDialog: typeof import('./src/components/user/InterestsSelectionDialog.vue')['default']
+    LineLoginButton: typeof import('./src/components/auth/LineLoginButton.vue')['default']
     LoginDialog: typeof import('./src/components/user/LoginDialog.vue')['default']
     MerchantHeader: typeof import('./src/components/layout/MerchantHeader.vue')['default']
     MerchantSidebar: typeof import('./src/components/layout/MerchantSidebar.vue')['default']

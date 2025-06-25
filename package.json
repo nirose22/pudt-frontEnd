@@ -17,6 +17,7 @@
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",
     "@fontsource/noto-sans-tc": "^5.2.5",
     "@fontsource/roboto": "^5.2.5",
+    "@line/liff": "^2.22.3",
     "@fullcalendar/core": "^6.1.17",
     "@fullcalendar/daygrid": "^6.1.17",
     "@fullcalendar/interaction": "^6.1.17",

@@ -47,15 +47,6 @@
                             <InputText class="w-full bg-gray-50" disabled />
                             <small class="text-gray-500">郵件地址無法修改</small>
                         </FormField>
-
-                        <!-- <FormField name="phone" class="col-span-1">
-                            <div class="form-label">手機號碼</div>
-                            <InputText class="w-full border-sky-200 focus:border-sky-500" />
-                            <Message v-if="$form.phone?.invalid" severity="secondary" size="small" variant="simple">
-                                {{ $form.phone?.error?.message }}
-                            </Message>
-                        </FormField> -->
-
                         <FormField name="address" class="col-span-2">
                             <div class="form-label">地址</div>
                             <InputText class="w-full border-sky-200 focus:border-sky-500" />
@@ -123,25 +114,32 @@
                             </span>
                         </div>
                         <div class="space-y-2 p-3 border rounded-lg bg-sky-50 border-sky-100">
-                            <div v-for="(cat, index) in form.interests.categories" :key="cat"
+                            <div v-for="(cat, index) in form.interests.categories" :key="`interest-${cat}-${index}`"
                                 class="flex items-center justify-between p-2 bg-white rounded border border-sky-100">
                                 <div class="flex items-center gap-3">
                                     <span class="w-6 h-6 bg-sky-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
                                         {{ index + 1 }}
                                     </span>
                                     <span class="font-medium text-sky-700">{{ getMainCategoryLabel(cat) }}</span>
+                                    <span class="text-xs text-gray-400">優先級: {{ index + 1 }}</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <Button icon="pi pi-chevron-up" size="small" text @click="moveInterestUp(index)" 
-                                        :disabled="index === 0" class="!text-sky-600" />
+                                        :disabled="index === 0" class="!text-sky-600" 
+                                        v-tooltip.top="'提高優先級'" />
                                     <Button icon="pi pi-chevron-down" size="small" text @click="moveInterestDown(index)" 
-                                        :disabled="index === form.interests.categories.length - 1" class="!text-sky-600" />
+                                        :disabled="index === form.interests.categories.length - 1" class="!text-sky-600" 
+                                        v-tooltip.top="'降低優先級'" />
                                     <Button icon="pi pi-times" size="small" text severity="danger" 
-                                        @click="removeInterestCategory(cat)" class="!text-red-500" />
+                                        @click="removeInterestCategory(cat)" class="!text-red-500" 
+                                        v-tooltip.top="'移除'" />
                                 </div>
                             </div>
                         </div>
-                        <small class="text-gray-500 mt-2 block">排序越前面的興趣，推薦權重越高</small>
+                        <small class="text-gray-500 mt-2 block">
+                            <i class="pi pi-info-circle mr-1"></i>
+                            排序越前面的興趣，推薦權重越高。第1位權重100%，往後遞減。
+                        </small>
                     </div>
                     
                     <div v-if="form.interests.categories.length === 0" class="text-center p-4 border rounded-lg bg-sky-50 border-sky-100">
@@ -298,13 +296,14 @@
                         <i class="pi pi-sort mr-2"></i>偏好順序
                     </h4>
                     <div class="space-y-2">
-                        <div v-for="(cat, index) in form.interests.categories" :key="cat"
+                        <div v-for="(cat, index) in form.interests.categories" :key="`modal-interest-${cat}-${index}`"
                             class="flex items-center justify-between p-2 bg-white rounded border border-sky-100">
                             <div class="flex items-center gap-3">
                                 <span class="w-6 h-6 bg-sky-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
                                     {{ index + 1 }}
                                 </span>
                                 <span class="font-medium text-sky-700">{{ getMainCategoryLabel(cat) }}</span>
+                                <span class="text-xs text-gray-400">推薦權重: {{ ((form.interests.categories.length - index) / form.interests.categories.length * 100).toFixed(0) }}%</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <Button icon="pi pi-chevron-up" size="small" text @click="moveInterestUp(index)" 
@@ -316,7 +315,10 @@
                             </div>
                         </div>
                     </div>
-                    <small class="text-gray-500 mt-2 block">拖拽或使用箭頭調整順序，排序越前面推薦權重越高</small>
+                    <small class="text-gray-500 mt-2 block">
+                        <i class="pi pi-info-circle mr-1"></i>
+                        使用箭頭調整順序，排序越前面推薦權重越高，確保個人化推薦的準確性
+                    </small>
                 </div>
             </div>
 
@@ -377,7 +379,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted } from 'vue';
+import { ref, computed, reactive, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import Select from 'primevue/select';
 import DatePicker from 'primevue/datepicker';
 import Button from 'primevue/button';
@@ -398,108 +400,70 @@ import { useUserStore } from '@/stores/userStore';
 import { useAuthStore } from '@/stores/authStore';
 import { userService } from '@/services/UserService';
 import { showSuccess, showError, showInfo } from '@/utils/toastHelper';
+import { debounce } from '@/utils/cmmonUtils';
 
-// 直接使用 stores
+
+// 定義擴展的用戶類型
+interface ExtendedUser extends Omit<User, 'birthday' | 'createdAt'> {
+    birthday?: Date;
+    createdAt?: Date;
+    twoFactorEnabled: boolean;
+    socialAccounts: Record<string, boolean>;
+    interests: { categories: MainCategory[] };
+    notifications: Record<string, boolean>;
+    preferences: { preferredRegions: string[] };
+}
+
+// Stores
 const userStore = useUserStore();
 const authStore = useAuthStore();
 
-// 計算屬性 - 用戶資料
+// 計算屬性
 const profile = computed(() => userStore.user);
 const behaviorProfile = computed(() => userStore.profile);
+const isLoggedIn = computed(() => authStore.isLoggedIn && userStore.user.id);
 
-// 業務方法 - 更新用戶資料
-const updateProfile = async (updatedProfile: UserUpdateRequest) => {
-    if (!userStore.user.id) {
-        showError('用戶未登入', '錯誤')
-        return { success: false, message: '用戶未登入' }
-    }
-
-    try {
-        const res = await userService.updateProfile(userStore.user.id, updatedProfile)
-        
-        if (res.success && res.data) {
-            // 更新本地用戶資料
-            await userStore.fetchUserProfile(userStore.user.id)
-            showSuccess(res.message || '個人資料更新成功', '成功')
-            return { success: true, message: res.message || '個人資料更新成功' }
-        } else {
-            showError(res.message || '個人資料更新失敗', '失敗')
-            return { success: false, message: res.message || '個人資料更新失敗' }
-        }
-    } catch (error) {
-        console.error('更新用戶資料時發生錯誤:', error)
-        showError('網路錯誤，請稍後再試', '錯誤')
-        return { success: false, message: '網路錯誤，請稍後再試' }
-    }
-};
-
-// 初始化數據
-onMounted(async () => {
-    if (authStore.isLoggedIn && userStore.user.id) {
-        await userStore.fetchUserProfile(userStore.user.id);
-        await userStore.fetchBehaviorProfile(userStore.user.id);
-    }
+// 對話框狀態
+const modals = reactive({
+    password: false,
+    interests: false,
+    regions: false
 });
 
-// 擴展 User 類型，添加新的欄位
-interface ExtendedUser extends Omit<User, 'birthday' | 'createdAt'> {
-    birthday: Date;
-    createdAt: Date;
-    twoFactorEnabled: boolean;
-    socialAccounts: {
-        facebook: boolean;
-        google: boolean;
-        twitter: boolean;
-        instagram: boolean;
-    };
-    interests: {
-        categories: MainCategory[]; // 主分類（按偏好順序排列）
-    };
-    notifications: {
-        email: boolean;
-        push: boolean;
-        activity: boolean;
-        promotion: boolean;
-        newCourse: boolean;
-    };
-    preferences: {
-        preferredRegions: string[];
-    };
-}
-
-const showPasswordModal = ref(false);
-const showInterestsModal = ref(false);
-const showRegionsModal = ref(false);
-
-// 將主分類轉換為選項格式
-const mainCategoryOptions = Object.entries(MainCategoryLabel).map(([value, label]) => ({
-    label,
-    value
-}));
-
-// 獲取各種標籤名稱的函數
-const getMainCategoryLabel = (code: string): string => {
-    return MainCategoryLabel[code as MainCategory] || code;
+// 選項數據
+const options = {
+    gender: [
+        { label: UserGenderLabelShort.M, value: UserGender.Male },
+        { label: UserGenderLabelShort.F, value: UserGender.Female },
+        { label: UserGenderLabelShort.O, value: UserGender.Other },
+        { label: UserGenderLabelShort.ND, value: UserGender.NotDisclosed }
+    ],
+    mainCategory: Object.entries(MainCategoryLabel).map(([value, label]) => ({ label, value })),
+    region: Object.entries(RegionCodeLabel).map(([value, label]) => ({ label, value }))
 };
 
-// 獲取地區標籤名稱
-const getRegionLabel = (code: string): string => {
-    return RegionCodeLabel[code as RegionCode] || code;
+// 工具函數
+const getLabel = {
+    mainCategory: (code: string) => MainCategoryLabel[code as MainCategory] || code,
+    region: (code: string) => RegionCodeLabel[code as RegionCode] || code
 };
 
-// 表單數據
-const form = reactive<ExtendedUser>({
-    ...profile.value as User,
-    id: profile.value?.id ?? 0,
-    name: profile.value?.name ?? '',
-    gender: profile.value?.gender ?? UserGender.Other,
-    birthday: profile.value?.birthday ? new Date(profile.value.birthday) : new Date(),
-    address: profile.value?.address ?? '',
-    email: profile.value?.email ?? '',
-    phone: profile.value?.phone ?? '',
-    points: profile.value?.points ?? 0,
-    createdAt: profile.value?.createdAt ? new Date(profile.value.createdAt) : new Date(),
-    // 新增欄位的默認值
+// 表單數據初始化
+const createInitialForm = (): ExtendedUser => ({
+    id: 0,
+    name: '',
+    email: '',
+    phone: '',
+    points: 0,
+    gender: UserGender.Other,
+    birthday: undefined,
+    address: '',
+    avatarUrl: undefined,
+    regionCode: undefined,
+    role: undefined,
+    lastLogin: undefined,
+    token: undefined,
+    createdAt: undefined,
     twoFactorEnabled: false,
     socialAccounts: {
         facebook: false,
@@ -507,9 +471,7 @@ const form = reactive<ExtendedUser>({
         twitter: false,
         instagram: false
     },
-    interests: {
-        categories: behaviorProfile.value.interests || []  // 只保留主分類
-    },
+    interests: { categories: [] },
     notifications: {
         email: true,
         push: true,
@@ -517,247 +479,402 @@ const form = reactive<ExtendedUser>({
         promotion: false,
         newCourse: true
     },
-    preferences: {
-        preferredRegions: behaviorProfile.value.preferredRegions || []
-    }
+    preferences: { preferredRegions: [] }
 });
 
-// 保存用户兴趣到後端
-const saveUserInterests = async () => {
-    try {
-        if (!userStore.user.id) {
-            showError('用戶未登入', '保存失敗');
-            return;
-        }
-        
-        const interestsRequest = {
-            categories: form.interests.categories
-        };
-        const result = await userService.updateUserInterestsAndRegions(userStore.user.id, interestsRequest);
-        
-        if (result.success) {
-            // 更新userStore
-            userStore.updateInterests(form.interests.categories);
-            
-            showSuccess('興趣偏好已保存', '保存成功');
-        } else {
-            showError(result.message || '保存興趣偏好失敗', '保存失敗');
-        }
-    } catch (error) {
-        console.error('保存興趣偏好失敗:', error);
-        showError('保存興趣偏好時出錯', '保存失敗');
-    }
-};
+const form = reactive<ExtendedUser>(createInitialForm());
 
-
-// 興趣偏好順序管理方法
-const moveInterestUp = (index: number) => {
-    if (index > 0) {
-        const temp = form.interests.categories[index];
-        form.interests.categories[index] = form.interests.categories[index - 1];
-        form.interests.categories[index - 1] = temp;
-        showInfo('已調整偏好順序', '順序更新');
-    }
-};
-
-const moveInterestDown = (index: number) => {
-    if (index < form.interests.categories.length - 1) {
-        const temp = form.interests.categories[index];
-        form.interests.categories[index] = form.interests.categories[index + 1];
-        form.interests.categories[index + 1] = temp;
-        showInfo('已調整偏好順序', '順序更新');
-    }
-};
-
-const removeInterestCategory = (category: MainCategory) => {
-    const index = form.interests.categories.indexOf(category);
-    if (index !== -1) {
-        form.interests.categories.splice(index, 1);
-        showInfo(`已移除興趣類別: ${getMainCategoryLabel(category)}`, '興趣更新');
-    }
-};
-
-// 確認興趣選擇
-const confirmInterests = async () => {
-    // 保存興趣到後端
-    await saveUserInterests();
-    showInterestsModal.value = false;
-};
-
-// 切換主分類
-const toggleMainCategory = (category: string) => {
-    const mainCat = category as MainCategory;
-    const index = form.interests.categories.indexOf(mainCat);
-    if (index === -1) {
-        // 添加主分類
-        form.interests.categories.push(mainCat);
-    } else {
-        // 移除主分類
-        form.interests.categories.splice(index, 1);
-    }
-};
-
-// 清空所有興趣選擇
-const clearAllInterests = () => {
-    form.interests.categories = [];
-    showInfo('已清空所有興趣偏好', '偏好更新');
-};
-
-// 表單驗證
-const resolver = zodResolver(
-    z.object({
-        name: z.string({ required_error: '姓名為必填欄位' })
-            .min(1, { message: '姓名不能為空' }),
-        birthday: z.date().max(new Date(), { message: '生日不能早於今天' }).optional(),
-        address: z.string().min(1, { message: '地址不能為空' }).optional(),
-        gender: z.nativeEnum(UserGender).optional()
-    })
-);
-
-const passwordResolver = zodResolver(
-    z.object({
-        password: z.string().min(6, { message: '密碼不能少於6個字' }),
-        confirmPassword: z.string().min(6, { message: '密碼不能少於6個字' }),
-    }).refine(
-        ({ confirmPassword, password }) => {
-            return confirmPassword === password
-        },
-        {
-            path: ["confirmPassword"],
-            message: "密碼不一致",
-        }
-    )
-);
-
-const genderOptions = [
-    { label: UserGenderLabelShort.M, value: UserGender.Male },
-    { label: UserGenderLabelShort.F, value: UserGender.Female },
-    { label: UserGenderLabelShort.O, value: UserGender.Other },
-    { label: UserGenderLabelShort.ND, value: UserGender.NotDisclosed }
-];
-
-// 切換社群帳號綁定狀態
-const toggleSocialAccount = (platform: keyof typeof form.socialAccounts) => {
-    form.socialAccounts[platform] = !form.socialAccounts[platform];
-
-    if (form.socialAccounts[platform]) {
-        // 模擬綁定社群帳號的流程
-        showInfo(`正在連接 ${platform} 帳號...`, '社群帳號綁定');
-    } else {
-        // 模擬解除綁定社群帳號的流程
-        showInfo(`已解除 ${platform} 帳號綁定`, '社群帳號解除綁定');
-    }
-};
-
-// 地區偏好選擇相關邏輯
-const regionOptions = Object.entries(RegionCodeLabel).map(([value, label]) => ({
-    label,
-    value
-}));
-
-const togglePreferredRegion = (region: string) => {
-    if (form.preferences.preferredRegions.includes(region)) {
-        form.preferences.preferredRegions = form.preferences.preferredRegions.filter(r => r !== region);
-    } else {
-        form.preferences.preferredRegions.push(region);
-    }
-};
-
-const clearAllRegions = () => {
-    form.preferences.preferredRegions = [];
-    showInfo('已清空所有偏好地區', '地區偏好設定');
-};
-
-// 移除偏好地區
-const removePreferredRegion = (region: string) => {
-    form.preferences.preferredRegions = form.preferences.preferredRegions.filter(r => r !== region);
-    showInfo(`已移除偏好地區: ${region}`, '地區偏好設定');
-};
-
-// 確認地區選擇
-const confirmRegions = async () => {
-    // 保存地區偏好到後端
-    await saveUserRegions();
-    showRegionsModal.value = false;
-    showSuccess('偏好地區已更新', '地區偏好設定');
-};
-
+// 密碼表單
 const passwordForm = reactive({
     password: '',
     confirmPassword: ''
 });
 
-// 提交密碼變更
-const submitPasswordChange = ({ valid }: any) => {
-    if (!valid) {
-        showError('請檢查輸入資料');
-        return;
+// 數據同步 - 確保順序一致性
+const syncFormWithStore = () => {
+    if (profile.value) {
+        Object.assign(form, {
+            ...profile.value,
+            birthday: profile.value.birthday ? new Date(profile.value.birthday) : undefined,
+            createdAt: profile.value.createdAt ? new Date(profile.value.createdAt) : undefined
+        });
     }
-
-    // 模擬 API 調用
-    setTimeout(() => {
-        showSuccess('密碼已修改');
-        showPasswordModal.value = false;
-        passwordForm.password = '';
-        passwordForm.confirmPassword = '';
-    }, 1000);
+    
+    if (behaviorProfile.value) {
+        // 確保興趣順序與後端保持一致 - 直接複製陣列保持順序
+        form.interests.categories = [...(behaviorProfile.value.interests || [])];
+        form.preferences.preferredRegions = behaviorProfile.value.preferredRegions?.map(String) || [];
+    }
 };
 
-// 保存用戶地區偏好到後端
-const saveUserRegions = async () => {
+// 通用保存處理
+const handleSave = async (
+    saveFunction: () => Promise<any>,
+    successMessage: string,
+    errorMessage: string
+) => {
+    if (!isLoggedIn.value) {
+        showError('用戶未登入', '錯誤');
+        return false;
+    }
+
     try {
-        if (!userStore.user.id) {
-            showError('用戶未登入', '保存失敗');
-            return;
-        }
-        const regions = form.preferences.preferredRegions.map(region => region as RegionCode);
-        const result = await userService.updateUserRegions(userStore.user.id, regions);
-        
+        const result = await saveFunction();
         if (result.success) {
-            showSuccess('地區偏好已保存', '保存成功');
+            showSuccess(successMessage, '成功');
+            return true;
         } else {
-            showError(result.message || '保存地區偏好失敗', '保存失敗');
+            showError(result.message || errorMessage, '失敗');
+            return false;
         }
     } catch (error) {
-        console.error('保存地區偏好失敗:', error);
-        showError('保存地區偏好時出錯', '保存失敗');
+        console.error('保存失敗:', error);
+        showError('網路錯誤，請稍後再試', '錯誤');
+        return false;
     }
 };
 
-// 重置表單
-const resetForm = () => {
-    // 只重置基本資料，保留其他設定
-    if (profile.value) {
-        form.name = profile.value.name || '';
-        form.gender = profile.value.gender || UserGender.Other;
-        form.birthday = profile.value.birthday ? new Date(profile.value.birthday) : new Date();
-        form.address = profile.value.address || '';
-        form.phone = profile.value.phone || '';
+// 通用切換邏輯
+const createToggleHandler = <T>(
+    array: T[],
+    updateMessage: (item: T, action: 'add' | 'remove') => string
+) => (item: T) => {
+    const index = array.indexOf(item);
+    if (index === -1) {
+        array.push(item);
+        showInfo(updateMessage(item, 'add'), '更新');
+    } else {
+        array.splice(index, 1);
+        showInfo(updateMessage(item, 'remove'), '更新');
     }
-
-    showInfo('表單已重置為原始資料', '已重置');
 };
 
-// 儲存個人資料
-const saveProfile = async (values: any) => {
-    if (!updateProfile) return;
+// 興趣偏好管理 - 即時更新優化
+const interestHandlers = {
+    // 即時響應式更新
+    updateAndSync: async (updateFn: () => void, autoSave: boolean = true) => {
+        updateFn();
+        
+        // 強制觸發響應式更新
+        await nextTick();
+        form.interests.categories = [...form.interests.categories];
+        
+        // 可選的自動保存
+        if (autoSave) {
+            debouncedSave(); // 使用預設的 800ms 防抖
+        }
+    },
     
-    // 構建符合 UserUpdateRequest 格式的數據
-    const profileData: UserUpdateRequest = {
-        name: values.name,
-        avatarUrl: values.avatarUrl,
-        address: values.address,
-        birthday: values.birthday ? values.birthday.toISOString() : undefined,
-        gender: values.gender,
-        regionCode: values.regionCode
-    };
+    // 專門的切換邏輯，立即更新
+    toggle: async (category: MainCategory) => {
+        await interestHandlers.updateAndSync(() => {
+            const index = form.interests.categories.indexOf(category);
+            if (index === -1) {
+                // 新增到末尾，用戶可以稍後調整順序
+                form.interests.categories.push(category);
+            } else {
+                // 移除
+                form.interests.categories.splice(index, 1);
+            }
+        });
+    },
     
-    // 保存基本資料到用戶表
-    await updateProfile(profileData);
+    // 精確的移動邏輯，立即更新
+    move: async (index: number, direction: 'up' | 'down') => {
+        const targetIndex = direction === 'up' ? index - 1 : index + 1;
+        const categories = form.interests.categories;
+        
+        if (targetIndex < 0 || targetIndex >= categories.length) return;
+        
+        await interestHandlers.updateAndSync(() => {
+            // 交換位置，確保順序準確
+            [categories[index], categories[targetIndex]] = [categories[targetIndex], categories[index]];
+        });
+    },
     
-    // 保存偏好設定到行為檔案表
-    // await saveCompletePreferences();
+    // 移除單個興趣，立即更新
+    remove: async (category: MainCategory) => {
+        await interestHandlers.updateAndSync(() => {
+            const index = form.interests.categories.indexOf(category);
+            if (index !== -1) {
+                form.interests.categories.splice(index, 1);
+            }
+        });
+    },
+    
+    // 清空所有興趣，立即更新
+    clear: async () => {
+        await interestHandlers.updateAndSync(() => {
+            form.interests.categories = [];
+        });
+        showInfo('已清空所有興趣偏好', '偏好更新');
+    },
+    
+    // 手動保存 - 增加詳細調試
+    save: async () => {
+        // 清除防抖計時器，執行立即保存
+        debouncedSave.cancel();
+        
+        const categoriesData = [...form.interests.categories];
+        
+        const result = await handleSave(
+            () => userStore.updateInterests(categoriesData), // 使用副本確保順序
+            '興趣偏好已保存',
+            '保存興趣偏好失敗'
+        );
+        
+        if (result) {
+            // 保存成功後重新同步，確保順序一致
+            await userStore.fetchBehaviorProfile(userStore.user.id);
+            // 重新同步表單數據
+            await nextTick();
+            syncFormWithStore();
+        }
+        
+        return result;
+    },
+    
+    // 確認並關閉對話框
+    confirm: async () => {
+        const success = await interestHandlers.save();
+        if (success) {
+            modals.interests = false;
+        }
+    }
 };
+
+
+
+// 地區偏好管理 - 即時更新優化
+const regionHandlers = {
+    // 即時響應式更新
+    updateAndSync: async (updateFn: () => void, autoSave: boolean = true) => {
+        updateFn();
+        
+        // 強制觸發響應式更新
+        await nextTick();
+        form.preferences.preferredRegions = [...form.preferences.preferredRegions];
+        
+        // 可選的自動保存
+        if (autoSave) {
+            debouncedRegionSave(); // 使用預設的 800ms 防抖
+        }
+    },
+    
+    // 切換地區偏好，立即更新
+    toggle: async (region: string) => {
+        await regionHandlers.updateAndSync(() => {
+            const index = form.preferences.preferredRegions.indexOf(region);
+            if (index === -1) {
+                form.preferences.preferredRegions.push(region);
+            } else {
+                form.preferences.preferredRegions.splice(index, 1);
+            }
+        });
+    },
+    
+    // 移除地區偏好，立即更新
+    remove: async (region: string) => {
+        await regionHandlers.updateAndSync(() => {
+            form.preferences.preferredRegions = form.preferences.preferredRegions.filter(r => r !== region);
+        });
+    },
+    
+    // 清空地區偏好，立即更新
+    clear: async () => {
+        await regionHandlers.updateAndSync(() => {
+            form.preferences.preferredRegions = [];
+        });
+        showInfo('已清空所有偏好地區', '地區偏好設定');
+    },
+    
+    // 手動保存
+    save: async () => {
+        // 清除防抖計時器，執行立即保存
+        debouncedRegionSave.cancel();
+        
+        const result = await handleSave(
+            () => userStore.updatePreferredRegions(
+                form.preferences.preferredRegions.map(region => region as RegionCode)
+            ),
+            '地區偏好已保存',
+            '保存地區偏好失敗'
+        );
+        
+        if (result) {
+            // 保存成功後重新同步
+            await userStore.fetchBehaviorProfile(userStore.user.id);
+            await nextTick();
+            syncFormWithStore();
+        }
+        
+        return result;
+    },
+    
+    // 確認並關閉對話框
+    confirm: async () => {
+        const success = await regionHandlers.save();
+        if (success) {
+            modals.regions = false;
+        }
+    }
+};
+
+// 社群帳號切換
+const toggleSocialAccount = (platform: string) => {
+    form.socialAccounts[platform] = !form.socialAccounts[platform];
+    const action = form.socialAccounts[platform] ? '連接' : '解除';
+    showInfo(`已${action} ${platform} 帳號`, '社群帳號設定');
+};
+
+// 表單驗證
+const validators = {
+    profile: zodResolver(z.object({
+        name: z.string({ required_error: '姓名為必填欄位' }).min(1, { message: '姓名不能為空' }),
+        birthday: z.date().max(new Date(), { message: '生日不能早於今天' }).optional(),
+        gender: z.nativeEnum(UserGender).optional()
+    })),
+    
+    password: zodResolver(z.object({
+        password: z.string().min(6, { message: '密碼不能少於6個字' }),
+        confirmPassword: z.string().min(6, { message: '密碼不能少於6個字' }),
+    }).refine(
+        ({ confirmPassword, password }) => confirmPassword === password,
+        { path: ["confirmPassword"], message: "密碼不一致" }
+    ))
+};
+
+// 主要業務邏輯
+const profileActions = {
+    update: async (updatedProfile: UserUpdateRequest) => 
+        handleSave(
+            () => userService.updateProfile(userStore.user.id, updatedProfile),
+            '個人資料更新成功',
+            '個人資料更新失敗'
+        ),
+    
+    save: async (values: any) => {
+        const profileData: UserUpdateRequest = {
+            name: values.name,
+            avatarUrl: values.avatarUrl,
+            address: values.address,
+            birthday: values.birthday?.toISOString(),
+            gender: values.gender,
+            regionCode: values.regionCode
+        };
+        await profileActions.update(profileData);
+    },
+    
+    reset: () => {
+        syncFormWithStore();
+        showInfo('表單已重置為原始資料', '已重置');
+    }
+};
+
+const passwordActions = {
+    submit: ({ valid }: any) => {
+        if (!valid) {
+            showError('請檢查輸入資料');
+            return;
+        }
+        
+        // 模擬 API 調用
+        setTimeout(() => {
+            showSuccess('密碼已修改');
+            modals.password = false;
+            Object.assign(passwordForm, { password: '', confirmPassword: '' });
+        }, 1000);
+    }
+};
+
+// 初始化和數據監聽
+onMounted(async () => {
+    if (isLoggedIn.value) {
+        await userStore.fetchUserProfile(userStore.user.id);
+        await userStore.fetchBehaviorProfile(userStore.user.id);
+        syncFormWithStore();
+    }
+});
+
+// 監聽 store 數據變化，同步到表單
+watch([profile, behaviorProfile], syncFormWithStore, { deep: true });
+
+// 監聽表單興趣變化，即時響應
+watch(
+    () => form.interests.categories,
+    (newCategories, oldCategories) => {
+        // 避免初始化時觸發
+        if (oldCategories && newCategories.length !== oldCategories.length) {
+            console.log('🎯 興趣偏好變更:', {
+                新增: newCategories.filter(cat => !oldCategories.includes(cat)),
+                移除: oldCategories.filter(cat => !newCategories.includes(cat)),
+                當前順序: newCategories.map((cat, index) => `${index + 1}. ${getLabel.mainCategory(cat)}`)
+            });
+        }
+    },
+    { deep: true }
+);
+
+// 監聽表單地區變化，即時響應
+watch(
+    () => form.preferences.preferredRegions,
+    (newRegions, oldRegions) => {
+        // 避免初始化時觸發
+        if (oldRegions && newRegions.length !== oldRegions.length) {
+            console.log('🗺️ 地區偏好變更:', {
+                新增: newRegions.filter(region => !oldRegions.includes(region)),
+                移除: oldRegions.filter(region => !newRegions.includes(region)),
+                當前地區: newRegions.map(region => getLabel.region(region))
+            });
+        }
+    },
+    { deep: true }
+);
+const debouncedSave = debounce(interestHandlers.save, 800);
+
+const debouncedRegionSave = debounce(regionHandlers.save, 800);
+
+// 組件卸載時清理計時器
+onBeforeUnmount(() => {
+    // 取消所有防抖函數的計時器
+    debouncedSave.cancel();
+    debouncedRegionSave.cancel();
+});
+
+// 模板引用 - 簡化變量名
+const showPasswordModal = computed(() => modals.password);
+
+const showInterestsModal = computed(() => modals.interests);
+
+const showRegionsModal = computed(() => modals.regions);
+
+// 暴露給模板的函數 - 使用更簡潔的名稱
+const resolver = validators.profile;
+const passwordResolver = validators.password;
+const genderOptions = options.gender;
+const mainCategoryOptions = options.mainCategory;
+const regionOptions = options.region;
+const getMainCategoryLabel = getLabel.mainCategory;
+const getRegionLabel = getLabel.region;
+
+// 興趣管理函數 - 即時更新
+const toggleMainCategory = async (category: string) => await interestHandlers.toggle(category as MainCategory);
+const moveInterestUp = async (index: number) => await interestHandlers.move(index, 'up');
+const moveInterestDown = async (index: number) => await interestHandlers.move(index, 'down');
+const removeInterestCategory = interestHandlers.remove;
+const clearAllInterests = interestHandlers.clear;
+const confirmInterests = interestHandlers.confirm;
+
+// 地區管理函數 - 即時更新
+const togglePreferredRegion = regionHandlers.toggle;
+const removePreferredRegion = regionHandlers.remove;
+const clearAllRegions = regionHandlers.clear;
+const confirmRegions = regionHandlers.confirm;
+
+// 其他動作
+const saveProfile = profileActions.save;
+const resetForm = profileActions.reset;
+const submitPasswordChange = passwordActions.submit;
 </script>
 
 <style scoped>

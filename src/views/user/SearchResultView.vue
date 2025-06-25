@@ -185,7 +185,9 @@
 							<template #header>
 								<div class="flex justify-between">
 									<div class="flex flex-col">
-										<h1 class="text-2xl font-bold">搜尋結果</h1>
+										<h1 class="text-2xl font-bold" v-if="searchRequest.keyword">搜尋結果</h1>
+										<h1 class="text-2xl font-bold" v-else-if="!isFiltersApplied && isLoggedIn">個人化推薦</h1>
+										<h1 class="text-2xl font-bold" v-else>篩選結果</h1>
 										<p class="text-sm text-gray-600 mt-1">
 											共 {{ searchResultsTotal }} 個結果，第 {{ searchRequest.pageNum || 1 }} / {{
 												searchResultsPages }} 頁
@@ -207,7 +209,7 @@
 									<div v-for="course in slotProps.items" :key="course.courseId"
 										class="flex flex-col sm:flex-row rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
 										:class="{ 'opacity-70': isLoading(course.courseId) }">
-										<div class="sm:w-48 h-48 sm:h-auto bg-gray-200relative overflow-hidden">
+										<div class=" bg-gray-200relative overflow-hidden flex-shrink-0 w-56 h-48">
 											<img :src="course.coverUrl" :alt="course.title"
 												class="inset-0w-full h-full object-cover" />
 											<!-- 添加加载覆盖层 -->
@@ -229,8 +231,8 @@
 													<Button icon="pi pi-share-alt" text rounded aria-label="分享" />
 												</div>
 											</div>
-											<div class="mt-2 flex-grow">
-												<p class="text-sm text-gray-600line-clamp-2">{{ course.description }}
+											<div class="mt-2 flex-grow overflow-hidden max-h-12">
+												<p class="text-sm text-gray-600 line-clamp-2">{{ course.description }}
 												</p>
 											</div>
 											<div class="mt-4 flex justify-between items-center">
