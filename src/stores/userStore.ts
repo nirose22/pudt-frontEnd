@@ -141,13 +141,31 @@ export const useUserStore = defineStore('user', () => {
 
     try {
       state.isLoading = true
+      
+      console.log('🗺️ [userStore] 準備更新地區偏好:');
+      console.log('📊 用戶ID:', userId.value);
+      console.log('📊 新地區資料:', newRegions);
+      console.log('📊 是否為清空操作:', newRegions.length === 0);
+      console.log('📊 API 端點:', `PUT /users/${userId.value}/regions`);
+      console.log('📊 請求資料:', { preferredRegions: newRegions });
+      
       const result = await userService.updateUserRegions(userId.value, newRegions)
+      
+      console.log('📨 [userStore] API 回應:');
+      console.log('📊 成功狀態:', result.success);
+      console.log('📊 回應訊息:', result.message);
+      console.log('📊 完整回應:', result);
+      
       if (result.success) {
+        console.log('✅ [userStore] 更新本地狀態 - 舊資料:', state.profile.preferredRegions);
         state.profile.preferredRegions = newRegions
+        console.log('✅ [userStore] 更新本地狀態 - 新資料:', state.profile.preferredRegions);
+      } else {
+        console.error('❌ [userStore] API 回應失敗:', result.message);
       }
       return result
     } catch (error) {
-      console.error('更新地區偏好失敗:', error)
+      console.error('❌ [userStore] 更新地區偏好失敗:', error)
       return { success: false, message: '更新失敗' }
     } finally {
       state.isLoading = false

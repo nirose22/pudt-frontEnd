@@ -502,8 +502,27 @@ const syncFormWithStore = () => {
     
     if (behaviorProfile.value) {
         // 確保興趣順序與後端保持一致 - 直接複製陣列保持順序
+        const oldInterests = [...form.interests.categories];
         form.interests.categories = [...(behaviorProfile.value.interests || [])];
-        form.preferences.preferredRegions = behaviorProfile.value.preferredRegions?.map(String) || [];
+        
+        // 地區偏好同步 - 添加調試和更嚴格的同步邏輯
+        const oldRegions = [...form.preferences.preferredRegions];
+        const newRegions = behaviorProfile.value.preferredRegions?.map(String) || [];
+        form.preferences.preferredRegions = newRegions;
+        
+        console.log('🔄 [syncFormWithStore] 數據同步:', {
+            興趣偏好: {
+                舊: oldInterests,
+                新: form.interests.categories,
+                變更: oldInterests.length !== form.interests.categories.length
+            },
+            地區偏好: {
+                舊: oldRegions,
+                新: form.preferences.preferredRegions,
+                變更: oldRegions.length !== form.preferences.preferredRegions.length,
+                後端原始資料: behaviorProfile.value.preferredRegions
+            }
+        });
     }
 };
 
@@ -649,11 +668,20 @@ const interestHandlers = {
 const regionHandlers = {
     // 即時響應式更新
     updateAndSync: async (updateFn: () => void, autoSave: boolean = true) => {
+        const oldRegions = [...form.preferences.preferredRegions];
         updateFn();
         
         // 強制觸發響應式更新
         await nextTick();
         form.preferences.preferredRegions = [...form.preferences.preferredRegions];
+        
+        // 調試日誌
+        console.log('🗺️ [regionHandlers] 數據變更:', {
+            舊資料: oldRegions,
+            新資料: form.preferences.preferredRegions,
+            操作: form.preferences.preferredRegions.length === 0 ? '清空' : 
+                  form.preferences.preferredRegions.length > oldRegions.length ? '新增' : '移除'
+        });
         
         // 可選的自動保存
         if (autoSave) {
@@ -675,37 +703,69 @@ const regionHandlers = {
     
     // 移除地區偏好，立即更新
     remove: async (region: string) => {
+        console.log('🗺️ [regionHandlers] 準備移除地區:', region);
         await regionHandlers.updateAndSync(() => {
             form.preferences.preferredRegions = form.preferences.preferredRegions.filter(r => r !== region);
         });
+        console.log('🗺️ [regionHandlers] 移除後剩餘地區:', form.preferences.preferredRegions);
     },
     
     // 清空地區偏好，立即更新
     clear: async () => {
+        console.log('🗺️ [regionHandlers] 準備清空所有地區偏好');
+        console.log('🗺️ [regionHandlers] 清空前:', form.preferences.preferredRegions);
+        
         await regionHandlers.updateAndSync(() => {
-            form.preferences.preferredRegions = [];
-        });
-        showInfo('已清空所有偏好地區', '地區偏好設定');
+            form.preferences.preferredRegions.length = 0; // 清空陣列引用
+            form.preferences.preferredRegions.splice(0); // 再次確保清空
+        }, false); // 不自動保存，手動觸發
+        
+        console.log('🗺️ [regionHandlers] 清空後:', form.preferences.preferredRegions);
+        
+        // 立即手動保存
+        const success = await regionHandlers.save();
+        if (success) {
+            showInfo('已清空所有偏好地區', '地區偏好設定');
+        }
     },
     
-    // 手動保存
+    // 手動保存 - 增加詳細調試
     save: async () => {
         // 清除防抖計時器，執行立即保存
         debouncedRegionSave.cancel();
         
+        const regionsData = [...form.preferences.preferredRegions];
+        console.log('🗺️ [regionHandlers] 準備保存地區偏好:', {
+            資料: regionsData,
+            數量: regionsData.length,
+            是否為空: regionsData.length === 0
+        });
+        
         const result = await handleSave(
             () => userStore.updatePreferredRegions(
-                form.preferences.preferredRegions.map(region => region as RegionCode)
+                regionsData.map(region => region as RegionCode)
             ),
             '地區偏好已保存',
             '保存地區偏好失敗'
         );
         
+        console.log('🗺️ [regionHandlers] 保存結果:', result);
+        
         if (result) {
-            // 保存成功後重新同步
+            // 保存成功後重新同步，但要確保清空狀態正確傳遞
+            console.log('🗺️ [regionHandlers] 保存成功，重新獲取資料...');
             await userStore.fetchBehaviorProfile(userStore.user.id);
             await nextTick();
-            syncFormWithStore();
+            
+            // 如果我們剛才保存的是空陣列，確保同步後也是空陣列
+            if (regionsData.length === 0) {
+                console.log('🗺️ [regionHandlers] 確保清空狀態...');
+                form.preferences.preferredRegions = [];
+            } else {
+                syncFormWithStore();
+            }
+        } else {
+            console.error('🗺️ [regionHandlers] 保存失敗，不同步數據');
         }
         
         return result;
@@ -815,21 +875,7 @@ watch(
     { deep: true }
 );
 
-// 監聽表單地區變化，即時響應
-watch(
-    () => form.preferences.preferredRegions,
-    (newRegions, oldRegions) => {
-        // 避免初始化時觸發
-        if (oldRegions && newRegions.length !== oldRegions.length) {
-            console.log('🗺️ 地區偏好變更:', {
-                新增: newRegions.filter(region => !oldRegions.includes(region)),
-                移除: oldRegions.filter(region => !newRegions.includes(region)),
-                當前地區: newRegions.map(region => getLabel.region(region))
-            });
-        }
-    },
-    { deep: true }
-);
+
 const debouncedSave = debounce(interestHandlers.save, 800);
 
 const debouncedRegionSave = debounce(regionHandlers.save, 800);
@@ -842,11 +888,20 @@ onBeforeUnmount(() => {
 });
 
 // 模板引用 - 簡化變量名
-const showPasswordModal = computed(() => modals.password);
+const showPasswordModal = computed({
+    get: () => modals.password,
+    set: (value) => modals.password = value
+});
 
-const showInterestsModal = computed(() => modals.interests);
+const showInterestsModal = computed({
+    get: () => modals.interests,
+    set: (value) => modals.interests = value
+});
 
-const showRegionsModal = computed(() => modals.regions);
+const showRegionsModal = computed({
+    get: () => modals.regions,
+    set: (value) => modals.regions = value
+});
 
 // 暴露給模板的函數 - 使用更簡潔的名稱
 const resolver = validators.profile;

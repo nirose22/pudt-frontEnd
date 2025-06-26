@@ -70,7 +70,22 @@ export const userService = {
    * 更新用戶地區偏好
    */
   async updateUserRegions(userId: number, regions: RegionCode[]): Promise<Result<boolean>> {
-    return request<boolean>(() => api.put(API_ROUTES.USER.UPDATE_REGIONS(userId), { preferredRegions: regions }))
+    const requestData = { preferredRegions: regions };
+    
+    console.log('🌐 [UserService] 發送地區偏好 HTTP 請求:');
+    console.log('📊 URL:', API_ROUTES.USER.UPDATE_REGIONS(userId));
+    console.log('📊 Method: PUT');
+    console.log('📊 Request Body:', JSON.stringify(requestData, null, 2));
+    console.log('📊 是否為清空請求:', regions.length === 0);
+    console.log('📊 Content-Type: application/json');
+    
+    const result = await request<boolean>(() => api.put(API_ROUTES.USER.UPDATE_REGIONS(userId), requestData));
+    
+    console.log('📨 [UserService] 地區偏好 HTTP 回應:');
+    console.log('📊 Status:', result.success ? 'Success' : 'Failed');
+    console.log('📊 Response:', result);
+    
+    return result;
   },
 
   /**
