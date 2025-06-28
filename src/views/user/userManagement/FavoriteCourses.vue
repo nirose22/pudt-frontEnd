@@ -163,7 +163,6 @@ const favoriteCourses = computed(() => courseStore.favoriteCourses);
 watch(() => favoriteCourses.value, (newValue) => {
 	// 當收藏課程變更時，清除所有課程的加載狀態
 	loadingStates.value.clear();
-	console.log('收藏課程已更新', newValue);
 }, { deep: true });
 
 // 將 Course 物件映射為 Course 物件

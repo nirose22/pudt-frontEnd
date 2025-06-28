@@ -365,8 +365,6 @@ const filteredCourseHistory = computed(() => {
     if (range.value) {
         filtered = inRange(range.value.start, range.value.end, filtered, (item) => new Date(item.date));
     }
-    console.log(filtered);
-    
     // 搜尋過濾
     if (filters.value.search) {
         const searchLower = filters.value.search.toLowerCase();

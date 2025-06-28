@@ -102,8 +102,6 @@ const applyFilter = () => {
 };
 
 const resetFilter = () => {
-    console.log(222222);
-
     // 重置为当前日期和默认范围
     localStartDate.value = new Date();
     localStartDate.value.setDate(localStartDate.value.getDate() - props.defaultRangeDays);
