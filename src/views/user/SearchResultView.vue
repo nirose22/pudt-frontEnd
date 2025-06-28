@@ -446,6 +446,7 @@ function onPage(event: { page: number, first: number, rows: number, pageCount?: 
 	
 	// 只更新 searchRequest，不管理 first 狀態
 	if (pageNum >= 1 && pageNum <= searchResultsPages.value) {
+		console.log("onPage: ", pageNum);
 		updateSearchRequest({ pageNum: pageNum });
 	}
 }
@@ -456,6 +457,10 @@ async function fetchFilteredCourses(): Promise<void> {
 		isSearchLoading.value = true;
 		searchError.value = null;
 		clearLoadingStates();
+		console.log("--------------------------------");
+		
+		console.log("fetchFilteredCourses: ", searchRequest.value);
+		
 		
 		// 準備搜索請求，過濾掉空值，但保留分頁參數
 		const cleanRequest = Object.fromEntries(
@@ -568,24 +573,22 @@ onMounted(async () => {
 	}
 	clearLoadingStates();
 
-	// 載入初始搜索結果
-	await fetchFilteredCourses();
-
 	// 初始化 toast
 	initToast(toast);
 });
 
 // 監聽路由參數變化，當從 Header 搜尋時重新觸發搜尋
-watch(() => route.query.keyword , (newQuery, oldQuery) => {
+watch(() => route.query.keyword, (newQuery, oldQuery) => {
+	console.log("watch keyword: ", "newQuery: ", newQuery, "oldQuery: ", oldQuery);
 	// 檢查是否為搜尋相關的參數變化
-	if (newQuery !== oldQuery) {
+	if (newQuery && newQuery !== oldQuery) {
 		console.log('路由搜尋參數變化，重新同步並搜尋:', newQuery);
 		// 同步新的 URL 參數到搜索請求
 		syncParamsToFilters();
 		// 重新執行搜尋
 		fetchFilteredCourses();
 	}
-}, { deep: true });
+});
 
 </script>
 

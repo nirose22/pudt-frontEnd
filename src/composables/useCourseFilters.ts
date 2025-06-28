@@ -79,7 +79,7 @@ export function useCourseFilters(route: RouteLocationNormalizedLoaded, router: R
     };
 
     // 同步搜索請求到URL（debounced）
-    const syncFiltersToParams = () => {
+    const syncFiltersToParams = debounce(() => {
         const query: Record<string, string> = {};
         const req = searchRequest.value;
 
@@ -95,7 +95,7 @@ export function useCourseFilters(route: RouteLocationNormalizedLoaded, router: R
         // if (req.pageNum && req.pageNum > 1)  query.pageNum = req.pageNum.toString();
 
         router.replace({ query });
-    };
+    }, 500);
 
     // 更新搜索參數的便捷方法
     const updateSearchRequest = (updates: Partial<SearchRequest>) => {
