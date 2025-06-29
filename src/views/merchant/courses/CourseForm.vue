@@ -109,13 +109,13 @@
                 <div class="flex gap-2 items-center">
                   <div class="flex-grow">
                     <label :for="`start-${index}`" class="block mb-1 font-medium">開始時間</label>
-                    <Calendar :id="`start-${index}`" v-model="slot.start as Date" timeOnly showTime hourFormat="24"
+                    <Calendar :id="`start-${index}`" v-model="slot.start as unknown as Date" timeOnly showTime hourFormat="24"
                       class="w-full" />
                   </div>
                   <span class="mt-6">至</span>
                   <div class="flex-grow">
                     <label :for="`end-${index}`" class="block mb-1 font-medium">結束時間</label>
-                    <Calendar :id="`end-${index}`" v-model="slot.end as Date" timeOnly showTime hourFormat="24"
+                    <Calendar :id="`end-${index}`" v-model="slot.end as unknown as Date" timeOnly showTime hourFormat="24"
                       class="w-full" />
                   </div>
                 </div>
@@ -291,8 +291,14 @@ const saving = ref(false);
 const isEditMode = computed(() => route.name === 'CourseEdit');
 const courseId = computed(() => route.params.id ? parseInt(route.params.id as string) : 0);
 
+// 扩展的课程类型以支持表单需要的额外属性
+interface ExtendedCourseForm extends CourseDetailDTO {
+  categories?: string[]
+  publishDate?: Date
+}
+
 // 課程數據
-const course = ref<CourseDetailDTO>({
+const course = ref<ExtendedCourseForm>({
     id: 0,
     title: '',
     description: '',
@@ -392,6 +398,14 @@ const subCategories = {
 };
 
 // 地區列表
+const mockRegions = [
+  { name: '臺北市', code: 'TPE' },
+  { name: '新北市', code: 'NTP' },
+  { name: '桃園市', code: 'TAO' },
+  { name: '臺中市', code: 'TXG' },
+  { name: '臺南市', code: 'TNN' },
+  { name: '高雄市', code: 'KHH' }
+];
 const regions = mockRegions;
 
 // zod 表單驗證 schema

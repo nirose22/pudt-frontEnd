@@ -120,8 +120,6 @@ router.beforeEach((to, from, next) => {
     // 根據用戶角色重定向到適當的頁面
     switch (userRole) {
       case UserRole.Merchant:
-        next({ name: 'MerchantDashboard' });
-        break;
       case UserRole.Admin:
       case UserRole.User:
       default:

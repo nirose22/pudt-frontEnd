@@ -17,8 +17,7 @@ export const PurchaseService = {
      */
     async getPurchaseHistory(userId: number): Promise<Result<ExtendedPurchaseItem[]>> {
         return request<ExtendedPurchaseItem[]>(
-            () => api.get(API_ROUTES.PURCHASE.HISTORY(userId)),
-            ERROR_MESSAGES.PURCHASE_ERROR
+            () => api.get(API_ROUTES.PURCHASE.HISTORY(userId))
         );
     },
     
@@ -50,8 +49,7 @@ export const PurchaseService = {
      */
     async downloadInvoice(invoiceNo: string): Promise<Result<void>> {
         return request<void>(
-            () => api.get(API_ROUTES.PURCHASE.INVOICE(invoiceNo)),
-            ERROR_MESSAGES.PURCHASE_ERROR
+            () => api.get(API_ROUTES.PURCHASE.INVOICE(invoiceNo))
         );
     }
 }; 

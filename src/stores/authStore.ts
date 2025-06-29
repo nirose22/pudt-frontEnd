@@ -113,6 +113,16 @@ export const useAuthStore = defineStore('auth', () => {
 		return res;
 	}
 
+	async function loginAdmin(creds: LoginCredentials): Promise<Result<User>> {
+		const res = await authApi.login(creds);
+		if (res.success && res.data) {
+			token.value = res.data.token || null;
+			role.value = res.data.role as UserRole;
+			useUserStore().user = res.data;
+		}
+		return res;
+	}
+
 	async function logout(): Promise<Result<void>> {
 		const res = await authApi.logout();
 		clearAuthData();
@@ -142,6 +152,7 @@ export const useAuthStore = defineStore('auth', () => {
 		isLoggedIn,
 		isMerchant,
 		login,
+		loginAdmin,
 		loginWithGoogle,
 		loginWithFacebook,
 		// loginWithLine,

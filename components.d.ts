@@ -12,6 +12,7 @@ declare module 'vue' {
     AsyncState: typeof import('./src/components/common/AsyncState.vue')['default']
     BaseLogo: typeof import('./src/components/layout/BaseLogo.vue')['default']
     BookingDetailDialog: typeof import('./src/components/user/BookingDetailDialog.vue')['default']
+    Button: typeof import('primevue/button')['default']
     CalendarSyncDialog: typeof import('./src/components/common/CalendarSyncDialog.vue')['default']
     CancelBookingDialog: typeof import('./src/components/user/CancelBookingDialog.vue')['default']
     CardPurchaseDialog: typeof import('./src/components/user/CardPurchaseDialog.vue')['default']
@@ -19,6 +20,7 @@ declare module 'vue' {
     CourseCarousel: typeof import('./src/components/user/CourseCarousel.vue')['default']
     CourseDetail: typeof import('./src/components/user/CourseDetail.vue')['default']
     DateRangeFilter: typeof import('./src/components/common/DateRangeFilter.vue')['default']
+    Dialog: typeof import('primevue/dialog')['default']
     Footer: typeof import('./src/components/layout/Footer.vue')['default']
     Header: typeof import('./src/components/layout/Header.vue')['default']
     HistoryDialog: typeof import('./src/components/user/HistoryDialog.vue')['default']
@@ -33,5 +35,9 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     SearchBar: typeof import('./src/components/layout/SearchBar.vue')['default']
     SideBar: typeof import('./src/components/layout/SideBar.vue')['default']
+    Toast: typeof import('primevue/toast')['default']
+  }
+  export interface GlobalDirectives {
+    Tooltip: typeof import('primevue/tooltip')['default']
   }
 }

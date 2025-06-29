@@ -125,7 +125,7 @@ const handleAdminLogin = async () => {
     
     try {
         const result = await authStore.loginAdmin({
-            username: adminForm.username,
+            account: adminForm.username,
             password: adminForm.password,
             rememberMe: adminForm.rememberMe
         });

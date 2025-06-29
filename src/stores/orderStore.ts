@@ -148,10 +148,10 @@ export const usePurchaseStore = defineStore('purchase', () => {
       const pointHistoryItem: PointTxn = {
         id: Date.now(),
         userId: userStore.user.id ?? 0,
-        kind: PointKind.Deposit,
+        kind: PointKind.ADD,
         amount: selectedCard.points,
         balance: newBalance ?? 0,
-        refType: PointRefType.Order,
+        refType: PointRefType.ORDER,
         refId: Date.now(),
         createdAt: new Date(),
       }

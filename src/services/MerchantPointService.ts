@@ -12,8 +12,7 @@ export const MerchantPointService = {
      */
     async getPointsStats(merchantId: number): Promise<Result<PointStats>> {
         return request<PointStats>(
-            () => api.get(API_ROUTES.MERCHANT.POINTS_STATS(merchantId)),
-            ERROR_MESSAGES.POINTS_ERROR
+            () => api.get(API_ROUTES.MERCHANT.POINTS_STATS(merchantId))
         );
     },
 
@@ -24,8 +23,7 @@ export const MerchantPointService = {
      */
     async getTransactions(merchantId: number): Promise<Result<PointTransaction[]>> {
         return request<PointTransaction[]>(
-            () => api.get(API_ROUTES.MERCHANT.POINTS_TRANSACTIONS(merchantId)),
-            ERROR_MESSAGES.POINTS_ERROR
+            () => api.get(API_ROUTES.MERCHANT.POINTS_TRANSACTIONS(merchantId))
         );
     },
 
@@ -49,8 +47,7 @@ export const MerchantPointService = {
             () => api.post(API_ROUTES.MERCHANT.POINTS_SETTLEMENT(merchantId), {
                 amount,
                 bankInfo
-            }),
-            ERROR_MESSAGES.POINTS_ERROR
+            })
         );
     }
 }; 

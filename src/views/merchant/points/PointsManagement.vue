@@ -494,8 +494,7 @@ async function submitSettlement(): Promise<void> {
       type: 'settlement',
       points: settlementAmount.value,
       description: '點數結算',
-      status: 'pending',
-      bankInfo: { ...bankInfo.value }
+      status: 'pending'
     };
     transactions.value.unshift(newTransaction);
     

@@ -2,8 +2,7 @@
   <div class="flex min-h-screen bg-gray-100">
     <div class="m-auto w-full max-w-md p-6">
       <div class="bg-white rounded-lg shadow-lg p-6">
-        <Toast />
-
+        <Toast position="top-center" group="merchant-login" />
         <!-- Logo 和標題 -->
         <div class="flex flex-col items-center mb-6">
           <img src="@/assets/image/pudt_logo-sm.png" alt="PUDT Logo" class="h-16 mb-4" />
@@ -87,9 +86,10 @@ import Message from 'primevue/message';
 import Checkbox from 'primevue/checkbox';
 import Button from 'primevue/button';
 import Divider from 'primevue/divider';
-import { showSuccess, showError, showInfo } from '@/utils/toastHelper';
 import { useAuthStore } from '@/stores/authStore';
+import { useToast } from 'primevue/usetoast';
 
+const toast = useToast();
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
@@ -101,6 +101,7 @@ const initialValues = ref({
   account: '',
   password: ''
 });
+
 
 const resolver = zodResolver(
   z.object({
@@ -118,10 +119,10 @@ const onFormSubmit = async (e: any) => {
         rememberMe: rememberMe.value
       })
       if (res.success) {
-        showSuccess(res.message || '登入成功')
+        toast.add({ severity: 'success', summary: '成功', detail: res.message || '登入成功', life: 3000, group: 'merchant-login' })
         router.push('/merchant')
       } else {
-        showError(res.message || '登入失敗')
+        toast.add({ severity: 'error', summary: '錯誤', detail: res.message || '登入失敗', life: 3000, group: 'merchant-login' })
       }
     } finally {
       loading.value = false
@@ -130,14 +131,14 @@ const onFormSubmit = async (e: any) => {
 }
 
 const handleGoogleLogin = async () => {
-  showInfo('Google 登入功能開發中', 'Google 登入');
+  toast.add({ severity: 'info', summary: '提示', detail: 'Google 登入功能開發中', life: 3000 })
 }
 
 const handleFacebookLogin = async () => {
-  showInfo('Facebook 登入功能開發中', 'Facebook 登入');
+  toast.add({ severity: 'info', summary: '提示', detail: 'Facebook 登入功能開發中', life: 3000 })
 }
 
 function contactSupport() {
-  showInfo('請聯絡我們的客服人員以申請商家帳號', '聯絡客服');
+  toast.add({ severity: 'info', summary: '提示', detail: '請聯絡我們的客服人員以申請商家帳號', life: 3000 })
 }
 </script>

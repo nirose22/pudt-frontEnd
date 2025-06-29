@@ -10,7 +10,7 @@
                 <ul class="py-2 text-gray-700">
                     <li v-for="(menuItem, index) in menuItems" :key="index">
                         <RouterLink :to="menuItem.path" custom v-slot="{ navigate, isActive }">
-                            <a @click="navigate" :class="['p-3 cursor-pointer flex items-center transition-colors duration-200 rounded-md',
+                            <a @click="(event) => handleMenuClick(event, menuItem, navigate)" :class="['p-3 cursor-pointer flex items-center transition-colors duration-200 rounded-md',
                                 isActive ? 'bg-blue-50 text-blue-600' : 'hover:bg-blue-100']">
                                 <i :class="['pi mr-2', menuItem.icon]"></i>
                                 {{ menuItem.label }}
@@ -61,15 +61,18 @@ import Avatar from 'primevue/avatar';
 import ConfirmDialog from 'primevue/confirmdialog';
 import { useConfirm } from 'primevue/useconfirm';
 import { useRouter } from 'vue-router';
+import Toast from 'primevue/toast';
+import { useToast } from 'primevue/usetoast';
 
 const router = useRouter();
+const toast = useToast();
 
 const visibleMenu = defineModel<boolean>('visible', { required: true });
-const { isLoggedIn } = useAuthStore();
 
 const userStore = useUserStore();
 const authStore = useAuthStore();
 const profile = computed(() => userStore.user);
+const isLoggedIn = computed(() => authStore.isLoggedIn);
 
 const menuDt = ref({
     mask: {
@@ -108,6 +111,76 @@ const menuItems = [
     { id: 'bookings', label: '預約行程管理', icon: 'pi-calendar', path: '/profile/bookings' },
     { id: 'history', label: '活動紀錄', icon: 'pi-history', path: '/profile/history' },
 ];
+
+// 處理菜單項點擊
+const handleMenuClick = (event: Event, menuItem: any, navigate: () => void) => {
+    // 調試信息
+    toast.add({
+        severity: 'info',
+        summary: '調試',
+        detail: `點擊: ${menuItem.label}, 登入狀態: ${isLoggedIn.value ? '已登入' : '未登入'}`,
+        life: 2000
+    });
+    
+    // 如果是探索頁面，直接跳轉
+    if (menuItem.id === 'search') {
+        navigate();
+        return;
+    }
+    
+    // 阻止默認行為
+    event.preventDefault();
+    
+    // 其他頁面需要檢查登入狀態
+    if (!isLoggedIn.value) {
+        toast.add({
+            severity: 'warn',
+            summary: '需要登入',
+            detail: '顯示確認對話框',
+            life: 2000
+        });
+        
+        // 顯示登入確認弹窗
+        confirm.require({
+            message: '此功能需要登入才能使用，是否要前往登入？',
+            header: '需要登入',
+            icon: 'pi pi-exclamation-triangle',
+            acceptLabel: '前往登入',
+            rejectLabel: '取消',
+            acceptClass: 'p-button-primary',
+            rejectClass: 'p-button-text',
+            accept: () => {
+                toast.add({
+                    severity: 'success',
+                    summary: '前往登入',
+                    detail: '打開登入對話框',
+                    life: 2000
+                });
+                // 打開登入對話框
+                showLoginDialog.value = true;
+                visibleMenu.value = false; // 關閉側邊欄
+            },
+            reject: () => {
+                toast.add({
+                    severity: 'info',
+                    summary: '取消',
+                    detail: '用戶取消登入',
+                    life: 2000
+                });
+                // 用戶取消，什麼都不做
+            }
+        });
+    } else {
+        toast.add({
+            severity: 'success',
+            summary: '已登入',
+            detail: '正常跳轉頁面',
+            life: 2000
+        });
+        // 已登入，正常跳轉
+        navigate();
+    }
+};
 </script>
 <style scoped>
 @reference "tailwindcss";

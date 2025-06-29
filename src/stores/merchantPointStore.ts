@@ -41,7 +41,10 @@ export const useMerchantPointStore = defineStore('merchantPoint', () => {
     async function loadPointsStats(merchantId: number): Promise<void> {
         loading.value = true;
         try {
-            pointsStats.value = await MerchantPointService.getPointsStats(merchantId);
+            const result = await MerchantPointService.getPointsStats(merchantId);
+            if (result.success && result.data) {
+                pointsStats.value = result.data;
+            }
         } catch (error) {
             console.error('加載點數統計失敗:', error);
             showError('無法加載點數統計，請稍後再試', '加載失敗');
@@ -53,7 +56,10 @@ export const useMerchantPointStore = defineStore('merchantPoint', () => {
     async function loadTransactions(merchantId: number): Promise<void> {
         loading.value = true;
         try {
-            transactions.value = await MerchantPointService.getTransactions(merchantId);
+            const result = await MerchantPointService.getTransactions(merchantId);
+            if (result.success && result.data) {
+                transactions.value = result.data;
+            }
         } catch (error) {
             console.error('加載交易記錄失敗:', error);
             showError('無法加載交易記錄，請稍後再試', '加載失敗');

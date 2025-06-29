@@ -446,7 +446,7 @@ const applyFilters = async () => {
 const resetFilters = () => {
     range.value = null;
     startDate.value = undefined;
-    endDate.value = undefined;
+    endDate.value = new Date(new Date().setDate(new Date().getDate() + 20));
     applyFilters();
 };
 
