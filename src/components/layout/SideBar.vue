@@ -114,13 +114,7 @@ const menuItems = [
 
 // 處理菜單項點擊
 const handleMenuClick = (event: Event, menuItem: any, navigate: () => void) => {
-    // 調試信息
-    toast.add({
-        severity: 'info',
-        summary: '調試',
-        detail: `點擊: ${menuItem.label}, 登入狀態: ${isLoggedIn.value ? '已登入' : '未登入'}`,
-        life: 2000
-    });
+    console.log(1111111);
     
     // 如果是探索頁面，直接跳轉
     if (menuItem.id === 'search') {
@@ -133,13 +127,6 @@ const handleMenuClick = (event: Event, menuItem: any, navigate: () => void) => {
     
     // 其他頁面需要檢查登入狀態
     if (!isLoggedIn.value) {
-        toast.add({
-            severity: 'warn',
-            summary: '需要登入',
-            detail: '顯示確認對話框',
-            life: 2000
-        });
-        
         // 顯示登入確認弹窗
         confirm.require({
             message: '此功能需要登入才能使用，是否要前往登入？',
@@ -150,35 +137,18 @@ const handleMenuClick = (event: Event, menuItem: any, navigate: () => void) => {
             acceptClass: 'p-button-primary',
             rejectClass: 'p-button-text',
             accept: () => {
-                toast.add({
-                    severity: 'success',
-                    summary: '前往登入',
-                    detail: '打開登入對話框',
-                    life: 2000
-                });
                 // 打開登入對話框
                 showLoginDialog.value = true;
                 visibleMenu.value = false; // 關閉側邊欄
             },
             reject: () => {
-                toast.add({
-                    severity: 'info',
-                    summary: '取消',
-                    detail: '用戶取消登入',
-                    life: 2000
-                });
                 // 用戶取消，什麼都不做
             }
         });
     } else {
-        toast.add({
-            severity: 'success',
-            summary: '已登入',
-            detail: '正常跳轉頁面',
-            life: 2000
-        });
         // 已登入，正常跳轉
         navigate();
+        visibleMenu.value = false; // 關閉側邊欄
     }
 };
 </script>
